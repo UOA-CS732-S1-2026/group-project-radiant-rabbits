@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "typegen": "payload generate:types",
+    "postinstall": "lefthook install"
   },
   "dependencies": {
     "next": "16.1.7",
@@ -20,6 +22,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "lefthook": "^2.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

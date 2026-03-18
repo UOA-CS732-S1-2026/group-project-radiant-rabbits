@@ -1,0 +1,19 @@
+post-merge:
+  commands:
+    npm:
+      glob: "{package.json,package-lock.json}"
+      run: npm install
+
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      exclude:
+        - "package-lock.json"
+        - "pnpm-lock.yaml"
+        - "**/importMap.js"
+        - "**/payload-types.ts"
+      run: |
+        npx --no-install biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
+      stage_fixed: true
