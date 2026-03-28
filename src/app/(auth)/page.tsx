@@ -13,10 +13,8 @@ export default function LoginPage() {
           </p>
         </header>
 
-        <div className="mt-xl">
-          <div className="mt-xl flex justify-center">
-            <Button>Sign in with GitHub</Button>
-          </div>
+        <div className="mt-xl flex justify-center">
+          <Button>Sign in with GitHub</Button>
         </div>
       </section>
     </main>
