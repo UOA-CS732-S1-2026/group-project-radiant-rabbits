@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sprint Review Hub",
+  title: "SprintHub",
   description: "Sprint Review Hub",
 };
 
