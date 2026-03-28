@@ -65,6 +65,10 @@
   --container-form: 42rem;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 html,
 body {
   min-height: 100%;
