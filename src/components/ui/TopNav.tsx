@@ -19,9 +19,7 @@ export default function TopNav() {
     <nav className="w-full bg-brand-surface/80 shadow-md">
       <div className="mx-auto flex w-full max-w-container items-center justify-between px-xl py-lg">
         <div className="shrink-0">
-          <p className="text-h3 font-semibold text-brand-dark">
-            Sprint Review Hub
-          </p>
+          <p className="text-h3 font-semibold text-brand-dark">SprintHub</p>
           <p className="mt-xs text-body-sm text-brand-dark/60">
             Radiant Rabbits
           </p>
