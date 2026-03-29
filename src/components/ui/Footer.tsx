@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="mt-xl w-full bg-brand-surface/80 px-md py-md shadow-md">
+    <footer className="w-full bg-brand-surface/80 px-md py-md shadow-md">
       <div className="mx-auto flex max-w-container items-center justify-between">
         <div>
           <p className="text-body-sm font-semibold text-brand-dark">
