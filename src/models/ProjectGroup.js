@@ -1,6 +1,6 @@
-import * as mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const projectGroupSchema = new mongoose.Schema(
+const projectGroupSchema = new Schema(
   {
     name: {
       type: String,
@@ -22,13 +22,13 @@ const projectGroupSchema = new mongoose.Schema(
     },
     members: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "User",
         required: true,
       },
     ],
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -40,13 +40,6 @@ const projectGroupSchema = new mongoose.Schema(
 
 // Explicit unique index for acceptance criteria
 projectGroupSchema.index({ inviteCode: 1 }, { unique: true });
-
-export type ProjectGroupDocument = mongoose.InferSchemaType<
-  typeof projectGroupSchema
-> & {
-  members: mongoose.Types.ObjectId[];
-  createdBy: mongoose.Types.ObjectId;
-};
 
 const ProjectGroup =
   mongoose.models.ProjectGroup ||

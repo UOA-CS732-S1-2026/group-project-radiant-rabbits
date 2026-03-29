@@ -1,6 +1,6 @@
-import * as mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
   {
     githubId: {
       type: String,
@@ -28,8 +28,6 @@ const userSchema = new mongoose.Schema(
 
 // Explicit unique index for acceptance criteria
 userSchema.index({ githubId: 1 }, { unique: true });
-
-export type UserDocument = mongoose.InferSchemaType<typeof userSchema>;
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
