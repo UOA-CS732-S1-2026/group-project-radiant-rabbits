@@ -1,15 +1,47 @@
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { options } from "@/app/api/auth/[...nextauth]/options";
+import SignOutButton from "@/components/auth/SignOutButton";
 import Card from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
 import SectionHeading from "@/components/ui/SectionHeading";
 import StatCard from "@/components/ui/StatCard";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await getServerSession(options);
+
+  if (!session?.user) {
+    redirect("/");
+  }
+
   return (
     <PageContainer>
       <SectionHeading
         title="Dashboard"
         subtitle="A central overview of contributors, commits, and sprint activity."
       />
+
+      {/* PLACEHOLDER FOR NOW: Show GitHub profile image and name*/}
+      <div className="mt-md flex items-center gap-md">
+        {session.user.image ? (
+          <Image
+            src={session.user.image}
+            alt="GitHub profile"
+            width={48}
+            height={48}
+            className="rounded-full"
+          />
+        ) : null}
+        <p className="text-body-md text-brand-dark">
+          {" "}
+          Welcome {session.user.name ?? "GitHub user"}{" "}
+        </p>
+      </div>
+
+      <div className="mt-md">
+        <SignOutButton />
+      </div>
 
       <section className="grid gap-lg md:grid-cols-3">
         <StatCard label="Contributors" value="5" />

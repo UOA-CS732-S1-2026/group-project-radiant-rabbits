@@ -1,6 +1,15 @@
-import Button from "@/components/ui/Button";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import SignInButton from "@/components/auth/SignInButton";
+import { options } from "../api/auth/[...nextauth]/options";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getServerSession(options);
+
+  if (session) {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-primary to-brand-accent px-xl">
       <section className="w-full max-w-form rounded-2xl bg-brand-surface p-xl shadow-lg">
@@ -12,7 +21,7 @@ export default function LoginPage() {
         </header>
 
         <div className="mt-xl flex justify-center">
-          <Button>Sign in with GitHub</Button>
+          <SignInButton />
         </div>
       </section>
     </main>
