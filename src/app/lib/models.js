@@ -30,6 +30,24 @@ const groupSchema = new Schema(
       unique: true,
       trim: true,
     },
+    members: [{
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    }],
+    createdBy: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,

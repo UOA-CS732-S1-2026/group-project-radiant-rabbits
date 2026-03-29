@@ -33,7 +33,7 @@ export async function POST(request) {
             )
         }
 
-    await connectMongoDB();
+        await connectMongoDB();
 
         const inviteCode = generateInviteCode();
 
@@ -42,7 +42,9 @@ export async function POST(request) {
             description: description,
             inviteCode: inviteCode,
             members: [session.user.id], // Assuming we have their Github ID
-            createdAt: new Date()
+            createdBy: session.user.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
 
         return NextResponse.json({ 
@@ -51,6 +53,9 @@ export async function POST(request) {
                 description: group.description,
                 inviteCode: group.inviteCode,
                 members: group.members,
+                createdBy: group.createdBy,
+                createdAt: group.createdAt,
+                updatedAt: group.updatedAt,
             },
             message: "Group Successfully Created" 
         }, 
