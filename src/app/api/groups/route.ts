@@ -5,6 +5,7 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { Group } from "../../lib/models";
 
+// Helper function to generate a random 8-character invite code
 function generateInviteCode() {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let inviteCode = "";
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(options);
 
+    // Check if user has logged in with a valid Github account
     if (!session?.user?.name) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -29,6 +31,7 @@ export async function POST(request: Request) {
 
     const { name, description } = await request.json();
 
+    // If the user does not input a name or description, return an error
     if (!name || !description) {
       return NextResponse.json(
         { error: "Name and description is required" },
@@ -36,6 +39,8 @@ export async function POST(request: Request) {
       );
     }
 
+    // Connect to MongoDB and create a new group with the provided name, description
+    // Generate a unique invite code
     await connectMongoDB();
 
     const inviteCode = generateInviteCode();
@@ -50,6 +55,7 @@ export async function POST(request: Request) {
       updatedAt: new Date(),
     });
 
+    // Return the created group info with a success message
     return NextResponse.json(
       {
         group: {
@@ -65,6 +71,8 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
+
+    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error creating group:", error);
     return NextResponse.json(

@@ -9,6 +9,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(options);
 
+    // Check if user has logged in with a valid Github account
     if (!session?.user?.name) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
 
     const { inviteCode } = await request.json();
 
+    // If the user does not input an invite code, return an error
     if (!inviteCode) {
       return NextResponse.json(
         { error: "Invite code is required" },
@@ -27,16 +29,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Connect to MongoDB and find a group that matches the invite code
     await connectMongoDB();
 
     const group = await Group.findOne({
       inviteCode: inviteCode.trim(),
     });
 
+    // If no group is found, return an error
     if (!group) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
+    // Check if user is already in that group
+    // If they are, return an error.
     if (
       group.members.some(
         (member: { toString: () => string }) => member.toString() === userName,
@@ -48,6 +54,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Add the user to the group and return the updated group info
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
       { $addToSet: { members: userName } },
@@ -57,6 +64,8 @@ export async function POST(request: Request) {
       { message: "Joined group successfully", group: updatedGroup },
       { status: 200 },
     );
+
+    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error joining group:", error);
     return NextResponse.json(

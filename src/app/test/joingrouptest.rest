@@ -7,8 +7,17 @@ Content-Type: application/json
     "inviteCode": "TEST1234"
 }
 
-### Join a group with authentication but invalid invite code
+### Join a group with authentication but no invite code
 ### SEE PR CHANNEL ON DISCORD FOR CONFIGURATION STEPS
+POST http://localhost:3000/api/groups/join
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "inviteCode": ""
+}
+
+### Join a group with authentication but invalid invite code
 POST http://localhost:3000/api/groups/join
 Content-Type: application/json
 Cookie: next-auth.session-token=your_valid_session_token_here
@@ -24,7 +33,7 @@ Content-Type: application/json
 Cookie: next-auth.session-token=your_valid_session_token_here
 
 {
-    "inviteCode": ""
+    "inviteCode": "your_generated_invite_code_here"
 }
 
 ### Join a group with authentication and valid invite code in a group you're not a member of
