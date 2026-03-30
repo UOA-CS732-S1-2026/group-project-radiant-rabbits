@@ -71,25 +71,6 @@ export default async function JoinGroupPage({
     );
   }
 
-  // 4. REPOSITORY ACCESS CHECK
-  const hasRepositoryAccess = true; // DUMMY VAR without repository data access
-
-  if (!hasRepositoryAccess) {
-    return (
-      <PageContainer>
-        <SectionHeading title="No Repository Access" />
-        <Card>
-          <p className="text-gray-700 mb-6">
-            You do not have the required repository access to join this group.
-          </p>
-          <Link href="/dashboard">
-            <Button type="button">Return to Dashboard</Button>
-          </Link>
-        </Card>
-      </PageContainer>
-    );
-  }
-
   // Check if the user is already a member of the group
   const isAlreadyMember = group.members.includes(userName);
 
@@ -115,6 +96,6 @@ export default async function JoinGroupPage({
     { $addToSet: { members: userName } },
   );
 
-  // 7. SUCCESS!
+  // Redirect the user to the group dashboard
   redirect(`/dashboard/${group._id}`);
 }
