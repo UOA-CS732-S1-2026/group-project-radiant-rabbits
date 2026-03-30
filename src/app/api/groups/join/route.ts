@@ -17,8 +17,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const userName = session.user.name;
-
     const { inviteCode } = await request.json();
 
     // If the user does not input an invite code, return an error
@@ -45,7 +43,8 @@ export async function POST(request: Request) {
     // If they are, return an error.
     if (
       group.members.some(
-        (member: { toString: () => string }) => member.toString() === userName,
+        (member: { toString: () => string }) =>
+          member.toString() === session.user.id,
       )
     ) {
       return NextResponse.json(
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
     // Add the user to the group and return the updated group info
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
-      { $addToSet: { members: userName } },
+      { $addToSet: { members: session.user.id } },
       { new: true },
     );
     return NextResponse.json(
