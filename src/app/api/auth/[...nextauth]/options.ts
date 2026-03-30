@@ -21,4 +21,21 @@ export const options: NextAuthOptions = {
   pages: {
     signIn: "/",
   },
+  callbacks: {
+    async jwt({ token, user }) {
+      // On first sign in, the `user` object is available.
+      if (user?.id) {
+        token.githubId = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // The session callback is called whenever a session is checked.
+      // We add the github id to the session object, so we can access it in our app.
+      if (session.user) {
+        session.user.id = (token.githubId as string) ?? token.sub ?? "";
+      }
+      return session;
+    },
+  },
 };
