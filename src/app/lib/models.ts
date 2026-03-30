@@ -21,14 +21,12 @@ const groupSchema = new Schema(
     members: [
       {
         type: String,
-        ref: "User",
         default: [],
       },
     ],
     createdBy: {
       type: String,
       required: true,
-      trim: true,
     },
     createdAt: {
       type: Date,

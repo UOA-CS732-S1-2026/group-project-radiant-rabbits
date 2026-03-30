@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const session = await getServerSession(options);
 
     // Check if user has logged in with a valid Github account
-    if (!session?.user?.name) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
@@ -49,8 +49,8 @@ export async function POST(request: Request) {
       name: name,
       description: description,
       inviteCode: inviteCode,
-      members: [session.user.name],
-      createdBy: session.user.name,
+      members: [session.user.id],
+      createdBy: session.user.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
