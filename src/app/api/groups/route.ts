@@ -1,3 +1,4 @@
+import { log } from "console";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
@@ -64,7 +65,8 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
-  } catch {
+  } catch (error) {
+    log("Error creating group:", error);
     return NextResponse.json(
       { error: "Failed to create group" },
       { status: 500 },

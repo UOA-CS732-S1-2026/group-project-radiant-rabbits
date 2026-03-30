@@ -20,7 +20,7 @@ const groupSchema = new Schema(
     },
     members: [
       {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: "User",
         default: [],
       },

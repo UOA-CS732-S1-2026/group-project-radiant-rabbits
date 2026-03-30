@@ -1,0 +1,43 @@
+### Create a Group without authentication
+POST http://localhost:3000/api/groups
+Content-Type: application/json
+
+{
+    "name": "Test Group",
+    "description": "This is a test group",
+    "inviteCode": "TEST1234"
+}
+
+### Create a group with authentication but no description
+### SEE PR CHANNEL ON DISCORD FOR CONFIGURATION STEPS
+POST http://localhost:3000/api/groups
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "name": "Test Group",
+    "description": "",
+    "inviteCode": "TEST123"
+}
+
+### Create a group with authentication but no name
+POST http://localhost:3000/api/groups
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "name": "",
+    "description": "This is a test group",
+    "inviteCode": "TEST1234"
+}
+
+### Create a group with authentication and all required fields
+POST http://localhost:3000/api/groups
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "name": "Test Group",
+    "description": "This is a test group",
+    "inviteCode": "TEST1234"
+}
