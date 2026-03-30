@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "jest --runInBand --detectOpenHandles",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -12,7 +13,9 @@
     "postinstall": "lefthook install"
   },
   "dependencies": {
+    "jest": "^30.3.0",
     "mongodb": "^7.1.0",
+    "mongodb-memory-server": "^11.0.1",
     "mongoose": "^9.3.1",
     "next": "16.1.7",
     "next-auth": "^4.24.13",
