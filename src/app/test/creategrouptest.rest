@@ -1,4 +1,5 @@
 ### Create a Group without authentication
+### SHOULD RETURN 401
 POST http://localhost:3000/api/groups
 Content-Type: application/json
 
@@ -9,6 +10,7 @@ Content-Type: application/json
 }
 
 ### Create a group with authentication but no description
+### SHOULD RETURN 400
 ### SEE PR CHANNEL ON DISCORD FOR CONFIGURATION STEPS
 POST http://localhost:3000/api/groups
 Content-Type: application/json
@@ -21,6 +23,7 @@ Cookie: next-auth.session-token=your_valid_session_token_here
 }
 
 ### Create a group with authentication but no name
+### SHOULD RETURN 400
 POST http://localhost:3000/api/groups
 Content-Type: application/json
 Cookie: next-auth.session-token=your_valid_session_token_here
@@ -32,6 +35,7 @@ Cookie: next-auth.session-token=your_valid_session_token_here
 }
 
 ### Create a group with authentication and all required fields
+### SHOULD RETURN 201
 POST http://localhost:3000/api/groups
 Content-Type: application/json
 Cookie: next-auth.session-token=your_valid_session_token_here
