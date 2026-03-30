@@ -1,17 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-const taskSchema = new Schema(
-  {
-    title: String,
-    description: String,
-  },
-  {
-    timestamps: true,
-  },
-);
-
-const Task = mongoose.models.Task || mongoose.model("Task", taskSchema);
-
 const groupSchema = new Schema(
   {
     name: {
@@ -30,11 +18,13 @@ const groupSchema = new Schema(
       unique: true,
       trim: true,
     },
-    members: [{
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      default: [],
-    }],
+    members: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
     createdBy: {
       type: String,
       required: true,
@@ -56,5 +46,3 @@ const groupSchema = new Schema(
 
 export const Group =
   mongoose.models.Group || mongoose.model("Group", groupSchema);
-
-export default Task;
