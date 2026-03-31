@@ -1,12 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { Group } from "@/app/lib/models";
 import JoinInvitePage from "./page";
 
 jest.mock("next-auth/next");
+jest.mock("next/navigation");
+
 const mockGetServerSession = getServerSession as jest.Mock;
+const mockRedirect = redirect as unknown as jest.Mock;
 
 let mongoServer: MongoMemoryServer;
 
@@ -27,7 +31,25 @@ beforeEach(async () => {
 
 describe("JoinGroupPage - Logic & UI Integration", () => {
   // Test 1: Redirects user to login if not authenticated/logged in
-  it("Test 1 - Logic: Unauthenticated User | Redirect to Log in", async () => {});
+  it("Test 1 - Logic: Unauthenticated User | Redirect to Log in", async () => {
+    // Set unauthenticated server session
+    mockGetServerSession.mockResolvedValue(null);
+
+    const inviteCode = "TEST123";
+    const params = Promise.resolve({ inviteCode });
+
+    try {
+      await JoinInvitePage({ params });
+    } catch (e) {
+      // Catch to ensure the test doesn't fail
+    }
+
+    // Redirect and logic assertion
+    expect(mockRedirect).toHaveBeenCalledWith(
+      `/?callbackUrl=/join/${inviteCode}`,
+    );
+    expect(Group.findOne).not.toHaveBeenCalled();
+  });
 
   // Test 2: Redirects user to groups page if the invite code is invalid
   it("Test 2 - Logic: Invalid Invite Code | UI: Show Invalid Invite Error", async () => {
@@ -113,5 +135,30 @@ describe("JoinGroupPage - Logic & UI Integration", () => {
   });
 
   // Test 5: Database connection error
-  it("Test 5 - Logic: Connection to database fails | UI: Show connection error message", async () => {});
+  it("Test 5 - Logic: Connection to database fails | UI: Show connection error message", async () => {
+    // Set up mock authentication
+    mockGetServerSession.mockResolvedValue({ user: { name: "Tester" } });
+
+    // Simulate database connection error
+    const spy = jest
+      .spyOn(Group, "findOne")
+      .mockRejectedValue(new Error("DB Connection Failed"));
+
+    // Call function to render page
+    const params = Promise.resolve({ inviteCode: "TEST123" });
+    const Page = await JoinInvitePage({ params });
+    render(Page);
+
+    // UI assertion - error message should display
+    expect(
+      screen.getByText(
+        /We have encountered an error connecting to the database./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Back to Groups/i }),
+    ).toBeInTheDocument();
+
+    spy.mockRestore();
+  });
 });
