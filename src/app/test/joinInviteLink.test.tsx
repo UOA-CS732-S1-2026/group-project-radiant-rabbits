@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { Group } from "@/app/lib/models";
-import JoinInvitePage from "./page";
+import JoinInvitePage from "../(main)/join/[inviteCode]/page";
 import "@testing-library/jest-dom";
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
