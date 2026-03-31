@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "jest --runInBand --detectOpenHandles",
+    "test": "jest",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -13,7 +13,6 @@
     "postinstall": "lefthook install"
   },
   "dependencies": {
-    "jest": "^30.3.0",
     "mongodb": "^7.1.0",
     "mongodb-memory-server": "^11.0.1",
     "mongoose": "^9.3.1",
@@ -28,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "jest": "^30.3.0",
     "lefthook": "^2.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"

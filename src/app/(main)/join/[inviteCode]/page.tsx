@@ -14,7 +14,6 @@ export default async function JoinGroupPage({
 }: {
   params: Promise<{ inviteCode: string }>;
 }) {
-  //const inviteCode = params.inviteCode;
   const { inviteCode } = await params;
 
   const session = await getServerSession(options);
@@ -96,6 +95,20 @@ export default async function JoinGroupPage({
     { $addToSet: { members: userName } },
   );
 
-  // Redirect the user to the group dashboard
-  redirect(`/dashboard/${group._id}`);
+  // Redirect the user to the group dashboard if successfully joined
+  if (session?.user?.name && group && !isAlreadyMember) {
+    return (
+      <PageContainer>
+        <SectionHeading title={`Successfully joined group ${group.name}!`} />
+        <Card>
+          <p className="text-gray-500 mb-6">
+            You are now a member of group ${group.name}.
+          </p>
+          <Link href={`/dashboard/${group._id}`}>
+            <Button type="button">Go to Group Dashboard</Button>
+          </Link>
+        </Card>
+      </PageContainer>
+    );
+  }
 }
