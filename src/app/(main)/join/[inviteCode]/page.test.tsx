@@ -1,18 +1,30 @@
 import { render, screen } from "@testing-library/react";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { Group } from "@/app/lib/models";
 import JoinInvitePage from "./page";
+import "@testing-library/jest-dom";
+const { MongoMemoryServer } = require("mongodb-memory-server");
 
 jest.mock("next-auth/next");
 jest.mock("next/navigation");
+// Mock to ensure mongodb connection
+jest.mock("@/app/lib/mongodbConnection", () => {
+  return jest.fn().mockResolvedValue(true);
+});
+
+// Mock to render link / avoid act() warning
+jest.mock("next/link", () => {
+  return ({ children, href }: { children: React.ReactNode; href: string }) => {
+    return <a href={href}>{children}</a>;
+  };
+});
 
 const mockGetServerSession = getServerSession as jest.Mock;
 const mockRedirect = redirect as unknown as jest.Mock;
 
-let mongoServer: MongoMemoryServer;
+let mongoServer: any;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
@@ -32,6 +44,8 @@ beforeEach(async () => {
 describe("JoinGroupPage - Logic & UI Integration", () => {
   // Test 1: Redirects user to login if not authenticated/logged in
   it("Test 1 - Logic: Unauthenticated User | Redirect to Log in", async () => {
+    const findOneSpy = jest.spyOn(Group, "findOne");
+
     // Set unauthenticated server session
     mockGetServerSession.mockResolvedValue(null);
 
@@ -48,7 +62,8 @@ describe("JoinGroupPage - Logic & UI Integration", () => {
     expect(mockRedirect).toHaveBeenCalledWith(
       `/?callbackUrl=/join/${inviteCode}`,
     );
-    expect(Group.findOne).not.toHaveBeenCalled();
+    expect(findOneSpy).not.toHaveBeenCalled();
+    findOneSpy.mockRestore();
   });
 
   // Test 2: Redirects user to groups page if the invite code is invalid
@@ -84,6 +99,8 @@ describe("JoinGroupPage - Logic & UI Integration", () => {
       name: "Testing Team",
       inviteCode: "TEST123",
       members: ["Tester"],
+      createdBy: "Tester",
+      description: "Test group",
     });
 
     // Call function to render page
@@ -114,6 +131,8 @@ describe("JoinGroupPage - Logic & UI Integration", () => {
       name: "Testing Team",
       inviteCode: "TEST123",
       members: [],
+      createdBy: "Tester",
+      description: "Test group",
     });
 
     // Call function to render page

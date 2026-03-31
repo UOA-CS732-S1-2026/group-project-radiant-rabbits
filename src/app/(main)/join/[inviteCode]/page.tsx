@@ -88,7 +88,7 @@ export default async function JoinInvitePage({
         <SectionHeading title="Invalid Invite Link" />
         <Card>
           <p className="mb-6 text-gray-700">
-            The code <strong>{inviteCode}</strong> is invalid.
+            The code {inviteCode} is invalid.
           </p>
           <Link href="/group">
             <Button type="button">Back to Groups</Button>
@@ -105,8 +105,7 @@ export default async function JoinInvitePage({
         <SectionHeading title="Already a Member" />
         <Card>
           <p className="mb-6 text-gray-700">
-            {" "}
-            You are already a member of the ${result.group.name} group.
+            {`You are already a member of the ${result.group.name} group.`}
           </p>
           <Link href={`/dashboard/${result.group?._id}`}>
             <Button type="button">Go to Group Dashboard</Button>
@@ -123,7 +122,7 @@ export default async function JoinInvitePage({
       <Card>
         <p className="mb-6 text-gray-700">
           {" "}
-          You have successfully joined ${result.group.name}!
+          You have successfully joined {result.group?.name}!
         </p>
         <Link href={`/dashboard/${result.group?._id}`}>
           <Button type="button">Go to Group Dashboard</Button>

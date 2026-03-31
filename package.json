@@ -31,6 +31,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
     "lefthook": "^2.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"
