@@ -1,5 +1,3 @@
-import { unique } from "next/dist/build/utils";
-
 const { Schema, model } = require("mongoose");
 
 const userSchema = new Schema({
