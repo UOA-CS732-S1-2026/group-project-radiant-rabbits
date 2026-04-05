@@ -13,6 +13,8 @@
     "postinstall": "lefthook install"
   },
   "dependencies": {
+    "@types/ioredis": "^4.28.10",
+    "ioredis": "^5.10.1",
     "mongodb": "^7.1.0",
     "mongodb-memory-server": "^11.0.1",
     "mongoose": "^9.3.1",
