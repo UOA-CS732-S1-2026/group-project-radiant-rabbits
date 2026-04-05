@@ -1,0 +1,53 @@
+### NOTE: For a smoother testing process, please test creategrouptest.rest first
+
+### Join a group without authentication 
+### SHOULD RETURN 401
+POST http://localhost:3000/api/groups/join
+Content-Type: application/json
+
+{
+    "inviteCode": "TEST1234"
+}
+
+### Join a group with authentication but no invite code 
+### SHOULD RETURN 400
+### SEE PR CHANNEL ON DISCORD FOR CONFIGURATION STEPS
+POST http://localhost:3000/api/groups/join
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "inviteCode": ""
+}
+
+### Join a group with authentication but invalid invite code 
+### SHOULD RETURN 404
+POST http://localhost:3000/api/groups/join
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "inviteCode": "TEST1234"
+}
+
+### Join a group with authentication and valid invite code in a group you're already a member of
+### SHOULD RETURN 400
+### INSERT YOUR GENERATED INVITECODE IN MONGODB AFTER TESTING FOR CREATEGROUP
+POST http://localhost:3000/api/groups/join
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "inviteCode": "your_generated_invite_code_here"
+}
+
+### Join a group with authentication and valid invite code in a group you're not a member of
+### SHOULD RETURN 200
+### Uses a dummy group code that has been made in the database for testing
+POST http://localhost:3000/api/groups/join
+Content-Type: application/json
+Cookie: next-auth.session-token=your_valid_session_token_here
+
+{
+    "inviteCode": "VDAAF90C"
+}
