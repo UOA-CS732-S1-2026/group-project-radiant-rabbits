@@ -1,4 +1,14 @@
+import BorderedPanel from "@/components/ui/BorderedPanel";
 import GroupCard from "@/components/ui/GroupCard";
+
+const DUMMY_REPO_NAMES = [
+  "group-project-radiant-rabbits",
+  "sprint-hub",
+  "team-alpha",
+  "team-beta",
+  "team-gamma",
+  "team-delta",
+] as const;
 
 export default function JoinCreateSwitchGroupPage() {
   return (
@@ -11,19 +21,19 @@ export default function JoinCreateSwitchGroupPage() {
           <p className="text-body-md text-brand-dark/60">SOFTENG</p>
         </header>
 
-        <div className="w-full min-w-0 text-left">
-          <GroupCard>
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Radiant Rabbits
-            </h2>
-            <p className="mt-1 text-body-sm text-brand-dark/60">
-              SOFTENG 310 · 5 members
-            </p>
-            <p className="mt-4 text-body-md text-brand-dark/80">
-              Preview: this is how a group card looks in context.
-            </p>
-          </GroupCard>
-        </div>
+        <BorderedPanel className="p-lg">
+          <div className="max-h-[min(70vh,40rem)] overflow-y-auto pr-sm">
+            <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
+              {DUMMY_REPO_NAMES.map((repoName) => (
+                <GroupCard key={repoName}>
+                  <p className="text-center text-body-md font-medium text-brand-dark">
+                    {repoName}
+                  </p>
+                </GroupCard>
+              ))}
+            </div>
+          </div>
+        </BorderedPanel>
       </div>
     </div>
   );
