@@ -28,9 +28,11 @@ const groupSchema = new Schema(
     ],
     repoOwner: {
       type: String,
+      required: true,
     },
     repoName: {
       type: String,
+      required: true,
     },
     createdBy: {
       type: String,
@@ -62,6 +64,8 @@ const groupSchema = new Schema(
     timestamps: true,
   },
 );
+
+groupSchema.index({ repoOwner: 1, repoName: 1 }, { unique: true }); // Prevents duplicate groups
 
 export const Group =
   mongoose.models.Group || mongoose.model("Group", groupSchema);

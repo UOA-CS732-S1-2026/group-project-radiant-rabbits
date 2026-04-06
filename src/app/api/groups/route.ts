@@ -1,4 +1,5 @@
 import { log } from "node:console";
+import { lstatSync } from "node:fs";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, description } = await request.json();
+    const { name, description, repoOwner, repoName } = await request.json();
 
     // If the user does not input a name or description, return an error
     if (!name || !description) {
@@ -40,10 +41,33 @@ export async function POST(request: Request) {
       );
     }
 
+    // If the user repository link lacks a repoOwner or repoName, return an error
+    if (!repoOwner || !repoName) {
+      return NextResponse.json(
+        { error: "Repository name and owner is required" },
+        { status: 400 },
+      );
+    }
+
     // Connect to MongoDB and create a new group with the provided name, description
     // Generate a unique invite code
     await connectMongoDB();
 
+    // Check if the group already exists for the associated repository
+    const existingGroup = await Group.findOne({ repoOwner, repoName });
+
+    // If the group already exists for the repository, return an error
+    if (existingGroup) {
+      return NextResponse.json(
+        { error: "A group already exists for this repository" },
+        { status: 409 },
+      );
+    }
+
+    // Check if the user has access to the associated repository with their GitHub account
+    edit;
+
+    // Otherwise, create the group and generate a unique invite code
     const inviteCode = generateInviteCode();
 
     const group = await Group.create({
@@ -51,9 +75,14 @@ export async function POST(request: Request) {
       description: description,
       inviteCode: inviteCode,
       members: [session.user.id],
+      repoOwner: repoOwner,
+      repoName: repoName,
       createdBy: session.user.id,
       createdAt: new Date(),
       updatedAt: new Date(),
+      lastSyncAt: new Date(),
+      syncStatus: "pending",
+      syncError: null,
     });
 
     // Fire-and-forget: start syncing GitHub data in the background.
