@@ -1,3 +1,4 @@
+import BorderedPanel from "@/components/ui/BorderedPanel";
 import Card from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -67,7 +68,7 @@ export default function PastSprintsPage() {
       />
 
       <Card className="border border-brand-dark/10 border-l-0 shadow-none">
-        <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-lg">
+        <BorderedPanel className="p-lg">
           <h2 className="text-h3 font-semibold text-brand-dark">
             Completed Sprints
           </h2>
@@ -112,7 +113,7 @@ export default function PastSprintsPage() {
               </button>
             ))}
           </div>
-        </div>
+        </BorderedPanel>
       </Card>
     </PageContainer>
   );
