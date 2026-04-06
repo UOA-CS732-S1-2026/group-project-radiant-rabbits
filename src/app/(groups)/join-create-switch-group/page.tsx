@@ -1,17 +1,43 @@
+"use client";
+
+import { useState } from "react";
 import BorderedPanel from "@/components/ui/BorderedPanel";
 import GroupCard from "@/components/ui/GroupCard";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
-const DUMMY_REPO_NAMES = [
-  "group-project-radiant-rabbits",
-  "sprint-hub-project",
-  "team-alph-project",
-  "team-beta-project",
-  "team-gamma-project",
-  "team-delta-project",
+const TAB_OPTIONS = [
+  { id: "join", label: "Join a Group" },
+  { id: "create", label: "Create a Group" },
+  { id: "current", label: "Current Groups" },
 ] as const;
 
+const DUMMY_CARDS: Record<
+  (typeof TAB_OPTIONS)[number]["id"],
+  readonly string[]
+> = {
+  join: [
+    "group-project-radiant-rabbits",
+    "sprint-hub-project",
+    "team-alpha-project",
+    "team-beta-project",
+    "team-gamma-project",
+    "team-delta-project",
+  ],
+  create: [
+    "New group from template · CS732",
+    "Blank group · name later",
+    "Import from GitHub org",
+    "Duplicate last semester’s group",
+  ],
+  current: ["UOA-CS732 / radiant-rabbits (you)", "Study group · design review"],
+};
+
 export default function JoinCreateSwitchGroupPage() {
+  const [tab, setTab] = useState<string>("join");
+  const cards =
+    DUMMY_CARDS[tab as keyof typeof DUMMY_CARDS] ?? DUMMY_CARDS.join;
+
   return (
     <div className="min-h-screen bg-brand-background px-6 py-10">
       <div className="mx-auto w-full max-w-3xl">
@@ -19,13 +45,20 @@ export default function JoinCreateSwitchGroupPage() {
           <SprintHubTitle />
         </header>
 
+        <SegmentedControl
+          className="mx-auto mb-6"
+          options={TAB_OPTIONS}
+          value={tab}
+          onChange={setTab}
+        />
+
         <BorderedPanel className="p-lg">
           <div className="max-h-[min(70vh,40rem)] overflow-y-auto pr-sm">
             <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
-              {DUMMY_REPO_NAMES.map((repoName) => (
-                <GroupCard key={repoName}>
+              {cards.map((line) => (
+                <GroupCard key={`${tab}-${line}`}>
                   <p className="text-center text-body-md font-medium text-brand-dark">
-                    {repoName}
+                    {line}
                   </p>
                 </GroupCard>
               ))}
