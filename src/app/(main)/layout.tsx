@@ -1,5 +1,4 @@
-import Footer from "@/components/ui/Footer";
-import TopNav from "@/components/ui/TopNav";
+import SideNav from "@/components/ui/SideNav";
 
 export default function MainLayout({
   children,
@@ -7,10 +6,9 @@ export default function MainLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <TopNav />
+    <div className="flex min-h-screen items-stretch">
+      <SideNav />
       <main className="flex-1">{children}</main>
-      <Footer />
     </div>
   );
 }
