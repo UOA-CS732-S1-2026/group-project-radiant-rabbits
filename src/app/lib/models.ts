@@ -99,6 +99,7 @@ const commitSchema = new Schema(
 );
 
 commitSchema.index({ sha: 1, group: 1 }, { unique: true });
+commitSchema.index({ group: 1, date: 1 });
 
 export const Commit =
   mongoose.models.Commit || mongoose.model("Commit", commitSchema);
@@ -220,6 +221,42 @@ contributorSchema.index({ githubId: 1, group: 1 }, { unique: true });
 export const Contributor =
   mongoose.models.Contributor ||
   mongoose.model("Contributor", contributorSchema);
+
+// Sprint schema
+
+const sprintSchema = new Schema(
+  {
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    isCurrent: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+sprintSchema.index({ group: 1, startDate: 1 });
+
+export const Sprint =
+  mongoose.models.Sprint || mongoose.model("Sprint", sprintSchema);
 
 // SprintTask schema
 
