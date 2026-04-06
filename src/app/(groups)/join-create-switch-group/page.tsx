@@ -1,5 +1,6 @@
 import BorderedPanel from "@/components/ui/BorderedPanel";
 import GroupCard from "@/components/ui/GroupCard";
+import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
 const DUMMY_REPO_NAMES = [
   "group-project-radiant-rabbits",
@@ -14,11 +15,8 @@ export default function JoinCreateSwitchGroupPage() {
   return (
     <div className="min-h-screen bg-brand-background px-6 py-10">
       <div className="mx-auto w-full max-w-3xl rounded-3xl border border-brand-dark/10 bg-white/90 p-10 shadow-lg">
-        <header className="mb-8 text-center">
-          <h1 className="mb-4 text-h2 font-semibold text-brand-dark">
-            Join / Create / Switch Group
-          </h1>
-          <p className="text-body-md text-brand-dark/60">SOFTENG</p>
+        <header className="mb-10 text-center">
+          <SprintHubTitle />
         </header>
 
         <BorderedPanel className="p-lg">
