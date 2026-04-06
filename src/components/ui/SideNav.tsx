@@ -12,7 +12,11 @@ const navItems = [
 ];
 
 const bottomItems = [
-  { href: "/change-group", label: "Change Group", icon: Settings },
+  {
+    href: "/join-create-switch-group",
+    label: "Change Group",
+    icon: Settings,
+  },
   { href: "/sprint-settings", label: "Sprint Settings", icon: Settings },
 ];
 

@@ -6,7 +6,9 @@ export default function SignInButton() {
   return (
     <button
       type="button"
-      onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+      onClick={() =>
+        signIn("github", { callbackUrl: "/join-create-switch-group" })
+      }
     >
       Sign In With GitHub
     </button>
