@@ -1,7 +1,5 @@
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
-import SectionHeading from "@/components/ui/SectionHeading";
 
 const sprintTasks = [
   { id: "#124", title: "Build Dashboard", status: "Closed" },
@@ -18,7 +16,7 @@ const contributors = [
   {
     name: "Tom Jones",
     commits: "30 Commits",
-    issue: "2 issues in Progress",
+    issue: "2 issue in Progress",
   },
   {
     name: "Ella Green",
@@ -38,245 +36,242 @@ const contributors = [
 ];
 
 const timeline = [
-  "April 22 — Merged PR #2",
-  "April 22 — Closed Issue #124",
-  "April 21 — Emma pushed 6 commits to branch web-ui",
+  { date: "April 22", text: "Merged PR #2", initials: "A" },
+  { date: "April 22", text: "Closed Issue #124", initials: "B" },
+  {
+    date: "April 21",
+    text: "Emma pushed 6 commits to branch web-ui",
+    initials: "A",
+  },
 ];
 
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "Closed"
-      ? "bg-green-100 text-green-700"
-      : "bg-blue-100 text-blue-700";
+      ? "bg-brand-primary text-brand-surface"
+      : "bg-brand-accent text-brand-surface";
 
   return (
     <span
-      className={`rounded-full px-sm py-xs text-xs font-semibold ${styles}`}
+      className={`inline-flex min-w-16 justify-center rounded-lg px-sm py-xs text-body-xs font-medium ${styles}`}
     >
       {status}
     </span>
   );
 }
 
-function MiniStatCard({
+function BreakdownTile({
   label,
   value,
-  dotColor,
+  dotClass,
 }: {
   label: string;
   value: string;
-  dotColor: string;
+  dotClass: string;
 }) {
   return (
-    <div className="rounded-xl border border-brand-border bg-brand-background p-md shadow-sm">
+    <div className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md shadow-md">
       <div className="flex items-center gap-sm">
-        <span className={`h-3 w-3 rounded-full ${dotColor}`} />
-        <p className="text-body-md font-semibold text-brand-dark">{label}</p>
+        <span className={`h-sm w-sm rounded-full ${dotClass}`} />
+        <span className="text-body-md font-medium text-brand-dark">
+          {label}
+        </span>
       </div>
-      <p className="mt-xs text-body-sm text-brand-dark/70">{value}</p>
+      <p className="mt-xs pl-lg text-body-md text-brand-dark/60">{value}</p>
     </div>
   );
 }
 
-export default function CurrentSprintPage() {
-  const progressPercent = 70;
-
+function FilterChip({
+  label,
+  active = false,
+}: {
+  label: string;
+  active?: boolean;
+}) {
   return (
-    <PageContainer>
-      <SectionHeading
-        title="Current Sprint"
-        subtitle="Track sprint progress, tasks, contribution activity, and recent updates."
-      />
+    <button
+      type="button"
+      className={
+        active
+          ? "rounded-lg bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-md"
+          : "rounded-lg px-sm py-xs text-body-xs text-brand-dark/70"
+      }
+    >
+      {label}
+    </button>
+  );
+}
 
-      <div className="grid gap-lg xl:grid-cols-[2fr_1fr]">
-        <div className="space-y-lg">
-          <Card>
-            <div className="flex items-start justify-between gap-md">
-              <div>
-                <h2 className="text-h2 font-semibold text-brand-dark">
-                  Sprint 4
-                </h2>
-                <p className="mt-sm text-body-md text-brand-dark/70">
-                  Current sprint overview and team delivery progress.
+export default function CurrentSprintPage() {
+  return (
+    <div className="min-h-screen bg-brand-background">
+      <PageContainer>
+        <Card className="border border-brand-dark/10 border-l-0 p-xl shadow-none">
+          <div className="space-y-lg">
+            <h2 className="text-h2 font-semibold text-brand-dark">Sprint 4</h2>
+
+            <section className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md">
+              <div className="flex items-start justify-between gap-md">
+                <div>
+                  <h3 className="text-body-lg font-medium text-brand-dark">
+                    Sprint Focus:
+                  </h3>
+                  <p className="text-body-lg text-brand-dark/60">
+                    This sprint is focused on implementing the dashboard and
+                    backend API integration.
+                  </p>
+                </div>
+
+                <span className="text-body-md text-brand-dark/70">✎</span>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md">
+              <div className="mb-md grid grid-cols-1 gap-sm text-body-md text-brand-dark/60 md:grid-cols-3">
+                <p>
+                  <span className="font-medium text-brand-dark">
+                    Sprint Start Date:
+                  </span>{" "}
+                  April 15, 2026
+                </p>
+                <p>
+                  <span className="font-medium text-brand-dark">
+                    Sprint End Date:
+                  </span>{" "}
+                  April 29, 2026
+                </p>
+                <p>
+                  <span className="font-medium text-brand-dark">
+                    Time Remaining:
+                  </span>{" "}
+                  7 days
                 </p>
               </div>
 
-              <Button>Generate Sprint Review</Button>
-            </div>
-
-            <div className="mt-lg rounded-xl border border-brand-border bg-brand-background p-md">
-              <p className="text-body-sm font-semibold text-brand-dark">
-                Sprint Focus:
-              </p>
-              <p className="mt-xs text-body-sm text-brand-dark/70">
-                This sprint is focused on implementing the dashboard and backend
-                API integration.
-              </p>
-            </div>
-
-            <div className="mt-lg rounded-xl border border-brand-border bg-brand-background p-md">
-              <div className="mb-sm flex flex-wrap gap-md text-body-sm text-brand-dark/70">
-                <span>
-                  <strong className="text-brand-dark">
-                    Sprint Start Date:
-                  </strong>{" "}
-                  April 15, 2026
-                </span>
-                <span>
-                  <strong className="text-brand-dark">Sprint End Date:</strong>{" "}
-                  April 29, 2026
-                </span>
-                <span>
-                  <strong className="text-brand-dark">Time Remaining:</strong> 7
-                  days
-                </span>
+              <div className="h-sm w-full rounded-full bg-brand-accent/20">
+                <div className="h-sm w-2/3 rounded-full bg-brand-accent" />
               </div>
+            </section>
 
-              <div className="h-3 w-full rounded-full bg-brand-accent/20">
-                <div
-                  className="h-3 rounded-full bg-brand-accent transition-all"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            </div>
-          </Card>
+            <section>
+              <h3 className="mb-md text-h3 font-semibold text-brand-dark">
+                Sprint Breakdown
+              </h3>
 
-          <Card>
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Sprint Breakdown
-            </h2>
+              <div className="grid gap-lg lg:grid-cols-[2.2fr_1fr]">
+                <div className="space-y-md">
+                  <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                    <div className="grid gap-md md:grid-cols-3">
+                      <BreakdownTile
+                        label="To Do"
+                        value="2 Issues"
+                        dotClass="bg-brand-dark/30"
+                      />
+                      <BreakdownTile
+                        label="In Progress"
+                        value="4 Issues"
+                        dotClass="bg-brand-primary"
+                      />
+                      <BreakdownTile
+                        label="Done"
+                        value="2 Issues"
+                        dotClass="bg-brand-accent"
+                      />
+                    </div>
+                  </div>
 
-            <div className="mt-lg grid gap-md sm:grid-cols-3">
-              <MiniStatCard
-                label="To Do"
-                value="2 Issues"
-                dotColor="bg-red-400"
-              />
-              <MiniStatCard
-                label="In Progress"
-                value="4 Issues"
-                dotColor="bg-yellow-400"
-              />
-              <MiniStatCard
-                label="Done"
-                value="2 Issues"
-                dotColor="bg-green-400"
-              />
-            </div>
+                  <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                    <h4 className="text-body-lg font-semibold text-brand-dark">
+                      Sprint Tasks
+                    </h4>
 
-            <div className="mt-lg grid gap-lg lg:grid-cols-[1.6fr_1fr]">
-              <div className="rounded-xl border border-brand-border bg-brand-background p-md">
-                <h3 className="text-body-md font-semibold text-brand-dark">
-                  Sprint Tasks
-                </h3>
+                    <div className="mt-md inline-flex rounded-lg bg-brand-background p-xs">
+                      <FilterChip label="All Issues" active />
+                      <FilterChip label="Open" />
+                      <FilterChip label="Closed" />
+                    </div>
 
-                <div className="mt-md flex gap-sm">
-                  <Button variant="secondary">All Issues</Button>
-                  <Button variant="secondary">Open</Button>
-                  <Button variant="secondary">Closed</Button>
-                </div>
-
-                <div className="mt-md space-y-sm">
-                  {sprintTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center justify-between rounded-lg border-b border-brand-border pb-sm text-body-sm"
-                    >
-                      <div className="flex items-center gap-md">
-                        <span className="font-medium text-brand-dark/70">
-                          {task.id}
-                        </span>
-                        <span className="text-brand-dark">{task.title}</span>
+                    <div className="mt-lg overflow-y-auto pr-sm">
+                      <div className="space-y-md">
+                        {sprintTasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className="grid grid-cols-[5rem_1fr_5rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
+                          >
+                            <span className="text-brand-dark/60">
+                              {task.id}
+                            </span>
+                            <span className="text-brand-dark/70">
+                              {task.title}
+                            </span>
+                            <div className="flex justify-end">
+                              <StatusBadge status={task.status} />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <StatusBadge status={task.status} />
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              <div className="rounded-xl border border-brand-border bg-brand-background p-md">
-                <h3 className="text-body-md font-semibold text-brand-dark">
-                  Contribution Breakdown
-                </h3>
+                  <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                    <h4 className="text-body-lg font-semibold text-brand-dark">
+                      Activity Timeline
+                    </h4>
 
-                <div className="mt-md space-y-md">
-                  {contributors.map((person) => (
-                    <div
-                      key={person.name}
-                      className="border-b border-brand-border pb-sm last:border-b-0"
-                    >
-                      <p className="text-body-md font-semibold text-brand-dark">
-                        {person.name}
-                      </p>
-                      <p className="mt-xs text-body-sm text-brand-dark/70">
-                        {person.commits}
-                      </p>
-                      <p className="text-body-sm text-brand-dark/70">
-                        {person.issue}
-                      </p>
+                    <div className="mt-md space-y-md">
+                      {timeline.map((item, index) => (
+                        <div
+                          key={`${item.date}-${index}`}
+                          className="grid grid-cols-[5rem_1fr_2.5rem] items-center gap-md border-b border-brand-dark/10 pb-sm"
+                        >
+                          <div className="text-body-md text-brand-dark/60">
+                            {item.date}
+                          </div>
+
+                          <div className="flex items-center gap-sm text-body-md text-brand-dark/70">
+                            <span className="text-brand-dark/40">↑</span>
+                            <span>{item.text}</span>
+                          </div>
+
+                          <div className="flex h-lg w-lg items-center justify-center rounded-xl bg-brand-accent/50 text-body-xs font-medium text-brand-dark">
+                            {item.initials}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Activity Timeline
-            </h2>
-
-            <div className="mt-lg space-y-md">
-              {timeline.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between rounded-xl border border-brand-border bg-brand-background px-md py-sm"
-                >
-                  <p className="text-body-md text-brand-dark">{item}</p>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-accent/20 text-xs font-semibold text-brand-accent">
-                    U
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-        </div>
 
-        <div className="space-y-lg">
-          <Card>
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Sprint Summary
-            </h2>
+                <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                  <h4 className="text-body-lg font-semibold text-brand-dark">
+                    Contribution Breakdown
+                  </h4>
 
-            <div className="mt-md space-y-sm text-body-md text-brand-dark/70">
-              <p>
-                The team is making steady progress on dashboard implementation
-                and API integration.
-              </p>
-              <p>
-                Most active contributors this sprint are Tom Jones and Ella
-                Green.
-              </p>
-              <p>
-                Focus for the remaining sprint period is closing open issues and
-                improving reliability.
-              </p>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Upcoming Goals
-            </h2>
-
-            <ul className="mt-md space-y-sm text-body-md text-brand-dark/70">
-              <li>Finish backend API connection</li>
-              <li>Resolve error handling issues</li>
-              <li>Prepare sprint review summary</li>
-            </ul>
-          </Card>
-        </div>
-      </div>
-    </PageContainer>
+                  <div className="mt-md space-y-lg">
+                    {contributors.map((person) => (
+                      <div
+                        key={person.name}
+                        className="border-b border-brand-dark/10 pb-md"
+                      >
+                        <p className="text-body-lg font-semibold text-brand-dark">
+                          {person.name}
+                        </p>
+                        <p className="mt-xs text-body-md text-brand-dark/50">
+                          {person.commits}
+                        </p>
+                        <p className="text-body-md text-brand-dark/50">
+                          {person.issue}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </Card>
+      </PageContainer>
+    </div>
   );
 }

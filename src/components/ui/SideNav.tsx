@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, RefreshCw, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -20,7 +20,7 @@ export default function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex w-56 shrink-0 self-stretch border-r border-brand-border bg-brand-surface px-md py-xl">
+    <nav className="flex w-56 shrink-0 self-stretch border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
       <div className="flex min-h-screen w-full flex-col">
         {/* Logo */}
         <div className="mb-xl flex flex-col items-center gap-sm">
@@ -39,8 +39,8 @@ export default function SideNav() {
                 href={item.href}
                 className={
                   isActive
-                    ? "rounded-lg bg-brand-accent/10 px-sm py-xs text-body-md font-semibold text-brand-accent"
-                    : "rounded-lg px-sm py-xs text-body-md text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
+                    ? "rounded-xl bg-brand-accent/10 px-md py-sm text-body-md font-semibold text-brand-accent"
+                    : "rounded-xl px-md py-sm text-body-md text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
                 }
               >
                 {item.label}
@@ -61,21 +61,22 @@ export default function SideNav() {
                 href={item.href}
                 className={
                   isActive
-                    ? "flex items-center gap-sm rounded-lg bg-brand-accent/10 px-sm py-xs text-body-sm font-semibold text-brand-accent"
-                    : "flex items-center gap-sm rounded-lg px-sm py-xs text-body-sm text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
+                    ? "flex items-center gap-sm rounded-xl bg-brand-accent/10 px-md py-sm text-body-sm font-semibold text-brand-accent"
+                    : "flex items-center gap-sm rounded-xl px-md py-sm text-body-sm text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
                 }
               >
-                <Icon size={15} />
+                <Icon size={16} />
                 {item.label}
               </Link>
             );
           })}
 
+          {/* Logout */}
           <Link
             href="/logout"
-            className="flex items-center gap-sm rounded-lg px-sm py-xs text-body-sm text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
+            className="flex items-center gap-sm rounded-xl px-md py-sm text-body-sm text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
           >
-            <LogOut size={15} />
+            <LogOut size={16} />
             Log out
           </Link>
         </div>
