@@ -3,6 +3,7 @@
 import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -27,9 +28,13 @@ export default function SideNav() {
     <nav className="flex w-56 shrink-0 self-stretch border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
       <div className="flex min-h-screen w-full flex-col">
         {/* Logo */}
-        <div className="mb-xl flex flex-col items-center gap-sm">
-          <div className="h-14 w-14 rounded-xl bg-brand-accent/30" />
-          <p className="text-h3 font-semibold text-brand-accent">SprintHub</p>
+        <div className="mb-xl flex w-full flex-col items-center gap-sm px-xs">
+          <div className="h-14 w-14 shrink-0 rounded-xl bg-brand-accent/30" />
+          <SprintHubTitle
+            as="p"
+            size="md"
+            className="w-full text-center leading-tight"
+          />
         </div>
 
         {/* Main nav links */}

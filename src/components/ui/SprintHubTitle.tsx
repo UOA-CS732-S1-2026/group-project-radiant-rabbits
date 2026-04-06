@@ -5,7 +5,7 @@ export type SprintHubTitleSize = "hero" | "lg" | "md" | "sm";
 const sizeClasses: Record<SprintHubTitleSize, string> = {
   hero: "text-4xl leading-[1.08] sm:text-5xl md:text-6xl",
   lg: "text-2xl leading-tight sm:text-3xl",
-  md: "text-lg leading-tight sm:text-xl",
+  md: "text-xl leading-tight sm:text-2xl",
   sm: "text-base leading-tight sm:text-lg",
 };
 
