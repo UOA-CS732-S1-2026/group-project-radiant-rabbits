@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { triggerSync } from "@/app/lib/syncService";
 import { Group } from "../../lib/models";
 
 // Helper function to generate a random 8-character invite code
@@ -54,6 +55,13 @@ export async function POST(request: Request) {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    // Fire-and-forget: start syncing GitHub data in the background.
+    // This doesn't block response — the user sees "Group Created" while the sync runs behind the scenes.
+    const sessionWithToken = session as { accessToken?: string };
+    if (sessionWithToken.accessToken) {
+      triggerSync(group._id.toString(), sessionWithToken.accessToken);
+    }
 
     // Return the created group info with a success message
     return NextResponse.json(
