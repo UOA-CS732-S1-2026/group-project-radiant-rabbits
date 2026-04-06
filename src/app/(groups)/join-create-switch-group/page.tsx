@@ -4,17 +4,17 @@ import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
 const DUMMY_REPO_NAMES = [
   "group-project-radiant-rabbits",
-  "sprint-hub",
-  "team-alpha",
-  "team-beta",
-  "team-gamma",
-  "team-delta",
+  "sprint-hub-project",
+  "team-alph-project",
+  "team-beta-project",
+  "team-gamma-project",
+  "team-delta-project",
 ] as const;
 
 export default function JoinCreateSwitchGroupPage() {
   return (
     <div className="min-h-screen bg-brand-background px-6 py-10">
-      <div className="mx-auto w-full max-w-3xl rounded-3xl border border-brand-dark/10 bg-white/90 p-10 shadow-lg">
+      <div className="mx-auto w-full max-w-3xl">
         <header className="mb-10 text-center">
           <SprintHubTitle />
         </header>
