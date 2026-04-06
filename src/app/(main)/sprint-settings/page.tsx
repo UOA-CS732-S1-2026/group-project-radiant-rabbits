@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
 import PageContainer from "@/components/ui/PageContainer";
 import SectionHeading from "@/components/ui/SectionHeading";
 
@@ -36,64 +37,55 @@ export default function SprintSettings() {
             Sprint Configuration
           </h2>
 
-          <div className="flex flex-wrap items-end gap-lg">
-            <div className="flex min-w-[220px] flex-col gap-xs">
-              <label
-                htmlFor="project-start"
-                className="text-body-sm font-medium text-brand-dark/70"
-              >
-                Project Start
-              </label>
-              <input
+          {/* 🔥 FIXED ALIGNMENT */}
+          <div className="flex flex-wrap items-start gap-lg">
+            <div className="min-w-[220px]">
+              <Input
                 id="project-start"
+                label="Project Start"
                 type="date"
                 value={projectStart}
                 onChange={(e) => setProjectStart(e.target.value)}
-                className="cursor-pointer rounded-lg border border-brand-dark/15 bg-brand-background px-md py-sm text-body-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-accent"
               />
             </div>
 
-            <div className="flex min-w-[220px] flex-col gap-xs">
-              <label
-                htmlFor="project-end"
-                className="text-body-sm font-medium text-brand-dark/70"
-              >
-                Project End
-              </label>
-              <input
+            <div className="min-w-[220px]">
+              <Input
                 id="project-end"
+                label="Project End"
                 type="date"
                 value={projectEnd}
                 onChange={(e) => setProjectEnd(e.target.value)}
-                className="cursor-pointer rounded-lg border border-brand-dark/15 bg-brand-background px-md py-sm text-body-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-accent"
               />
             </div>
 
-            <div className="flex min-w-[180px] flex-col gap-xs">
-              <label
-                htmlFor="sprint-length"
-                className="text-body-sm font-medium text-brand-dark/70"
-              >
-                Sprint Length
-              </label>
-
-              <div className="flex items-center gap-sm">
-                <input
-                  id="sprint-length"
-                  type="number"
-                  min={1}
-                  max={8}
-                  value={sprintLength}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (val >= 1 && val <= 8) {
-                      setSprintLength(val);
-                    }
-                  }}
-                  className="w-20 rounded-lg border border-brand-dark/15 bg-brand-background px-md py-sm text-center text-body-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                />
-                <span className="text-body-sm text-brand-dark/60">weeks</span>
-              </div>
+            <div className="min-w-[180px]">
+              <Input
+                id="sprint-length"
+                label="Sprint Length"
+                type="number"
+                value={sprintLength}
+                min={1}
+                max={4}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (!Number.isNaN(val) && val >= 1 && val <= 4) {
+                    setSprintLength(val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    e.key !== "ArrowUp" &&
+                    e.key !== "ArrowDown" &&
+                    e.key !== "Tab"
+                  ) {
+                    e.preventDefault();
+                  }
+                }}
+                onPaste={(e) => e.preventDefault()}
+                className="w-20 text-center"
+              />
+              <p className="mt-xs text-body-sm text-brand-dark/60">weeks</p>
             </div>
 
             <div className="ml-auto">
