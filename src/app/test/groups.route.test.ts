@@ -1,4 +1,3 @@
-import { group } from "console";
 import { getServerSession } from "next-auth/next";
 import { checkRepoAccess } from "@/app/lib/githubService";
 import { Group } from "@/app/lib/models";
@@ -90,7 +89,7 @@ describe("POST /api/groups", () => {
 
     const request = new Request("http://localhost:3000/api/groups", {
       method: "POST",
-      body: JSON.stringify({ name: "Test Group", description: "Tester" }),
+      body: JSON.stringify({ description: "Tester" }),
       headers: { "Content-Type": "application/json" },
     });
 
@@ -110,7 +109,7 @@ describe("POST /api/groups", () => {
 
     const request = new Request("http://localhost:3000/api/groups", {
       method: "POST",
-      body: JSON.stringify({ name: "", description: "" }),
+      body: JSON.stringify({ description: "" }),
       headers: { "Content-Type": "application/json" },
     });
 
@@ -118,7 +117,7 @@ describe("POST /api/groups", () => {
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body).toEqual({ error: "Name and description is required" });
+    expect(body).toEqual({ error: "Description is required" });
   });
 
   // Test 3: test case for successful group creation
@@ -134,7 +133,7 @@ describe("POST /api/groups", () => {
 
     mockGroupCreate.mockResolvedValue({
       _id: "new-group-id",
-      name: "Test Group",
+      name: "test-name",
       description: "This is a test group",
       inviteCode: "ABCDEFG1",
       members: ["123"],
@@ -151,7 +150,6 @@ describe("POST /api/groups", () => {
     const request = new Request("http://localhost:3000/api/groups", {
       method: "POST",
       body: JSON.stringify({
-        name: "Test Group",
         description: "This is a test group",
         repoOwner: "test-owner",
         repoName: "test-name",
@@ -164,7 +162,7 @@ describe("POST /api/groups", () => {
 
     expect(response.status).toBe(201);
     expect(body.message).toBe("Group Successfully Created");
-    expect(body.group.name).toBe("Test Group");
+    expect(body.group.name).toBe("test-name");
     expect(body.group.description).toBe("This is a test group");
     expect(body.group.createdBy).toBe("123");
     expect(mockConnectMongoDB).toHaveBeenCalledTimes(1);
@@ -180,7 +178,7 @@ describe("POST /api/groups", () => {
 
     const request = new Request("http://localhost:3000/api/groups", {
       method: "POST",
-      body: JSON.stringify({ name: "Test Group", description: "Tester" }),
+      body: JSON.stringify({ description: "Tester" }),
       headers: { "Content-Type": "application/json" },
     });
 
@@ -206,7 +204,6 @@ describe("POST /api/groups", () => {
     const request = new Request("http://localhost:3000/api/groups", {
       method: "POST",
       body: JSON.stringify({
-        name: "Test Group",
         description: "Tester",
         repoOwner: "owner",
         repoName: "repo",
@@ -237,7 +234,6 @@ describe("POST /api/groups", () => {
     const request = new Request("http://localhost:3000/api/groups", {
       method: "POST",
       body: JSON.stringify({
-        name: "Test Group",
         description: "Tester",
         repoOwner: "owner",
         repoName: "repo",

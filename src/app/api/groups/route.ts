@@ -41,12 +41,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, description, repoOwner, repoName } = await request.json();
+    const { description, repoOwner, repoName } = await request.json();
 
     // If the user does not input a name or description, return an error
-    if (!name || !description) {
+    if (!description) {
       return NextResponse.json(
-        { error: "Name and description is required" },
+        { error: "Description is required" },
         { status: 400 },
       );
     }
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     const inviteCode = generateInviteCode();
 
     const group = await Group.create({
-      name: name,
+      name: repoName,
       description: description,
       inviteCode: inviteCode,
       members: [session.user.id],
