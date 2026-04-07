@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f2fdff;
+  --background: #ffffff;
   --foreground: #091636;
 }
 
@@ -9,7 +9,7 @@
   /* Brand colors */
   --color-brand-primary: #7bbcfe;
   --color-brand-dark: #091636;
-  --color-brand-background: #f2fdff;
+  --color-brand-background: #ffffff;
   --color-brand-accent: #b8a9fe;
   --color-brand-surface: #ffffff;
 
