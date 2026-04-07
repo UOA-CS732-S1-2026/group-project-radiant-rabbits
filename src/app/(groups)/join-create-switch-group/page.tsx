@@ -29,6 +29,17 @@ const DUMMY_CARDS: Record<
     "Blank group · name later",
     "Import from GitHub org",
     "Duplicate last semester’s group",
+    "New group from template · CS73",
+    "Blank group · name lat",
+    "Import from GitHub o",
+    "Duplicate last semester’s",
+    "New group from template · CS7",
+    "Blank group · name late",
+    "Import from GitHub",
+    "Duplicate last semester",
+    "Blank group · name ",
+    "Import from ",
+    "Duplicate last ",
   ],
   current: ["UOA-CS732 / radiant-rabbits (you)", "Study group · design review"],
 };
@@ -39,7 +50,7 @@ export default function JoinCreateSwitchGroupPage() {
     DUMMY_CARDS[tab as keyof typeof DUMMY_CARDS] ?? DUMMY_CARDS.join;
 
   return (
-    <div className="min-h-screen bg-brand-background px-6 py-10">
+    <div className="min-h-screen bg-brand-background px-6 pb-10 pt-20">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-10 text-center">
           <SprintHubTitle />
@@ -53,7 +64,7 @@ export default function JoinCreateSwitchGroupPage() {
         />
 
         <BorderedPanel className="p-lg">
-          <div className="max-h-[min(70vh,40rem)] overflow-y-auto pr-sm">
+          <div className="scrollbar-thumb-accent max-h-[min(50vh,28rem)] overflow-y-auto pr-sm">
             <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
               {cards.map((line) => (
                 <GroupCard key={`${tab}-${line}`}>
