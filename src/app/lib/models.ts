@@ -266,3 +266,46 @@ sprintTaskSchema.index(
 
 export const SprintTask =
   mongoose.models.SprintTask || mongoose.model("SprintTask", sprintTaskSchema);
+
+// Sprint schema
+
+const sprintSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    goal: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["PLANNING", "ACTIVE", "COMPLETED"],
+      default: "PLANNING",
+    },
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      required: true,
+    },
+  },
+  {
+    // createdAt/updatedAt are added automatically; createdAt satisfies the
+    // minimum shape expected by the GitHub sync logic.
+    timestamps: true,
+  },
+);
+
+sprintSchema.index({ group: 1, startDate: 1 });
+
+export const Sprint =
+  mongoose.models.Sprint || mongoose.model("Sprint", sprintSchema);
