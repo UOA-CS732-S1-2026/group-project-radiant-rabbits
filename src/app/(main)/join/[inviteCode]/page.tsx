@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { checkRepoAccess } from "@/app/lib/githubService";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import Button from "@/components/ui/Button";
@@ -10,7 +11,11 @@ import PageContainer from "@/components/ui/PageContainer";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 // Function to retrieve conditional logic for join page via invite code
-export async function joinInviteLogic(inviteCode: string, userName: string) {
+export async function joinInviteLogic(
+  inviteCode: string,
+  userName: string,
+  accessToken: string,
+) {
   try {
     // Connect to database
     await connectMongoDB();
@@ -29,6 +34,18 @@ export async function joinInviteLogic(inviteCode: string, userName: string) {
     // If user is already a member, return existing member error
     if (isAlreadyMember) {
       return { error: "Already Member", group };
+    }
+
+    // Check if the user has access to the repository linked to the group
+    const repoAccess = await checkRepoAccess(
+      accessToken,
+      group.repoOwner,
+      group.repoName,
+    );
+
+    // If the user doesn't have repository access, return access error
+    if (!repoAccess) {
+      return { error: "No Repository Access" };
     }
 
     // Else, the user should be able to join the group
@@ -54,6 +71,7 @@ export default async function JoinInvitePage({
   // Retrieving invite code and GitHub Auth session
   const { inviteCode } = await params;
   const session = await getServerSession(options);
+  const sessionWithToken = session as { accessToken?: string };
 
   // Check if user has logged in with a valid Github account
   if (!session?.user?.name) {
@@ -62,7 +80,11 @@ export default async function JoinInvitePage({
   }
 
   // Retrieving state from invite logic conditions
-  const result = await joinInviteLogic(inviteCode, session.user.name);
+  const result = await joinInviteLogic(
+    inviteCode,
+    session.user.name,
+    sessionWithToken.accessToken as string,
+  );
 
   // If the database fails to connect, show error and redirect to groups page
   if (result.error === "Database Connection Error") {
@@ -109,6 +131,24 @@ export default async function JoinInvitePage({
           </p>
           <Link href={`/dashboard/${result.group?._id}`}>
             <Button type="button">Go to Group Dashboard</Button>
+          </Link>
+        </Card>
+      </PageContainer>
+    );
+  }
+
+  // If the user doesn't have repository access linked to the group, redirect the user to the groups page
+  if (result.error === "No Repository Access") {
+    return (
+      <PageContainer>
+        <SectionHeading title="Access Denied" />
+        <Card>
+          <p className="mb-6 text-gray-700">
+            You do not have access to the associated GitHub repository for this
+            group.
+          </p>
+          <Link href="/group">
+            <Button type="button">Back to Groups</Button>
           </Link>
         </Card>
       </PageContainer>
