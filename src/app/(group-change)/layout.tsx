@@ -1,4 +1,4 @@
-export default function GroupsLayout({
+export default function GroupChangeLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
