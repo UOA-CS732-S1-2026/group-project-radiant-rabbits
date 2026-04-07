@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
@@ -73,9 +72,7 @@ export default async function JoinInvitePage({
           <p className="mb-6 text-gray-700">
             We have encountered an error connecting to the database.
           </p>
-          <Link href="/group">
-            <Button type="button">Back to Groups</Button>
-          </Link>
+          <Button href="/group">Back to Groups</Button>
         </Card>
       </PageContainer>
     );
@@ -90,9 +87,7 @@ export default async function JoinInvitePage({
           <p className="mb-6 text-gray-700">
             The code {inviteCode} is invalid.
           </p>
-          <Link href="/group">
-            <Button type="button">Back to Groups</Button>
-          </Link>
+          <Button href="/group">Back to Groups</Button>
         </Card>
       </PageContainer>
     );
@@ -107,9 +102,9 @@ export default async function JoinInvitePage({
           <p className="mb-6 text-gray-700">
             {`You are already a member of the ${result.group.name} group.`}
           </p>
-          <Link href={`/dashboard/${result.group?._id}`}>
-            <Button type="button">Go to Group Dashboard</Button>
-          </Link>
+          <Button href={`/dashboard/${result.group?._id}`}>
+            Go to Group Dashboard
+          </Button>
         </Card>
       </PageContainer>
     );
@@ -124,9 +119,9 @@ export default async function JoinInvitePage({
           {" "}
           You have successfully joined {result.group?.name}!
         </p>
-        <Link href={`/dashboard/${result.group?._id}`}>
-          <Button type="button">Go to Group Dashboard</Button>
-        </Link>
+        <Button href={`/dashboard/${result.group?._id}`}>
+          Go to Group Dashboard
+        </Button>
       </Card>
     </PageContainer>
   );

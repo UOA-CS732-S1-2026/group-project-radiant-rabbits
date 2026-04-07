@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Button from "@/components/ui/Button";
 import GroupCard from "@/components/ui/GroupCard";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
@@ -17,7 +18,6 @@ function nextSprintUnit(current: SprintLengthUnit): SprintLengthUnit {
   return SPRINT_UNITS[(i + 1) % SPRINT_UNITS.length];
 }
 
-/** `YYYY-MM-DD` for native `<input type="date">` (local calendar date). */
 function toDateInputValue(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -46,12 +46,20 @@ export default function SetGroupPage() {
   return (
     <div className="min-h-screen bg-brand-background px-6 pb-10 pt-20">
       <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-10 text-center">
+        <header className="mb-8 flex flex-col items-center text-center">
           <SprintHubTitle />
+          <Button
+            variant="blue-help"
+            shape="pill"
+            className="mt-4 shrink-0"
+            aria-label="Help"
+          >
+            ?
+          </Button>
         </header>
 
-        <div className="flex justify-center p-lg">
-          <div className="w-full max-w-full min-w-0 sm:w-fit">
+        <div className="flex justify-center p-lg pt-0">
+          <div className="flex w-full max-w-full min-w-0 flex-col items-stretch gap-lg sm:w-fit">
             <GroupCard>
               <div className="grid w-full min-w-0 grid-cols-1 gap-y-2 sm:grid-cols-[11rem_auto] sm:items-center sm:gap-x-6 sm:gap-y-4">
                 <label
@@ -118,6 +126,19 @@ export default function SetGroupPage() {
                 </div>
               </div>
             </GroupCard>
+
+            <div className="flex w-full items-center justify-between gap-md">
+              <Button
+                variant="grey"
+                href="/join-create-switch-group"
+                className="py-2.5 text-body-md"
+              >
+                Back
+              </Button>
+              <Button href="/dashboard" className="py-2.5 text-body-md">
+                Create Group
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -22,7 +22,7 @@ export default function RepositoryPage() {
             />
             <div className="flex gap-sm">
               <Button type="submit">Connect Repository</Button>
-              <Button type="button" variant="secondary">
+              <Button type="button" variant="white">
                 Test Connection
               </Button>
             </div>

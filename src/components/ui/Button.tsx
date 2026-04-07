@@ -1,33 +1,66 @@
+import Link from "next/link";
+
 type ButtonProps = {
   children: React.ReactNode;
-  variant?: "primary" | "secondary";
+  variant?: "purple" | "white" | "grey" | "blue-help";
+  shape?: "default" | "pill";
   type?: "button" | "submit";
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
+  href?: string;
+  "aria-label"?: string;
 };
 
 export default function Button({
   children,
-  variant = "primary",
+  variant = "purple",
+  shape = "default",
   type = "button",
   onClick,
   disabled,
   className = "",
+  href,
+  "aria-label": ariaLabel,
 }: ButtonProps) {
-  const base =
-    "rounded-xl px-md py-sm text-body-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-accent disabled:opacity-60 disabled:cursor-not-allowed";
-  const styles =
-    variant === "primary"
+  const layout =
+    shape === "pill"
+      ? "inline-flex items-center justify-center rounded-full px-4 py-2.5 text-body-sm font-semibold"
+      : "inline-flex items-center justify-center rounded-xl px-md py-sm text-body-sm font-medium";
+
+  const base = `${layout} transition disabled:opacity-60 disabled:cursor-not-allowed`;
+
+  const variantStyles =
+    variant === "purple"
       ? "bg-brand-accent text-white hover:opacity-90"
-      : "bg-white text-brand-dark border border-brand-accent hover:bg-brand-background";
+      : variant === "white"
+        ? "border border-brand-accent bg-white text-brand-dark hover:bg-brand-background"
+        : variant === "grey"
+          ? "bg-[#7A7A7A] text-white hover:opacity-90"
+          : "bg-brand-primary text-white shadow-sm hover:opacity-90";
+
+  const merged = `${base} ${variantStyles} ${className}`.trim();
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        aria-label={ariaLabel}
+        className={`no-underline ${merged} ${disabled ? "pointer-events-none opacity-60" : ""}`.trim()}
+        aria-disabled={disabled || undefined}
+      >
+        {children}
+      </Link>
+    );
+  }
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${styles} ${className}`}
+      aria-label={ariaLabel}
+      className={merged}
     >
       {children}
     </button>
