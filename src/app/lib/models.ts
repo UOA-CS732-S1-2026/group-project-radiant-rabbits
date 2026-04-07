@@ -28,11 +28,11 @@ const groupSchema = new Schema(
     ],
     repoOwner: {
       type: String,
-      required: true,
+      required: false,
     },
     repoName: {
       type: String,
-      required: true,
+      required: false,
     },
     createdBy: {
       type: String,

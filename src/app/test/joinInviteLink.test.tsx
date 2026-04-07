@@ -21,6 +21,10 @@ jest.mock("next/link", () => {
   };
 });
 
+jest.mock("@/app/lib/githubService", () => ({
+  checkRepoAccess: jest.fn().mockResolvedValue(true),
+}));
+
 const mockGetServerSession = getServerSession as jest.Mock;
 const mockRedirect = redirect as unknown as jest.Mock;
 
@@ -179,5 +183,42 @@ describe("JoinGroupPage - Logic & UI Integration", () => {
     ).toBeInTheDocument();
 
     spy.mockRestore();
+  });
+
+  // Test 6: User does not have repository access
+  it("Test 6 - Logic: User lacks GitHub repo access | UI: Show Access Denied Error", async () => {
+    const { checkRepoAccess } = require("@/app/lib/githubService");
+    checkRepoAccess.mockResolvedValueOnce(false);
+
+    mockGetServerSession.mockResolvedValue({
+      user: { id: "123", name: "Tester" },
+      accessToken: "token123",
+    });
+
+    // Set up database with a valid group
+    await Group.create({
+      name: "Testing Team",
+      inviteCode: "TEST123",
+      repoOwner: "test-owner",
+      repoName: "test-name",
+      members: [],
+      createdBy: "Tester",
+      description: "Test group",
+    });
+
+    // Call function to render page
+    const params = Promise.resolve({ inviteCode: "TEST123" });
+    const Page = await JoinInvitePage({ params });
+    render(Page);
+
+    // UI assertion - error message should display based on the UI logic we wrote earlier
+    expect(
+      screen.getByText(
+        /You do not have access to the associated GitHub repository for this group./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Back to Groups/i }),
+    ).toBeInTheDocument();
   });
 });
