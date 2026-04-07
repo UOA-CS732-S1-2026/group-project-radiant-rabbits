@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { Group } from "@/app/lib/models";
 import JoinInvitePage from "../(main)/join/[inviteCode]/page";
 import "@testing-library/jest-dom";
-const { MongoMemoryServer } = require("mongodb-memory-server");
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 jest.mock("next-auth/next");
 jest.mock("next/navigation");
@@ -28,7 +28,7 @@ jest.mock("@/app/lib/githubService", () => ({
 const mockGetServerSession = getServerSession as jest.Mock;
 const mockRedirect = redirect as unknown as jest.Mock;
 
-let mongoServer: any;
+let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
@@ -58,7 +58,7 @@ describe("JoinGroupPage - Logic & UI Integration", () => {
 
     try {
       await JoinInvitePage({ params });
-    } catch (e) {
+    } catch {
       // Catch to ensure the test doesn't fail
     }
 
