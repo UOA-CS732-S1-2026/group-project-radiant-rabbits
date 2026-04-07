@@ -25,10 +25,10 @@ export default function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex w-56 shrink-0 self-stretch border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
-      <div className="flex min-h-screen w-full flex-col">
+    <nav className="flex h-full w-56 shrink-0 flex-col overflow-hidden border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
+      <div className="flex min-h-0 flex-1 flex-col">
         {/* Logo */}
-        <div className="mb-xl flex w-full flex-col items-center gap-md px-sm pb-md pt-2">
+        <div className="mb-xl flex shrink-0 flex-col items-center gap-md px-sm pb-md pt-2">
           <div className="p-3">
             <div className="h-14 w-14 shrink-0 rounded-xl bg-brand-accent/30" />
           </div>
@@ -39,29 +39,31 @@ export default function SideNav() {
           />
         </div>
 
-        {/* Main nav links */}
-        <div className="flex flex-col gap-xs">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
+        {/* Main nav links — scrolls only if space is tight */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="flex flex-col gap-xs pr-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={
-                  isActive
-                    ? "rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
-                    : "rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
-                }
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={
+                    isActive
+                      ? "rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
+                      : "rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
+                  }
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Bottom links */}
-        <div className="mt-auto flex flex-col gap-xs">
+        {/* Bottom links — pinned to viewport bottom */}
+        <div className="mt-md flex shrink-0 flex-col gap-xs border-t border-brand-dark/10 pt-md">
           {bottomItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
