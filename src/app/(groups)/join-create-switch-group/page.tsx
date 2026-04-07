@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import BorderedPanel from "@/components/ui/BorderedPanel";
 import GroupCard from "@/components/ui/GroupCard";
@@ -23,24 +24,17 @@ const DUMMY_CARDS: Record<
     "team-beta-project",
     "team-gamma-project",
     "team-delta-project",
+    "team-epsilon-project",
+    "team-zeta-project",
+    "team-eta-project",
+    "team-theta-project",
+    "team-iota-project",
+    "team-kappa-project",
+    "team-lambda-project",
+    "team-mu-project",
+    "team-nu-project",
   ],
-  create: [
-    "New group from template · CS732",
-    "Blank group · name later",
-    "Import from GitHub org",
-    "Duplicate last semester’s group",
-    "New group from template · CS73",
-    "Blank group · name lat",
-    "Import from GitHub o",
-    "Duplicate last semester’s",
-    "New group from template · CS7",
-    "Blank group · name late",
-    "Import from GitHub",
-    "Duplicate last semester",
-    "Blank group · name ",
-    "Import from ",
-    "Duplicate last ",
-  ],
+  create: ["Team a", "Team b", "Team c", "Team d"],
   current: ["UOA-CS732 / radiant-rabbits (you)", "Study group · design review"],
 };
 
@@ -67,11 +61,17 @@ export default function JoinCreateSwitchGroupPage() {
           <div className="scrollbar-thumb-accent max-h-[min(50vh,28rem)] overflow-y-auto pr-sm">
             <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
               {cards.map((line) => (
-                <GroupCard key={`${tab}-${line}`}>
-                  <p className="text-center text-body-md font-medium text-brand-dark">
-                    {line}
-                  </p>
-                </GroupCard>
+                <Link
+                  key={`${tab}-${line}`}
+                  href={tab === "create" ? "/set-group" : "/dashboard"}
+                  className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
+                >
+                  <GroupCard className="cursor-pointer transition-colors duration-150 hover:bg-slate-200">
+                    <p className="text-center text-body-md font-medium text-brand-dark">
+                      {line}
+                    </p>
+                  </GroupCard>
+                </Link>
               ))}
             </div>
           </div>
