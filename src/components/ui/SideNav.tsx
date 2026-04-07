@@ -28,8 +28,10 @@ export default function SideNav() {
     <nav className="flex w-56 shrink-0 self-stretch border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
       <div className="flex min-h-screen w-full flex-col">
         {/* Logo */}
-        <div className="mb-xl flex w-full flex-col items-center gap-sm px-xs">
-          <div className="h-14 w-14 shrink-0 rounded-xl bg-brand-accent/30" />
+        <div className="mb-xl flex w-full flex-col items-center gap-md px-sm pb-md pt-2">
+          <div className="p-3">
+            <div className="h-14 w-14 shrink-0 rounded-xl bg-brand-accent/30" />
+          </div>
           <SprintHubTitle
             as="p"
             size="md"
