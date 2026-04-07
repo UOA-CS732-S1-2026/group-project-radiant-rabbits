@@ -48,8 +48,8 @@ export default function SideNav() {
                 href={item.href}
                 className={
                   isActive
-                    ? "rounded-xl bg-brand-accent/10 px-md py-sm text-body-md font-semibold text-brand-accent"
-                    : "rounded-xl px-md py-sm text-body-md text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
+                    ? "rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
+                    : "rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
                 }
               >
                 {item.label}
@@ -70,8 +70,8 @@ export default function SideNav() {
                 href={item.href}
                 className={
                   isActive
-                    ? "flex items-center gap-sm rounded-xl bg-brand-accent/10 px-md py-sm text-body-sm font-semibold text-brand-accent"
-                    : "flex items-center gap-sm rounded-xl px-md py-sm text-body-sm text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
+                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-sm font-semibold text-brand-dark"
+                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-sm text-brand-dark transition hover:bg-brand-accent/10"
                 }
               >
                 <Icon size={16} />
@@ -83,7 +83,7 @@ export default function SideNav() {
           {/* Logout */}
           <Link
             href="/logout"
-            className="flex items-center gap-sm rounded-xl px-md py-sm text-body-sm text-brand-dark transition hover:bg-brand-accent/10 hover:text-brand-accent"
+            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-sm text-brand-dark transition hover:bg-brand-accent/10"
           >
             <LogOut size={16} />
             Log out
