@@ -38,6 +38,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Checking that the inputted invite code is valid (8 alphanumeric characters)
+    const isValidFormat =
+      inviteCode.length === 8 && /^[A-Z0-9]+$/i.test(inviteCode);
+
+    if (!isValidFormat) {
+      return NextResponse.json(
+        { error: "Invalid format. Please enter the 8-character invite code." },
+        { status: 400 },
+      );
+    }
+
     // Connect to MongoDB and find a group that matches the invite code
     await connectMongoDB();
 

@@ -1,5 +1,4 @@
 import { log } from "node:console";
-import { lstatSync } from "node:fs";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
