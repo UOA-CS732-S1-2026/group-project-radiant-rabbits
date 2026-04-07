@@ -3,6 +3,7 @@ import { lstatSync } from "node:fs";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { checkRepoAccess } from "@/app/lib/githubService";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
 import { Group } from "../../lib/models";
@@ -23,10 +24,20 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(options);
 
+    const sessionWithToken = session as { accessToken?: string };
+
     // Check if user has logged in with a valid Github account
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    // Ensure user has access token
+    if (!sessionWithToken.accessToken) {
+      return NextResponse.json(
+        { error: "GitHub access token missing. Please sign in again." },
         { status: 401 },
       );
     }
@@ -65,7 +76,18 @@ export async function POST(request: Request) {
     }
 
     // Check if the user has access to the associated repository with their GitHub account
-    edit;
+    const repoAccess = await checkRepoAccess(
+      sessionWithToken.accessToken,
+      repoOwner,
+      repoName,
+    );
+
+    if (!repoAccess) {
+      return NextResponse.json(
+        { error: "You do not have access to this GitHub repository" },
+        { status: 403 },
+      );
+    }
 
     // Otherwise, create the group and generate a unique invite code
     const inviteCode = generateInviteCode();
@@ -87,7 +109,6 @@ export async function POST(request: Request) {
 
     // Fire-and-forget: start syncing GitHub data in the background.
     // This doesn't block response — the user sees "Group Created" while the sync runs behind the scenes.
-    const sessionWithToken = session as { accessToken?: string };
     if (sessionWithToken.accessToken) {
       triggerSync(group._id.toString(), sessionWithToken.accessToken);
     }
