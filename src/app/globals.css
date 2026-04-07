@@ -2,10 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #091636;
 }
 
 @theme inline {
+  /* Brand colors */
+  --color-brand-primary: #7bbcfe;
+  --color-brand-dark: #091636;
+  --color-brand-background: #ffffff;
+  --color-brand-accent: #b8a9fe;
+  --color-brand-surface: #ffffff;
+
+  /* App colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
