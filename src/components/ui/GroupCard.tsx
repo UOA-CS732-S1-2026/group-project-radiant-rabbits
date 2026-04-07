@@ -11,11 +11,11 @@ export default function GroupCard({
 }: GroupCardProps) {
   return (
     <div
-      className="rounded-2xl p-[3px]"
+      className="w-full rounded-2xl p-[3px]"
       style={{ background: "linear-gradient(to right, #7BB8FF, #B8A9FE)" }}
     >
       <div
-        className={`rounded-2xl h-full w-full bg-[#F1F5F9] p-6 ${className}`}
+        className={`h-full w-full rounded-2xl bg-[#F1F5F9] p-6 ${className}`}
       >
         {children}
       </div>
