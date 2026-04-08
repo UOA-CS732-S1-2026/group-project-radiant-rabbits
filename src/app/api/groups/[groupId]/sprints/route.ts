@@ -116,8 +116,30 @@ export async function GET(
     const limitParam = url.searchParams.get("limit");
     const offsetParam = url.searchParams.get("offset");
 
-    const limit = limitParam ? Math.max(0, parseInt(limitParam, 10)) : 50;
-    const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10)) : 0;
+    let limit = 50;
+    let offset = 0;
+
+    if (limitParam !== null) {
+      const parsedLimit = Number(limitParam);
+      if (Number.isNaN(parsedLimit)) {
+        return NextResponse.json(
+          { error: "limit must be a valid number" },
+          { status: 400 },
+        );
+      }
+      limit = Math.max(0, Math.floor(parsedLimit));
+    }
+
+    if (offsetParam !== null) {
+      const parsedOffset = Number(offsetParam);
+      if (Number.isNaN(parsedOffset)) {
+        return NextResponse.json(
+          { error: "offset must be a valid number" },
+          { status: 400 },
+        );
+      }
+      offset = Math.max(0, Math.floor(parsedOffset));
+    }
 
     await connectMongoDB();
 
