@@ -77,7 +77,7 @@ export default function JoinCreateSwitchGroupPage() {
         />
 
         <BorderedPanel className="p-4 sm:p-5 md:p-6">
-          <div className="scrollbar-thumb-accent max-h-[min(44vh,28rem)] overflow-y-auto pr-1 sm:pr-2">
+          <div className="scrollbar-thumb-accent max-h-[calc(100dvh-20rem)] overflow-y-auto pr-1 sm:max-h-[calc(100dvh-24rem)] sm:pr-2">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
               {cards.map((card) => (
                 <Link
