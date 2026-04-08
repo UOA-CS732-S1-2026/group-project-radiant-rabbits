@@ -19,11 +19,11 @@ const tabClasses: Record<
 > = {
   lg: {
     shell:
-      "flex w-full max-w-full flex-wrap items-center justify-center gap-1 rounded-xl bg-slate-100/90 p-1.5 sm:w-fit sm:flex-nowrap",
+      "flex w-full max-w-full flex-wrap items-center justify-center gap-0.5 rounded-xl bg-slate-100/90 p-1 sm:w-fit sm:flex-nowrap",
     active:
-      "min-h-10 shrink-0 rounded-lg bg-brand-surface px-3.5 py-2 text-center text-body-md font-semibold text-brand-dark shadow-sm sm:min-h-11 sm:px-4 sm:py-2.5 sm:text-body-lg",
+      "min-h-9 shrink-0 rounded-lg bg-brand-surface px-3 py-1.5 text-center text-body-sm font-semibold text-brand-dark shadow-sm sm:min-h-10 sm:px-3.5 sm:py-2 sm:text-body-md",
     inactive:
-      "min-h-10 shrink-0 rounded-lg px-3.5 py-2 text-center text-body-md font-medium text-brand-dark/60 transition hover:bg-brand-surface/60 hover:text-brand-dark/85 sm:min-h-11 sm:px-4 sm:py-2.5 sm:text-body-lg",
+      "min-h-9 shrink-0 rounded-lg px-3 py-1.5 text-center text-body-sm font-medium text-brand-dark/60 transition hover:bg-brand-surface/60 hover:text-brand-dark/85 sm:min-h-10 sm:px-3.5 sm:py-2 sm:text-body-md",
   },
   sm: {
     shell:

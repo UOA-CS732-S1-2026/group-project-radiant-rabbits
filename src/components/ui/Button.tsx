@@ -6,7 +6,6 @@ type ButtonProps = {
   children: React.ReactNode;
   variant?: "purple" | "white" | "grey" | "blue-help";
   shape?: "default" | "pill";
-  /** `lg` matches primary actions (e.g. set-group). `sm` is compact for toolbars and secondary UI. */
   size?: ButtonSize;
   type?: "button" | "submit";
   onClick?: () => void;
@@ -36,17 +35,17 @@ export default function Button({
   const defaultTextSize = hasExplicitTextSize
     ? ""
     : size === "lg"
-      ? "text-body-md sm:text-body-lg"
+      ? "text-body-sm sm:text-body-md"
       : "text-body-sm sm:text-body-md";
 
   const layoutDefault =
     size === "lg"
-      ? `inline-flex items-center justify-center rounded-xl px-md py-sm font-medium ${defaultTextSize}`.trim()
+      ? `inline-flex items-center justify-center rounded-xl px-3 py-1.5 font-medium ${defaultTextSize}`.trim()
       : `inline-flex min-h-9 items-center justify-center rounded-xl px-sm py-1.5 font-medium ${defaultTextSize}`.trim();
 
   const layoutPill =
     size === "lg"
-      ? `inline-flex items-center justify-center rounded-full px-4 py-2.5 font-semibold ${defaultTextSize}`.trim()
+      ? `inline-flex items-center justify-center rounded-full px-3.5 py-2 font-semibold ${defaultTextSize}`.trim()
       : `inline-flex min-h-9 items-center justify-center rounded-full px-3 py-1.5 font-semibold ${defaultTextSize}`.trim();
 
   const layout = shape === "pill" ? layoutPill : layoutDefault;

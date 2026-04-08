@@ -13,10 +13,7 @@ const TAB_OPTIONS = [
   { id: "current", label: "Current Groups" },
 ] as const;
 
-/** Repo / group title with optional owner line (join + current tabs). */
-type GroupListCard =
-  | { name: string; repoOwner: string }
-  | { name: string; repoOwner?: undefined };
+type GroupListCard = { name: string; repoOwner: string };
 
 const DUMMY_CARDS: Record<
   (typeof TAB_OPTIONS)[number]["id"],
@@ -43,10 +40,10 @@ const DUMMY_CARDS: Record<
     { name: "team-nu-project", repoOwner: "nu-research" },
   ],
   create: [
-    { name: "Team a" },
-    { name: "Team b" },
-    { name: "Team c" },
-    { name: "Team d" },
+    { name: "Team a", repoOwner: "UOA-CS732-S1-2026" },
+    { name: "Team b", repoOwner: "cs732-course-org" },
+    { name: "Team c", repoOwner: "study-group-uoa" },
+    { name: "Team d", repoOwner: "radiant-rabbits-class" },
   ],
   current: [
     {
@@ -79,25 +76,23 @@ export default function JoinCreateSwitchGroupPage() {
           onChange={setTab}
         />
 
-        <BorderedPanel className="p-6 sm:p-8 md:p-10">
-          <div className="scrollbar-thumb-accent max-h-[min(58vh,40rem)] overflow-y-auto pr-1 sm:pr-2">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:gap-10">
+        <BorderedPanel className="p-4 sm:p-5 md:p-6">
+          <div className="scrollbar-thumb-accent max-h-[min(44vh,28rem)] overflow-y-auto pr-1 sm:pr-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
               {cards.map((card) => (
                 <Link
-                  key={`${tab}-${card.name}-${"repoOwner" in card ? card.repoOwner : "create"}`}
+                  key={`${tab}-${card.name}-${card.repoOwner}`}
                   href={tab === "create" ? "/set-group" : "/dashboard"}
                   className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
                 >
                   <GroupCard className="cursor-pointer transition-colors duration-150 hover:bg-slate-200">
-                    <div className="flex flex-col items-center gap-2 text-center sm:gap-2.5">
-                      <p className="text-body-lg font-semibold leading-snug text-brand-dark sm:text-xl">
+                    <div className="flex flex-col items-center gap-1 text-center sm:gap-1.5">
+                      <p className="text-body-md font-semibold leading-snug text-brand-dark sm:text-body-lg">
                         {card.name}
                       </p>
-                      {"repoOwner" in card ? (
-                        <p className="text-body-md leading-snug text-[#7A7A7A]">
-                          {card.repoOwner}
-                        </p>
-                      ) : null}
+                      <p className="text-body-sm leading-snug text-[#7A7A7A] sm:text-body-md">
+                        {card.repoOwner}
+                      </p>
                     </div>
                   </GroupCard>
                 </Link>

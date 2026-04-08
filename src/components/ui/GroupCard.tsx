@@ -15,7 +15,7 @@ export default function GroupCard({
       style={{ background: "linear-gradient(to right, #7BB8FF, #B8A9FE)" }}
     >
       <div
-        className={`h-full w-full rounded-2xl bg-[#F1F5F9] p-8 md:p-10 ${className}`}
+        className={`h-full w-full rounded-2xl bg-[#F1F5F9] px-4 py-4 md:px-5 md:py-5.5 ${className}`}
       >
         {children}
       </div>
