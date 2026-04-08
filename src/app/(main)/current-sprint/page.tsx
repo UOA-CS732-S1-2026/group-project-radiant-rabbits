@@ -1,6 +1,10 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import BorderedPanel from "@/components/ui/BorderedPanel";
 import Card from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 
 const sprintTasks = [
   { id: "#124", title: "Build Dashboard", status: "Closed" },
@@ -83,28 +87,25 @@ function BreakdownTile({
   );
 }
 
-function FilterChip({
-  label,
-  active = false,
-}: {
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className={
-        active
-          ? "rounded-lg bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-md"
-          : "rounded-lg px-sm py-xs text-body-xs text-brand-dark/70"
-      }
-    >
-      {label}
-    </button>
-  );
-}
+const ISSUE_FILTER_OPTIONS = [
+  { id: "all", label: "All Issues" },
+  { id: "open", label: "Open" },
+  { id: "closed", label: "Closed" },
+] as const;
 
 export default function CurrentSprintPage() {
+  const [issueFilter, setIssueFilter] = useState<string>("all");
+
+  const filteredSprintTasks = useMemo(() => {
+    if (issueFilter === "open") {
+      return sprintTasks.filter((t) => t.status === "Open");
+    }
+    if (issueFilter === "closed") {
+      return sprintTasks.filter((t) => t.status === "Closed");
+    }
+    return sprintTasks;
+  }, [issueFilter]);
+
   return (
     <div className="min-h-screen bg-brand-background">
       <PageContainer>
@@ -187,15 +188,17 @@ export default function CurrentSprintPage() {
                       Sprint Tasks
                     </h4>
 
-                    <div className="mt-md inline-flex rounded-lg bg-brand-background p-xs">
-                      <FilterChip label="All Issues" active />
-                      <FilterChip label="Open" />
-                      <FilterChip label="Closed" />
-                    </div>
+                    <SegmentedControl
+                      className="mt-md !justify-start"
+                      size="sm"
+                      options={ISSUE_FILTER_OPTIONS}
+                      value={issueFilter}
+                      onChange={setIssueFilter}
+                    />
 
                     <div className="mt-lg overflow-y-auto pr-sm">
                       <div className="space-y-md">
-                        {sprintTasks.map((task) => (
+                        {filteredSprintTasks.map((task) => (
                           <div
                             key={task.id}
                             className="grid grid-cols-[5rem_1fr_5rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"

@@ -6,9 +6,9 @@ import GroupCard from "@/components/ui/GroupCard";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
 const fieldColumnClass =
-  "w-full max-w-[14rem] min-w-0 justify-self-start sm:max-w-[13rem]";
+  "w-full max-w-[18rem] min-w-0 justify-self-start sm:max-w-[17rem]";
 
-const dateFieldClass = `${fieldColumnClass} rounded-lg border border-brand-accent/50 bg-brand-surface px-sm py-1.5 text-body-sm leading-tight text-brand-dark shadow-sm outline-none transition-shadow [color-scheme:light] focus:ring-2 focus:ring-brand-primary`;
+const dateFieldClass = `${fieldColumnClass} min-h-[3.25rem] rounded-lg border border-brand-accent/50 bg-brand-surface px-md py-2.5 text-body-lg leading-tight text-brand-dark shadow-sm outline-none transition-shadow [color-scheme:light] focus:ring-2 focus:ring-brand-primary sm:min-h-14`;
 
 const SPRINT_UNITS = ["days", "weeks", "months"] as const;
 type SprintLengthUnit = (typeof SPRINT_UNITS)[number];
@@ -44,27 +44,28 @@ export default function SetGroupPage() {
     useState<SprintLengthUnit>("days");
 
   return (
-    <div className="min-h-screen bg-brand-background px-6 pb-10 pt-20">
-      <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-8 flex flex-col items-center text-center">
+    <div className="min-h-screen bg-brand-background px-5 pb-14 pt-16 sm:px-8 sm:pb-16 sm:pt-20 md:px-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-10 flex flex-col items-center text-center sm:mb-12">
           <SprintHubTitle />
           <Button
             variant="blue-help"
             shape="pill"
-            className="mt-4 shrink-0"
+            size="lg"
+            className="mt-5 min-h-12 min-w-12 shrink-0 p-0 text-lg font-semibold leading-none sm:min-h-14 sm:min-w-14 sm:text-xl"
             aria-label="Help"
           >
             ?
           </Button>
         </header>
 
-        <div className="flex justify-center p-lg pt-0">
-          <div className="flex w-full max-w-full min-w-0 flex-col items-stretch gap-lg sm:w-fit">
+        <div className="flex justify-center px-0 pt-0 sm:px-lg">
+          <div className="flex w-full max-w-full min-w-0 flex-col items-stretch gap-8 sm:w-fit sm:gap-10">
             <GroupCard>
-              <div className="grid w-full min-w-0 grid-cols-1 gap-y-2 sm:grid-cols-[11rem_auto] sm:items-center sm:gap-x-6 sm:gap-y-4">
+              <div className="grid w-full min-w-0 grid-cols-1 gap-y-3 sm:grid-cols-[minmax(0,13rem)_1fr] sm:items-center sm:gap-x-8 sm:gap-y-5">
                 <label
                   htmlFor="set-group-start"
-                  className="text-body-md font-semibold text-brand-dark"
+                  className="text-body-lg font-semibold text-brand-dark sm:text-xl"
                 >
                   Project Start
                 </label>
@@ -78,7 +79,7 @@ export default function SetGroupPage() {
 
                 <label
                   htmlFor="set-group-end"
-                  className="text-body-md font-semibold text-brand-dark"
+                  className="text-body-lg font-semibold text-brand-dark sm:text-xl"
                 >
                   Project End
                 </label>
@@ -92,14 +93,14 @@ export default function SetGroupPage() {
 
                 <label
                   htmlFor="set-group-sprint"
-                  className="text-body-md font-semibold text-brand-dark"
+                  className="text-body-lg font-semibold text-brand-dark sm:text-xl"
                 >
                   Sprint Length
                 </label>
                 <div
-                  className={`grid min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-brand-accent/50 bg-brand-surface shadow-sm focus-within:ring-2 focus-within:ring-brand-primary ${fieldColumnClass}`}
+                  className={`grid min-h-[3.25rem] min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-brand-accent/50 bg-brand-surface shadow-sm focus-within:ring-2 focus-within:ring-brand-primary sm:min-h-14 ${fieldColumnClass}`}
                 >
-                  <div className="flex min-h-0 min-w-0 items-center justify-center border-r border-brand-accent/30 py-1.5">
+                  <div className="flex min-h-0 min-w-0 items-center justify-center border-r border-brand-accent/30 py-2">
                     <input
                       id="set-group-sprint"
                       type="number"
@@ -109,13 +110,13 @@ export default function SetGroupPage() {
                         const n = Number(e.target.value);
                         if (!Number.isNaN(n) && n >= 1) setSprintLength(n);
                       }}
-                      className="w-full min-w-0 border-0 bg-transparent text-center text-body-sm text-brand-dark outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      className="w-full min-w-0 border-0 bg-transparent text-center text-body-lg text-brand-dark outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       aria-label="Sprint length amount"
                     />
                   </div>
                   <button
                     type="button"
-                    className="flex min-h-0 min-w-0 cursor-pointer select-none items-center justify-center border-0 py-1.5 text-body-sm text-brand-dark/75 transition-colors hover:bg-brand-accent/15 active:bg-brand-accent/25"
+                    className="flex min-h-0 min-w-0 cursor-pointer select-none items-center justify-center border-0 py-2 text-body-lg text-brand-dark/75 transition-colors hover:bg-brand-accent/15 active:bg-brand-accent/25"
                     onClick={() =>
                       setSprintLengthUnit((u) => nextSprintUnit(u))
                     }
@@ -127,15 +128,20 @@ export default function SetGroupPage() {
               </div>
             </GroupCard>
 
-            <div className="flex w-full items-center justify-between gap-md">
+            <div className="flex w-full flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-md">
               <Button
                 variant="grey"
+                size="lg"
                 href="/join-create-switch-group"
-                className="py-2.5 text-body-md"
+                className="min-h-12 w-full justify-center py-3 font-semibold sm:w-auto sm:px-8"
               >
                 Back
               </Button>
-              <Button href="/dashboard" className="py-2.5 text-body-md">
+              <Button
+                size="lg"
+                href="/dashboard"
+                className="min-h-12 w-full justify-center py-3 font-semibold sm:w-auto sm:px-8"
+              >
                 Create Group
               </Button>
             </div>

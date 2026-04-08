@@ -30,11 +30,11 @@ export default function SideNav() {
         {/* Logo */}
         <div className="mb-xl flex shrink-0 flex-col items-center gap-md px-sm pb-md pt-2">
           <div className="p-3">
-            <div className="h-14 w-14 shrink-0 rounded-xl bg-brand-accent/30" />
+            <div className="h-16 w-16 shrink-0 rounded-xl bg-brand-accent/30" />
           </div>
           <SprintHubTitle
             as="p"
-            size="md"
+            size="lg"
             className="w-full text-center leading-tight"
           />
         </div>
@@ -51,8 +51,8 @@ export default function SideNav() {
                   href={item.href}
                   className={
                     isActive
-                      ? "rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
-                      : "rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
+                      ? "rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-lg font-semibold text-brand-dark"
+                      : "rounded-md py-1.5 pl-3 pr-2 text-body-lg text-brand-dark transition hover:bg-brand-accent/10"
                   }
                 >
                   {item.label}
@@ -74,11 +74,11 @@ export default function SideNav() {
                 href={item.href}
                 className={
                   isActive
-                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-sm font-semibold text-brand-dark"
-                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-sm text-brand-dark transition hover:bg-brand-accent/10"
+                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
+                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
                 }
               >
-                <Icon size={16} />
+                <Icon size={18} />
                 {item.label}
               </Link>
             );
@@ -87,9 +87,9 @@ export default function SideNav() {
           {/* Logout */}
           <Link
             href="/logout"
-            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-sm text-brand-dark transition hover:bg-brand-accent/10"
+            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
           >
-            <LogOut size={16} />
+            <LogOut size={18} />
             Log out
           </Link>
         </div>

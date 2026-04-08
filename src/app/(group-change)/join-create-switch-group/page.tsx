@@ -66,22 +66,22 @@ export default function JoinCreateSwitchGroupPage() {
     DUMMY_CARDS[tab as keyof typeof DUMMY_CARDS] ?? DUMMY_CARDS.join;
 
   return (
-    <div className="min-h-screen bg-brand-background px-6 pb-10 pt-20">
-      <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-10 text-center">
+    <div className="min-h-screen bg-brand-background px-5 pb-14 pt-16 sm:px-8 sm:pb-16 sm:pt-20 md:px-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-12 text-center sm:mb-14">
           <SprintHubTitle />
         </header>
 
         <SegmentedControl
-          className="mx-auto mb-6"
+          className="mx-auto mb-8 sm:mb-10"
           options={TAB_OPTIONS}
           value={tab}
           onChange={setTab}
         />
 
-        <BorderedPanel className="p-lg">
-          <div className="scrollbar-thumb-accent max-h-[min(50vh,28rem)] overflow-y-auto pr-sm">
-            <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
+        <BorderedPanel className="p-6 sm:p-8 md:p-10">
+          <div className="scrollbar-thumb-accent max-h-[min(58vh,40rem)] overflow-y-auto pr-1 sm:pr-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:gap-10">
               {cards.map((card) => (
                 <Link
                   key={`${tab}-${card.name}-${"repoOwner" in card ? card.repoOwner : "create"}`}
@@ -89,12 +89,12 @@ export default function JoinCreateSwitchGroupPage() {
                   className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
                 >
                   <GroupCard className="cursor-pointer transition-colors duration-150 hover:bg-slate-200">
-                    <div className="flex flex-col items-center gap-1 text-center">
-                      <p className="text-body-md font-medium text-brand-dark">
+                    <div className="flex flex-col items-center gap-2 text-center sm:gap-2.5">
+                      <p className="text-body-lg font-semibold leading-snug text-brand-dark sm:text-xl">
                         {card.name}
                       </p>
                       {"repoOwner" in card ? (
-                        <p className="text-body-sm leading-tight text-[#7A7A7A]">
+                        <p className="text-body-md leading-snug text-[#7A7A7A]">
                           {card.repoOwner}
                         </p>
                       ) : null}

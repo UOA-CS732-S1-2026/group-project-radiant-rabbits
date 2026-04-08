@@ -1,9 +1,13 @@
 import Link from "next/link";
 
+export type ButtonSize = "sm" | "lg";
+
 type ButtonProps = {
   children: React.ReactNode;
   variant?: "purple" | "white" | "grey" | "blue-help";
   shape?: "default" | "pill";
+  /** `lg` matches primary actions (e.g. set-group). `sm` is compact for toolbars and secondary UI. */
+  size?: ButtonSize;
   type?: "button" | "submit";
   onClick?: () => void;
   disabled?: boolean;
@@ -16,6 +20,7 @@ export default function Button({
   children,
   variant = "purple",
   shape = "default",
+  size = "lg",
   type = "button",
   onClick,
   disabled,
@@ -23,10 +28,28 @@ export default function Button({
   href,
   "aria-label": ariaLabel,
 }: ButtonProps) {
-  const layout =
-    shape === "pill"
-      ? "inline-flex items-center justify-center rounded-full px-4 py-2.5 text-body-sm font-semibold"
-      : "inline-flex items-center justify-center rounded-xl px-md py-sm text-body-sm font-medium";
+  const hasExplicitTextSize =
+    /text-body-(?:xs|sm|md|lg)/.test(className) ||
+    /\btext-(?:xs|sm|md|lg|xl|2xl|3xl)\b/.test(className) ||
+    /text-\[/.test(className);
+
+  const defaultTextSize = hasExplicitTextSize
+    ? ""
+    : size === "lg"
+      ? "text-body-md sm:text-body-lg"
+      : "text-body-sm sm:text-body-md";
+
+  const layoutDefault =
+    size === "lg"
+      ? `inline-flex items-center justify-center rounded-xl px-md py-sm font-medium ${defaultTextSize}`.trim()
+      : `inline-flex min-h-9 items-center justify-center rounded-xl px-sm py-1.5 font-medium ${defaultTextSize}`.trim();
+
+  const layoutPill =
+    size === "lg"
+      ? `inline-flex items-center justify-center rounded-full px-4 py-2.5 font-semibold ${defaultTextSize}`.trim()
+      : `inline-flex min-h-9 items-center justify-center rounded-full px-3 py-1.5 font-semibold ${defaultTextSize}`.trim();
+
+  const layout = shape === "pill" ? layoutPill : layoutDefault;
 
   const base = `${layout} transition disabled:opacity-60 disabled:cursor-not-allowed`;
 
