@@ -63,21 +63,21 @@ export default function JoinCreateSwitchGroupPage() {
     DUMMY_CARDS[tab as keyof typeof DUMMY_CARDS] ?? DUMMY_CARDS.join;
 
   return (
-    <div className="min-h-screen bg-brand-background px-5 pb-14 pt-16 sm:px-8 sm:pb-16 sm:pt-20 md:px-12">
-      <div className="mx-auto w-full max-w-5xl">
-        <header className="mb-12 text-center sm:mb-14">
+    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-brand-background px-5 pb-4 pt-16 sm:px-8 sm:pb-5 sm:pt-20 md:px-12">
+      <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+        <header className="mb-6 shrink-0 text-center sm:mb-8">
           <SprintHubTitle />
         </header>
 
         <SegmentedControl
-          className="mx-auto mb-8 sm:mb-10"
+          className="mx-auto mb-4 shrink-0 sm:mb-5"
           options={TAB_OPTIONS}
           value={tab}
           onChange={setTab}
         />
 
-        <BorderedPanel className="p-4 sm:p-5 md:p-6">
-          <div className="scrollbar-thumb-accent max-h-[calc(100dvh-20rem)] overflow-y-auto pr-1 sm:max-h-[calc(100dvh-24rem)] sm:pr-2">
+        <BorderedPanel className="w-full shrink-0 overflow-hidden p-4 sm:p-5 md:p-6">
+          <div className="scrollbar-thumb-accent max-h-[calc(100dvh-19rem)] overflow-y-auto pr-1 sm:max-h-[calc(100dvh-23rem)] sm:pr-2">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
               {cards.map((card) => (
                 <Link
