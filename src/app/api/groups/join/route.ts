@@ -2,6 +2,7 @@ import { log } from "node:console";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { checkRepoAccess } from "@/app/lib/githubService";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 
@@ -9,10 +10,20 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(options);
 
+    const sessionWithToken = session as { accessToken?: string };
+
     // Check if user has logged in with a valid Github account
     if (!session?.user?.name) {
       return NextResponse.json(
         { error: "Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    // Ensure user has access token
+    if (!sessionWithToken.accessToken) {
+      return NextResponse.json(
+        { error: "GitHub access token missing. Please sign in again." },
         { status: 401 },
       );
     }
@@ -23,6 +34,17 @@ export async function POST(request: Request) {
     if (!inviteCode) {
       return NextResponse.json(
         { error: "Invite code is required" },
+        { status: 400 },
+      );
+    }
+
+    // Checking that the inputted invite code is valid (8 alphanumeric characters)
+    const isValidFormat =
+      inviteCode.length === 8 && /^[A-Z0-9]+$/i.test(inviteCode);
+
+    if (!isValidFormat) {
+      return NextResponse.json(
+        { error: "Invalid format. Please enter the 8-character invite code." },
         { status: 400 },
       );
     }
@@ -50,6 +72,21 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "User is already a member" },
         { status: 400 },
+      );
+    }
+
+    // Check if the user has access to the associated repository with their GitHub account
+    // Using repo information associated with the group
+    const repoAccess = await checkRepoAccess(
+      sessionWithToken.accessToken,
+      group.repoOwner,
+      group.repoName,
+    );
+
+    if (!repoAccess) {
+      return NextResponse.json(
+        { error: "You do not have access to this GitHub repository." },
+        { status: 403 },
       );
     }
 
