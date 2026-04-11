@@ -74,3 +74,40 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    await connectDB();
+
+    const { searchParams } = new URL(req.url);
+    const groupId = searchParams.get("groupId");
+
+    if (!groupId) {
+      return NextResponse.json(
+        { error: "groupId is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return NextResponse.json({ error: "Invalid groupId" }, { status: 400 });
+    }
+
+    const group = await Group.findById(groupId);
+
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(group.sprintSettings || null);
+  } catch (error: any) {
+    console.error("GET sprint settings error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to fetch sprint settings",
+        details: error.message,
+      },
+      { status: 500 },
+    );
+  }
+}
