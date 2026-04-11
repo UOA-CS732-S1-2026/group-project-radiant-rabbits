@@ -89,9 +89,22 @@ export async function GET(
     });
 
     return NextResponse.json({
-      currentGroups,
-      joinGroups,
-      createGroups,
+      currentGroups: currentGroups.map((group) => ({
+        name: group.repoName,
+        repoOwner: group.repoOwner,
+      })),
+
+      joinGroups: joinGroups.map((group) => ({
+        name: group.repoName,
+        repoOwner: group.repoOwner,
+        inviteCode: group.inviteCode,
+      })),
+
+      // 3. Map raw GitHub repositories
+      createGroups: createGroups.map((repo) => ({
+        name: repo.repoName,
+        repoOwner: repo.repoOwner,
+      })),
     });
   } catch (error) {
     console.error("Error fetching user groups:", error);
