@@ -1,25 +1,4 @@
-const { Schema, model } = require("mongoose");
-
-const userSchema = new Schema({
-  githubId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-  },
-  image: {
-    type: String,
-  },
-});
-
-module.exports = model("User", userSchema);
+import mongoose, { model, models, Schema } from "mongoose";
 
 const groupSchema = new Schema({
   name: {
@@ -44,14 +23,27 @@ const groupSchema = new Schema({
   repoName: {
     type: String,
     unique: true,
+    sparse: true,
   },
   repoNURL: {
     type: String,
     unique: true,
+    sparse: true,
   },
   createdBy: {
     type: String,
     required: true,
+  },
+  sprintSettings: {
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
+    sprintLength: {
+      type: Number,
+    },
   },
   createdAt: {
     type: Date,
@@ -63,4 +55,6 @@ const groupSchema = new Schema({
   },
 });
 
-module.exports = model("Group", groupSchema);
+const Group = models.Group || model("Group", groupSchema);
+
+export default Group;
