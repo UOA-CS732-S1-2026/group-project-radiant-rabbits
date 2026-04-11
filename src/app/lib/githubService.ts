@@ -483,3 +483,30 @@ export async function fetchProjectTasks(
 
   return tasks;
 }
+
+// Fetches repository id given owner and name to verify user access
+
+const CHECK_ACCESS_QUERY = `
+  query($owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+      id
+    }
+  }
+`;
+
+// Checks for user repository access given repository owner and name
+export async function checkRepoAccess(
+  token: string,
+  owner: string,
+  repo: string,
+): Promise<boolean> {
+  try {
+    // If this succeeds, the user has read access to the repo
+    await graphqlRequest(token, CHECK_ACCESS_QUERY, { owner, repo });
+    return true;
+  } catch (error) {
+    // Error means the repo doesn't exist OR the user doesn't have access.
+    console.error(`Access check failed for ${owner}/${repo}:`, error);
+    return false;
+  }
+}

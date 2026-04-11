@@ -1,25 +1,30 @@
+import Image from "next/image";
 import Button from "@/components/ui/Button";
 
 type PageTopBarProps = {
   repoName: string;
   pageLabel: string;
   profileImageUrl?: string;
+  profileName?: string;
 };
 
 export default function PageTopBar({
   repoName,
   pageLabel,
   profileImageUrl,
+  profileName,
 }: PageTopBarProps) {
+  const fallbackInitial = profileName?.trim().charAt(0).toUpperCase() ?? "?";
+
   return (
     <header className="border-b border-brand-dark/10 bg-brand-surface">
       <div className="flex items-center justify-between px-lg py-sm">
         {/* Left: Repo name */}
         <div>
-          <h1 className="text-xl font-semibold leading-tight text-brand-dark">
+          <h1 className="text-body-lg font-semibold text-brand-dark">
             {repoName}
           </h1>
-          <p className="sr-only">{pageLabel}</p>
+          <p className="text-body-sm text-brand-dark/70">{pageLabel}</p>
         </div>
 
         {/* Right: Button + Avatar */}
@@ -29,17 +34,16 @@ export default function PageTopBar({
 
           {/* Avatar */}
           {profileImageUrl ? (
-            <img
+            <Image
               src={profileImageUrl}
-              alt="GitHub profile"
-              className="h-11 w-11 rounded-xl object-cover shadow-md sm:h-12 sm:w-12"
+              alt={`${profileName ?? "GitHub"} profile`}
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-xl object-cover shadow-md"
             />
           ) : (
-            <div
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-accent/60 text-body-md font-medium leading-none text-brand-dark shadow-md sm:h-12 sm:w-12 sm:text-body-lg"
-              aria-hidden
-            >
-              ✶
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-accent/60 text-body-sm font-medium text-brand-dark shadow-md">
+              {fallbackInitial}
             </div>
           )}
         </div>

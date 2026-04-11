@@ -16,6 +16,22 @@ import {
 } from "./models";
 import connectMongoDB from "./mongodbConnection";
 
+// Invalidate all dashboard cache keys using Redis for a group after new data is synced
+async function invalidateDashboardCache(groupId: string) {
+  if (!process.env.REDIS_URL) return;
+  try {
+    const { default: Redis } = await import("ioredis");
+    const redis = new Redis(process.env.REDIS_URL);
+    const keys = await redis.keys(`dashboard:${groupId}:*`);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+    await redis.quit();
+  } catch {
+    // If Redis is unavailable, still serve stale data until the next successful sync
+  }
+}
+
 // This function orchestrates the entire sync process:
 //   1. Mark group as syncing
 //   2. Fetch data from GitHub
@@ -77,6 +93,9 @@ export async function syncGroup(groupId: string, accessToken: string) {
       syncStatus: "success",
       syncError: null,
     });
+
+    // Invalidate dashboard cache for this group so fresh data is served
+    await invalidateDashboardCache(groupId);
   } catch (error) {
     // Handle different error types with appropriate status
     await handleSyncError(groupId, error, accessToken);

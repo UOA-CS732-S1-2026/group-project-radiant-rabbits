@@ -28,9 +28,11 @@ const groupSchema = new Schema(
     ],
     repoOwner: {
       type: String,
+      required: false,
     },
     repoName: {
       type: String,
+      required: false,
     },
     createdBy: {
       type: String,
@@ -62,6 +64,8 @@ const groupSchema = new Schema(
     timestamps: true,
   },
 );
+
+groupSchema.index({ repoOwner: 1, repoName: 1 }, { unique: true }); // Prevents duplicate groups
 
 export const Group =
   mongoose.models.Group || mongoose.model("Group", groupSchema);
@@ -99,6 +103,7 @@ const commitSchema = new Schema(
 );
 
 commitSchema.index({ sha: 1, group: 1 }, { unique: true });
+commitSchema.index({ group: 1, date: 1 });
 
 export const Commit =
   mongoose.models.Commit || mongoose.model("Commit", commitSchema);
@@ -221,6 +226,42 @@ export const Contributor =
   mongoose.models.Contributor ||
   mongoose.model("Contributor", contributorSchema);
 
+// Sprint schema
+
+const sprintSchema = new Schema(
+  {
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    isCurrent: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+sprintSchema.index({ group: 1, startDate: 1 });
+
+export const Sprint =
+  mongoose.models.Sprint || mongoose.model("Sprint", sprintSchema);
+
 // SprintTask schema
 
 const sprintTaskSchema = new Schema(
@@ -266,3 +307,46 @@ sprintTaskSchema.index(
 
 export const SprintTask =
   mongoose.models.SprintTask || mongoose.model("SprintTask", sprintTaskSchema);
+
+// Sprint schema
+
+const sprintSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    goal: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["PLANNING", "ACTIVE", "COMPLETED"],
+      default: "PLANNING",
+    },
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      required: true,
+    },
+  },
+  {
+    // createdAt/updatedAt are added automatically; createdAt satisfies the
+    // minimum shape expected by the GitHub sync logic.
+    timestamps: true,
+  },
+);
+
+sprintSchema.index({ group: 1, startDate: 1 });
+
+export const Sprint =
+  mongoose.models.Sprint || mongoose.model("Sprint", sprintSchema);

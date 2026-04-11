@@ -1,11 +1,15 @@
+import { getServerSession } from "next-auth";
+import { options } from "@/app/api/auth/[...nextauth]/options";
 import PageTopBar from "@/components/ui/PageTopBar";
 import SideNav from "@/components/ui/SideNav";
 
-export default function MainLayout({
+export default async function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(options);
+
   return (
     <div className="flex h-screen min-h-0 overflow-hidden">
       <SideNav />
@@ -13,7 +17,9 @@ export default function MainLayout({
         <PageTopBar
           repoName="Repo name"
           pageLabel="Current Sprint"
-          profileImageUrl=""
+          // Use session-backed avatar
+          profileImageUrl={session?.user?.image ?? undefined}
+          profileName={session?.user?.name ?? undefined}
         />
 
         <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
