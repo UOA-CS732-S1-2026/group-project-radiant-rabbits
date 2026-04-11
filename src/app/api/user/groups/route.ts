@@ -100,7 +100,6 @@ export async function GET(
         inviteCode: group.inviteCode,
       })),
 
-      // 3. Map raw GitHub repositories
       createGroups: createGroups.map((repo) => ({
         name: repo.repoName,
         repoOwner: repo.repoOwner,
