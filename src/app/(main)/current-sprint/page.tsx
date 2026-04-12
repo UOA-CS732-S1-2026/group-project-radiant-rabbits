@@ -48,8 +48,8 @@ const timeline = [
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "Closed"
-      ? "bg-brand-primary text-brand-surface"
-      : "bg-brand-accent text-brand-surface";
+      ? "bg-green-500  text-brand-surface"
+      : "bg-blue-500 text-brand-surface";
 
   return (
     <span
@@ -90,16 +90,18 @@ function FilterChip({
   active?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      className={
-        active
-          ? "rounded-lg bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-md"
-          : "rounded-lg px-sm py-xs text-body-xs text-brand-dark/70"
-      }
-    >
-      {label}
-    </button>
+    <div className="bg-gray-200 inline-flex p-1">
+      <button
+        type="button"
+        className={
+          active
+            ? "rounded-md bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-sm"
+            : "px-sm py-xs text-body-xs text-brand-dark/70"
+        }
+      >
+        {label}
+      </button>
+    </div>
   );
 }
 
@@ -166,17 +168,17 @@ export default function CurrentSprintPage() {
                       <BreakdownTile
                         label="To Do"
                         value="2 Issues"
-                        dotClass="bg-brand-dark/30"
+                        dotClass="bg-red-500"
                       />
                       <BreakdownTile
                         label="In Progress"
                         value="4 Issues"
-                        dotClass="bg-brand-primary"
+                        dotClass="bg-yellow-500"
                       />
                       <BreakdownTile
                         label="Done"
                         value="2 Issues"
-                        dotClass="bg-brand-accent"
+                        dotClass="bg-green-500"
                       />
                     </div>
                   </div>
@@ -186,7 +188,7 @@ export default function CurrentSprintPage() {
                       Sprint Tasks
                     </h4>
 
-                    <div className="mt-md inline-flex rounded-lg bg-brand-background p-xs">
+                    <div className="py-3 inline-flex rounded-lg bg-brand-background">
                       <FilterChip label="All Issues" active />
                       <FilterChip label="Open" />
                       <FilterChip label="Closed" />

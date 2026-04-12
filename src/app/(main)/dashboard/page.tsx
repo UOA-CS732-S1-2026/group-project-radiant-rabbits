@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import Dashboard from "@/components/ui/dashboard";
-import PageContainer from "@/components/ui/PageContainer";
 
 export default async function DashboardPage() {
   const session = await getServerSession(options);
