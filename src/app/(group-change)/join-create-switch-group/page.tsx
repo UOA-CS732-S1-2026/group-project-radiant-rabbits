@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import BorderedPanel from "@/components/ui/BorderedPanel";
-import GroupCard from "@/components/ui/GroupCard";
-import SegmentedControl from "@/components/ui/SegmentedControl";
-import SprintHubTitle from "@/components/ui/SprintHubTitle";
+import GroupCard from "@/components/group-change/GroupCard";
+import BorderedPanel from "@/components/shared/BorderedPanel";
+import SegmentedControl from "@/components/shared/SegmentedControl";
+import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
 const TAB_OPTIONS = [
   { id: "join", label: "Join a Group" },

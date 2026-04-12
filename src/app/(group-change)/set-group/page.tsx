@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Button from "@/components/ui/Button";
-import GroupCard from "@/components/ui/GroupCard";
-import SprintHubTitle from "@/components/ui/SprintHubTitle";
+import GroupCard from "@/components/group-change/GroupCard";
+import Button from "@/components/shared/Button";
+import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
 const fieldColumnClass =
   "w-full max-w-[18rem] min-w-0 justify-self-start sm:max-w-[17rem]";

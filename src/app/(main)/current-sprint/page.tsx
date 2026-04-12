@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import BorderedPanel from "@/components/ui/BorderedPanel";
-import Card from "@/components/ui/Card";
-import PageContainer from "@/components/ui/PageContainer";
-import SegmentedControl from "@/components/ui/SegmentedControl";
+import BorderedPanel from "@/components/shared/BorderedPanel";
+import Card from "@/components/shared/Card";
+import PageContainer from "@/components/shared/PageContainer";
+import SegmentedControl from "@/components/shared/SegmentedControl";
 
 const sprintTasks = [
   { id: "#124", title: "Build Dashboard", status: "Closed" },

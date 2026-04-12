@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import SignOutButton from "@/components/auth/SignOutButton";
-import Card from "@/components/ui/Card";
-import PageContainer from "@/components/ui/PageContainer";
-import SectionHeading from "@/components/ui/SectionHeading";
-import StatCard from "@/components/ui/StatCard";
+import StatCard from "@/components/main/StatCard";
+import Card from "@/components/shared/Card";
+import PageContainer from "@/components/shared/PageContainer";
+import SectionHeading from "@/components/shared/SectionHeading";
 
 export default async function DashboardPage() {
   const session = await getServerSession(options);
