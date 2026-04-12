@@ -3,6 +3,7 @@
 import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
 const navItems = [
@@ -85,13 +86,14 @@ export default function SideNav() {
           })}
 
           {/* Logout */}
-          <Link
-            href="/logout"
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
           >
             <LogOut size={18} />
             Log out
-          </Link>
+          </button>
         </div>
       </div>
     </nav>
