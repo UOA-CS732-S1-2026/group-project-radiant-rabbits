@@ -13,9 +13,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mt-6 mx-5 mb-6 border-2 border-gray-200 border-spacing-2 rounded-lg shadow-lg">
-      <PageContainer>
-        <Dashboard />
-      </PageContainer>
+      <Dashboard />
     </div>
   );
 }

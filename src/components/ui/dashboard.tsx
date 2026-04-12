@@ -41,7 +41,7 @@ export default function Dashboard({
   return (
     <div className="flex flex-col gap-lg">
       {/* Project Overview */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
+      <div className=" bg-brand-surface p-lg">
         <h2 className="mb-md text-h3 font-bold text-brand-dark">
           Project Overview
         </h2>
@@ -63,12 +63,16 @@ export default function Dashboard({
         </div>
       </div>
 
+      <div className="border-b border-gray-200 my-0" />
+
       {/* Project Timeline & Sprint Velocity */}
-      <ProjectTimeline
-        sprints={sprints}
-        currentSprint={currentSprint}
-        totalSprints={totalSprints}
-      />
+      <div className="mx-6 mb-6 flex flex-col gap-lg">
+        <ProjectTimeline
+          sprints={sprints}
+          currentSprint={currentSprint}
+          totalSprints={totalSprints}
+        />
+      </div>
     </div>
   );
 }
