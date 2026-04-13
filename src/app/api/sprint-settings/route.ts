@@ -8,19 +8,13 @@ async function connectDB() {
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(MONGODB_URL);
   }
-
-  console.log("Connected DB:", mongoose.connection.name);
-  console.log("Group collection name:", Group.collection.name);
 }
 
 export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const body = await req.json();
-    console.log("Request body:", body);
-
-    const { groupId, startDate, endDate, sprintLength } = body;
+    const { groupId, startDate, endDate, sprintLength } = await req.json();
 
     if (!groupId || !startDate || !endDate || sprintLength === undefined) {
       return NextResponse.json(
@@ -29,28 +23,14 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("groupId received:", groupId);
-    console.log("is valid ObjectId:", mongoose.Types.ObjectId.isValid(groupId));
-
-    const allGroups = await Group.find({});
-    console.log("All groups found:", allGroups);
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return NextResponse.json({ error: "Invalid groupId" }, { status: 400 });
+    }
 
     const existingGroup = await Group.findById(groupId);
-    console.log("Existing group:", existingGroup);
 
     if (!existingGroup) {
-      return NextResponse.json(
-        {
-          error: "Group not found",
-          debug: {
-            connectedDB: mongoose.connection.name,
-            collection: Group.collection.name,
-            groupId,
-            totalGroupsSeen: allGroups.length,
-          },
-        },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
     existingGroup.sprintSettings = {
@@ -62,7 +42,7 @@ export async function POST(req: Request) {
 
     await existingGroup.save();
 
-    return NextResponse.json(existingGroup);
+    return NextResponse.json(existingGroup, { status: 200 });
   } catch (error: any) {
     console.error("POST /api/sprint-settings failed:", error);
     return NextResponse.json(
@@ -99,7 +79,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    return NextResponse.json(group.sprintSettings || null);
+    return NextResponse.json(group.sprintSettings || null, { status: 200 });
   } catch (error: any) {
     console.error("GET sprint settings error:", error);
     return NextResponse.json(
