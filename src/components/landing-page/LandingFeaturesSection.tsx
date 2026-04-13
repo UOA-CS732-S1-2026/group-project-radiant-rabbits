@@ -1,6 +1,7 @@
 import LandingFeatureCard from "@/components/landing-page/LandingFeatureCard";
 import LandingSectionHeading from "@/components/landing-page/LandingSectionHeading";
 import { LANDING_FEATURES } from "@/components/landing-page/landingFeatures";
+import { LANDING_SECTION_STACK } from "@/components/landing-page/landingStack";
 
 type LandingFeaturesSectionProps = {
   className?: string;
@@ -17,14 +18,14 @@ export default function LandingFeaturesSection({
       className={`w-full min-w-0 ${className}`}
       aria-labelledby="landing-features-heading"
     >
-      <div className="mx-auto w-full max-w-6xl">
+      <div className={`mx-auto w-full max-w-6xl ${LANDING_SECTION_STACK}`}>
         <LandingSectionHeading
           id="landing-features-heading"
           eyebrow="Features"
           title="Everything your team needs to run better sprints"
         />
 
-        <ul className="mt-0 flex list-none flex-wrap items-stretch justify-center gap-6 p-0 sm:gap-7 lg:gap-8">
+        <ul className="flex list-none flex-wrap items-stretch justify-center gap-6 p-0 sm:gap-7 lg:gap-8">
           {LANDING_FEATURES.map((feature) => (
             <li
               key={feature.title}
