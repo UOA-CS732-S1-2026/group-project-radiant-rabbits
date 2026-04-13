@@ -15,7 +15,7 @@ export default function LandingFeatureCard({
 }: LandingFeatureCardProps) {
   return (
     <article
-      className={`flex min-w-0 flex-col rounded-2xl bg-brand-dark p-5 shadow-md sm:rounded-2xl sm:p-6 ${className}`}
+      className={`flex min-w-0 flex-col rounded-2xl bg-brand-dark/85 p-5 shadow-md sm:rounded-2xl sm:p-6 ${className}`}
     >
       <div
         className="h-9 w-9 shrink-0 rounded-lg shadow-sm sm:h-10 sm:w-10 sm:rounded-lg"

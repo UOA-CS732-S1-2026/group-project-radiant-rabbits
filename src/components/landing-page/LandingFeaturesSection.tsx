@@ -28,7 +28,7 @@ export default function LandingFeaturesSection({
           {LANDING_FEATURES.map((feature) => (
             <li
               key={feature.title}
-              className="flex w-full min-w-0 max-w-[19rem] flex-col sm:max-w-[19rem] sm:w-[calc(50%-0.875rem)] lg:w-[calc((100%-4rem)/3)]"
+              className="flex w-full min-w-0 max-w-[21rem] flex-col sm:max-w-[21rem] sm:w-[calc(50%-0.875rem)] lg:w-[calc((100%-4rem)/3)]"
             >
               <LandingFeatureCard
                 className="h-full min-h-0 w-full flex-1"
