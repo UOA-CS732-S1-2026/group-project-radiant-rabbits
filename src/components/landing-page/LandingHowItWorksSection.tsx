@@ -1,30 +1,10 @@
 import LandingSectionHeading from "@/components/landing-page/LandingSectionHeading";
+import { LANDING_HOW_IT_WORKS_STEPS } from "@/components/landing-page/landingHowItWorks";
 import {
   LANDING_SECTION_STACK,
   LANDING_STEP_GRID_GAP,
   LANDING_STEP_INNER_STACK,
 } from "@/components/landing-page/landingStack";
-
-const STEPS = [
-  {
-    title: "Sign in",
-    description: "Authenticate with GitHub. Create or join your project group.",
-  },
-  {
-    title: "Connect repo",
-    description: "Link your repository. Commits, PRs, and issues are fetched.",
-  },
-  {
-    title: "Set sprint dates",
-    description:
-      "Define your sprint window. Activity is filtered to that period.",
-  },
-  {
-    title: "Review & reflect",
-    description:
-      "Generate your sprint summary and run a meaningful retrospective.",
-  },
-] as const;
 
 type LandingHowItWorksSectionProps = {
   className?: string;
@@ -48,7 +28,7 @@ export default function LandingHowItWorksSection({
         <ol
           className={`grid list-none grid-cols-1 p-0 sm:grid-cols-2 lg:grid-cols-4 ${LANDING_STEP_GRID_GAP}`}
         >
-          {STEPS.map((step, index) => (
+          {LANDING_HOW_IT_WORKS_STEPS.map((step, index) => (
             <li
               key={step.title}
               className={`group ${LANDING_STEP_INNER_STACK} items-center text-center`}

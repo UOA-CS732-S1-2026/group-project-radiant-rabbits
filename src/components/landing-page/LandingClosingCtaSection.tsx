@@ -1,4 +1,5 @@
 import SignInButton from "@/components/auth/SignInButton";
+import { LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS } from "@/components/landing-page/landingStack";
 
 type LandingClosingCtaSectionProps = {
   className?: string;
@@ -29,7 +30,9 @@ export default function LandingClosingCtaSection({
             Sign in with GitHub, connect a repo, and pull your sprint story
             together in minutes.
           </p>
-          <SignInButton className="mt-5 rounded-xl border-2 border-white bg-transparent px-5 py-2.5 text-body-sm font-semibold text-white transition hover:bg-white/15 active:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:mt-6 sm:px-6 sm:py-3">
+          <SignInButton
+            className={`mt-5 sm:mt-6 ${LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS}`}
+          >
             Get started with GitHub
           </SignInButton>
         </div>

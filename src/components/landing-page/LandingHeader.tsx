@@ -11,12 +11,7 @@ export default function LandingHeader({
   showSignInButton = true,
 }: LandingHeaderProps) {
   return (
-    <header
-      className="w-full px-4 py-2.5 shadow-sm sm:px-6 sm:py-2.5"
-      style={{
-        background: "linear-gradient(to right, #7BB8FF, #B8A9FE)",
-      }}
-    >
+    <header className="w-full bg-gradient-to-r from-brand-primary to-brand-accent px-4 py-2.5 shadow-sm sm:px-6 sm:py-2.5">
       <div
         className={`flex w-full min-w-0 items-center gap-3 sm:gap-4 ${showSignInButton ? "justify-between" : "justify-start"}`}
       >
