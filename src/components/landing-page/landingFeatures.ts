@@ -9,37 +9,37 @@ export const LANDING_FEATURES = [
   {
     title: "Sprint Configuration",
     description:
-      "Define sprint start/end dates. GitHub activity is automatically filtered to the selected period.",
+      "Set sprint dates; GitHub activity auto-filters to that window.",
     accentColor: "#99D1C1",
   },
   {
     title: "AI Sprint Summaries",
     description:
-      "Plain-language summaries of each contributor's work, including invisible work not linked to issues.",
+      "Plain language summaries per contributor, including work not tied to issues.",
     accentColor: "#B8A9FE",
   },
   {
     title: "Contributor Insights",
     description:
-      "Visualise workload balance across the team. Spot uneven distributions early.",
+      "See workload balance across the team. Catch uneven load early.",
     accentColor: "#6BCF8E",
   },
   {
     title: "Issue Tracking",
     description:
-      "GitHub issues mapped to your sprint. See exactly what was planned vs. what shipped.",
+      "GitHub issues mapped to your sprint. Planned vs shipped at a glance.",
     accentColor: "#C4D65E",
   },
   {
     title: "Velocity Tracking",
     description:
-      "Sprint-by-sprint velocity chart shows momentum over time to improve future planning.",
+      "Team velocity by sprint. Spot trends and plan the next one with confidence.",
     accentColor: "#7BB8FF",
   },
   {
     title: "Secure GitHub OAuth",
     description:
-      "Sign in directly with GitHub. Only accesses repositories you explicitly connect.",
+      "Sign in with GitHub. Only repos you connect are ever accessed.",
     accentColor: "#B8A9FE",
   },
 ] as const satisfies readonly LandingFeature[];

@@ -15,7 +15,7 @@ export default function LandingFeatureCard({
 }: LandingFeatureCardProps) {
   return (
     <article
-      className={`flex min-w-0 flex-col rounded-2xl bg-brand-dark/85 p-4 shadow-md transition duration-300 ease-out hover:-translate-y-1 hover:brightness-110 hover:shadow-xl sm:rounded-2xl sm:p-5 ${className}`}
+      className={`flex min-w-0 flex-col rounded-2xl bg-brand-dark p-4 shadow-md transition duration-300 ease-out hover:-translate-y-1 hover:brightness-110 hover:shadow-xl sm:rounded-2xl sm:p-5 ${className}`}
     >
       <div
         className="h-2.5 w-14 shrink-0 rounded-md shadow-sm sm:h-3 sm:w-16"

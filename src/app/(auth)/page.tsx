@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import SignInButton from "@/components/auth/SignInButton";
+import LandingClosingCtaSection from "@/components/landing-page/LandingClosingCtaSection";
 import LandingFeaturesSection from "@/components/landing-page/LandingFeaturesSection";
 import LandingHowItWorksSection from "@/components/landing-page/LandingHowItWorksSection";
 import {
@@ -59,6 +60,10 @@ export default async function LoginPage() {
 
       <div className="w-full min-w-0">
         <LandingHowItWorksSection />
+      </div>
+
+      <div className="w-full min-w-0">
+        <LandingClosingCtaSection />
       </div>
     </div>
   );

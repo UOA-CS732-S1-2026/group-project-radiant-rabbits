@@ -1,4 +1,3 @@
-import SignInButton from "@/components/auth/SignInButton";
 import LandingSectionHeading from "@/components/landing-page/LandingSectionHeading";
 import {
   LANDING_SECTION_STACK,
@@ -52,10 +51,10 @@ export default function LandingHowItWorksSection({
           {STEPS.map((step, index) => (
             <li
               key={step.title}
-              className={`${LANDING_STEP_INNER_STACK} items-center text-center sm:items-start sm:text-left`}
+              className={`group ${LANDING_STEP_INNER_STACK} items-center text-center`}
             >
               <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-dark text-body-lg font-bold text-white"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-accent text-body-lg font-bold text-brand-dark shadow-sm transition duration-200 ease-out group-hover:scale-110 group-hover:bg-brand-primary group-hover:shadow-md motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                 aria-hidden
               >
                 {index + 1}
@@ -63,18 +62,12 @@ export default function LandingHowItWorksSection({
               <h3 className="text-body-lg font-extrabold text-brand-dark sm:text-h3 sm:leading-snug">
                 {step.title}
               </h3>
-              <p className="max-w-xs text-body-sm leading-relaxed text-brand-dark/85 sm:text-body-md">
+              <p className="mx-auto max-w-xs text-body-sm font-semibold leading-relaxed text-brand-dark/85 sm:text-body-md">
                 {step.description}
               </p>
             </li>
           ))}
         </ol>
-
-        <div className="flex justify-center">
-          <SignInButton className="rounded-xl bg-brand-primary px-6 py-3 text-body-sm font-semibold text-brand-dark shadow-md transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark">
-            Get started with GitHub
-          </SignInButton>
-        </div>
       </div>
     </section>
   );
