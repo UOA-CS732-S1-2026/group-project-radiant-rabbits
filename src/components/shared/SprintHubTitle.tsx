@@ -21,6 +21,7 @@ const variantClasses: Record<SprintHubTitleVariant, string> = {
 type SprintHubTitleProps = {
   children?: ReactNode;
   className?: string;
+  id?: string;
   as?: "h1" | "h2" | "p" | "span";
   size?: SprintHubTitleSize;
   /** `gradient` matches main nav; `white` for use on ombre / colored bars. */
@@ -30,12 +31,14 @@ type SprintHubTitleProps = {
 export default function SprintHubTitle({
   children = "SprintHub",
   className = "",
+  id,
   as: Tag = "h1",
   size = "hero",
   variant = "gradient",
 }: SprintHubTitleProps) {
   return (
     <Tag
+      id={id}
       className={`font-extrabold tracking-tight ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
     >
       {children}

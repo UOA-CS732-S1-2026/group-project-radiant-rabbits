@@ -1,7 +1,10 @@
 import LandingFeatureCard from "@/components/landing-page/LandingFeatureCard";
 import LandingSectionHeading from "@/components/landing-page/LandingSectionHeading";
 import { LANDING_FEATURES } from "@/components/landing-page/landingFeatures";
-import { LANDING_SECTION_STACK } from "@/components/landing-page/landingStack";
+import {
+  LANDING_FEATURE_GRID_GAP,
+  LANDING_SECTION_STACK,
+} from "@/components/landing-page/landingStack";
 
 type LandingFeaturesSectionProps = {
   className?: string;
@@ -25,11 +28,13 @@ export default function LandingFeaturesSection({
           title="Everything your team needs to run better sprints"
         />
 
-        <ul className="flex list-none flex-wrap items-stretch justify-center gap-6 p-0 sm:gap-7 lg:gap-8">
+        <ul
+          className={`flex list-none flex-wrap items-stretch justify-center p-0 ${LANDING_FEATURE_GRID_GAP}`}
+        >
           {LANDING_FEATURES.map((feature) => (
             <li
               key={feature.title}
-              className="flex w-full min-w-0 max-w-[21rem] flex-col sm:max-w-[21rem] sm:w-[calc(50%-0.875rem)] lg:w-[calc((100%-4rem)/3)]"
+              className="flex w-full min-w-0 max-w-[21rem] flex-col sm:max-w-[21rem] sm:w-[calc(50%-1.25rem)] md:w-[calc(50%-1.5rem)] lg:w-[calc((100%-6rem)/3)]"
             >
               <LandingFeatureCard
                 className="h-full min-h-0 w-full flex-1"

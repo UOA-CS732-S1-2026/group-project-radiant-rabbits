@@ -2,6 +2,7 @@ import SignInButton from "@/components/auth/SignInButton";
 import LandingSectionHeading from "@/components/landing-page/LandingSectionHeading";
 import {
   LANDING_SECTION_STACK,
+  LANDING_STEP_GRID_GAP,
   LANDING_STEP_INNER_STACK,
 } from "@/components/landing-page/landingStack";
 
@@ -45,7 +46,9 @@ export default function LandingHowItWorksSection({
           title="From GitHub to sprint review in minutes"
         />
 
-        <ol className="grid list-none grid-cols-1 gap-8 p-0 sm:grid-cols-2 sm:gap-10 lg:grid-cols-4 lg:gap-8">
+        <ol
+          className={`grid list-none grid-cols-1 p-0 sm:grid-cols-2 lg:grid-cols-4 ${LANDING_STEP_GRID_GAP}`}
+        >
           {STEPS.map((step, index) => (
             <li
               key={step.title}
