@@ -7,7 +7,7 @@ export default async function LoginPage() {
   const session = await getServerSession(options);
 
   if (session) {
-    redirect("/dashboard");
+    redirect("/join-create-switch-group");
   }
 
   return (

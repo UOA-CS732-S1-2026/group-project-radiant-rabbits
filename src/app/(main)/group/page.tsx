@@ -38,7 +38,7 @@ export default function GroupPage() {
               label="Invite code"
               placeholder="Enter team code"
             />
-            <Button type="submit" variant="secondary">
+            <Button type="submit" variant="white">
               Join Group
             </Button>
           </form>
