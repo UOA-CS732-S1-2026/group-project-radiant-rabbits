@@ -1,4 +1,5 @@
 import LandingFeatureCard from "@/components/landing-page/LandingFeatureCard";
+import LandingSectionHeading from "@/components/landing-page/LandingSectionHeading";
 import { LANDING_FEATURES } from "@/components/landing-page/landingFeatures";
 
 type LandingFeaturesSectionProps = {
@@ -17,21 +18,17 @@ export default function LandingFeaturesSection({
       aria-labelledby="landing-features-heading"
     >
       <div className="mx-auto w-full max-w-6xl">
-        <h2
+        <LandingSectionHeading
           id="landing-features-heading"
-          className="text-center text-h2 font-bold text-brand-dark"
-        >
-          Features
-        </h2>
-        <p className="mx-auto mt-sm max-w-2xl text-center text-body-md text-brand-dark/70">
-          Everything your team needs to run better sprints
-        </p>
+          eyebrow="Features"
+          title="Everything your team needs to run better sprints"
+        />
 
-        <ul className="mt-xl flex list-none flex-wrap items-stretch justify-center gap-5 p-0 sm:mt-2xl lg:gap-6">
+        <ul className="mt-0 flex list-none flex-wrap items-stretch justify-center gap-6 p-0 sm:gap-7 lg:gap-8">
           {LANDING_FEATURES.map((feature) => (
             <li
               key={feature.title}
-              className="flex w-full min-w-0 max-w-[19rem] flex-col sm:max-w-[19rem] sm:w-[calc(50%-0.625rem)] lg:w-[calc((100%-3rem)/3)]"
+              className="flex w-full min-w-0 max-w-[19rem] flex-col sm:max-w-[19rem] sm:w-[calc(50%-0.875rem)] lg:w-[calc((100%-4rem)/3)]"
             >
               <LandingFeatureCard
                 className="h-full min-h-0 w-full flex-1"
