@@ -227,7 +227,7 @@ export const Contributor =
   mongoose.model("Contributor", contributorSchema);
 
 // Sprint schema
-
+/*
 const sprintSchema = new Schema(
   {
     group: {
@@ -261,7 +261,7 @@ sprintSchema.index({ group: 1, startDate: 1 });
 
 export const Sprint =
   mongoose.models.Sprint || mongoose.model("Sprint", sprintSchema);
-
+*/
 // SprintTask schema
 
 const sprintTaskSchema = new Schema(
