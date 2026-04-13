@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Commit, Group, Issue, PullRequest, Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { isUserInGroup } from "@/app/lib/userRef";
 
 const CACHE_TTL_SECONDS = 300;
 
@@ -209,7 +210,7 @@ export async function GET(
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    if (!group.members.includes(session.user.id)) {
+    if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
         { status: 403 },
