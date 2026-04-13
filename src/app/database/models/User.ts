@@ -17,6 +17,11 @@ const userSchema = new Schema({
   image: {
     type: String,
   },
+  currentGroupId: {
+    type: Schema.Types.ObjectId,
+    ref: "Group",
+    default: null,
+  },
 });
 
 const User = models.User || model("User", userSchema);

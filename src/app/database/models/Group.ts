@@ -1,4 +1,4 @@
-import mongoose, { model, models, Schema } from "mongoose";
+import { model, models, Schema } from "mongoose";
 
 const groupSchema = new Schema({
   name: {
@@ -20,14 +20,13 @@ const groupSchema = new Schema({
       required: true,
     },
   ],
+  repoOwner: {
+    type: String,
+    required: true,
+  },
   repoName: {
     type: String,
-    unique: true,
-    sparse: true,
-  },
-  repoNURL: {
-    type: String,
-    unique: true,
+    required: true,
     sparse: true,
   },
   createdBy: {
