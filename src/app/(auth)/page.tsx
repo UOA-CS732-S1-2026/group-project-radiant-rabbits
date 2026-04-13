@@ -4,6 +4,7 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import SignInButton from "@/components/auth/SignInButton";
 import LandingFeaturesSection from "@/components/landing-page/LandingFeaturesSection";
 import LandingHowItWorksSection from "@/components/landing-page/LandingHowItWorksSection";
+import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
 export default async function LoginPage() {
   const session = await getServerSession(options);
@@ -28,6 +29,14 @@ export default async function LoginPage() {
               Your agile coach
             </span>
           </div>
+          <div className="mt-md flex justify-center sm:mt-lg">
+            <SprintHubTitle
+              as="p"
+              size="display"
+              variant="gradient"
+              className="text-center"
+            />
+          </div>
           <h1
             id="landing-hero-heading"
             className="mt-lg text-balance text-[2rem] font-extrabold leading-tight tracking-tight text-brand-dark sm:mt-xl sm:text-[2.25rem] md:text-[2.5rem]"
@@ -36,7 +45,7 @@ export default async function LoginPage() {
           </h1>
           <p className="mx-auto mt-md w-full min-w-0 max-w-2xl text-body-md leading-relaxed text-brand-dark/85 sm:mt-lg sm:text-body-lg">
             SprintHub connects to your GitHub repository and automatically
-            generates data-driven sprint review reports — so your team can stop
+            generates data-driven sprint review reports, so your team can stop
             guessing and start improving.
           </p>
           <div className="mt-lg flex justify-center sm:mt-xl">
