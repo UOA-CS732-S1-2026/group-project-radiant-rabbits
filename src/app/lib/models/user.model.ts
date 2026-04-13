@@ -35,6 +35,11 @@ const userSchema = new Schema(
       trim: true,
       alias: "image",
     },
+    currentGroupId: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
   },
   {
     timestamps: true,
