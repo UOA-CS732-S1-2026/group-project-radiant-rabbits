@@ -1,13 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import { Group } from "@/app/lib/models";
+import Group from "@/app/database/models/Group";
+import User from "@/app/database/models/User";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<void> },
-) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(options);
     const sessionWithToken = session as {
@@ -15,7 +13,6 @@ export async function GET(
       user?: { id?: string; name?: string };
     };
 
-    // Check if user has logged in and has a token
     if (!sessionWithToken?.user?.id || !sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "Authentication and GitHub token required" },
@@ -25,7 +22,6 @@ export async function GET(
 
     const userId = sessionWithToken.user.id;
 
-    // Fetching all the repositories the user has access to from GitHub
     const githubResponse = await fetch(
       "https://api.github.com/user/repos?per_page=100",
       {
@@ -42,44 +38,41 @@ export async function GET(
 
     const githubRepos = await githubResponse.json();
 
-    // Fetch all groups from monogdb
     await connectMongoDB();
-    const allGroups = await Group.find({}).lean();
 
-    // Intialising groups
+    const [allGroups, user] = await Promise.all([
+      Group.find({}).lean(),
+      User.findOne({ githubId: userId }).lean(),
+    ]);
+
+    const currentActiveGroupId = user?.currentGroupId?.toString() ?? null;
+
     const currentGroups: typeof allGroups = [];
     const joinGroups: typeof allGroups = [];
     const createGroups: Array<{ repoName: string; repoOwner: string }> = [];
 
-    // Sort exisiting groups from database
     allGroups.forEach((group) => {
-      // If the user is already a member, add to "Current Groups"
       if (group.members.map(String).includes(userId)) {
         currentGroups.push(group);
-      }
-      // If they aren't a member, check if they have GitHub access to the associated repo
-      else {
+      } else {
         const hasGithubAccess = githubRepos.some(
           (repo: any) =>
             repo.name === group.repoName &&
             repo.owner.login === group.repoOwner,
         );
-        // If they have access, add to "Joinable Groups"
+
         if (hasGithubAccess) {
           joinGroups.push(group);
         }
       }
     });
 
-    // Sort the remaining GitHub repos into "Creatable Groups" if no existing group is associated with that repo in MongoDB
     githubRepos.forEach((repo: any) => {
-      // Check if a group already exists in MongoDB for this specific repo
       const groupExists = allGroups.some(
         (group) =>
           group.repoName === repo.name && group.repoOwner === repo.owner.login,
       );
 
-      // If no group exists, the user can create one!
       if (!groupExists) {
         createGroups.push({
           repoName: repo.name,
@@ -90,11 +83,14 @@ export async function GET(
 
     return NextResponse.json({
       currentGroups: currentGroups.map((group) => ({
+        _id: group._id.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
+        isCurrent: currentActiveGroupId === group._id.toString(),
       })),
 
       joinGroups: joinGroups.map((group) => ({
+        _id: group._id.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
         inviteCode: group.inviteCode,

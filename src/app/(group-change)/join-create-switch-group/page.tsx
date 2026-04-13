@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SignInButton from "@/components/auth/SignInButton";
 import BorderedPanel from "@/components/ui/BorderedPanel";
-import Button from "@/components/ui/Button";
 import GroupCard from "@/components/ui/GroupCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
@@ -16,35 +14,35 @@ const TAB_OPTIONS = [
   { id: "current", label: "Current Groups" },
 ] as const;
 
-type GroupListCard = { name: string; repoOwner: string; inviteCode?: string };
+type GroupListCard = {
+  _id?: string;
+  name: string;
+  repoOwner: string;
+  inviteCode?: string;
+};
 
 export default function JoinCreateSwitchGroupPage() {
   const router = useRouter();
   const [tab, setTab] = useState<string>("join");
 
-  // State to hold the lists of groups for each tab
   const [lists, setLists] = useState({
     current: [] as GroupListCard[],
     join: [] as GroupListCard[],
     create: [] as GroupListCard[],
   });
 
-  // States to manage loading and error states for fetching groups
   const [isFetching, setIsFetching] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isAuthError, setIsAuthError] = useState(false);
 
-  // Fetch the groups for the user on page load
   useEffect(() => {
     async function fetchCardData() {
       try {
-        // Call API route to fetch the user's groups and accessible repositories
         setIsFetching(true);
         const response = await fetch("/api/user/groups");
         const data = await response.json();
 
-        // Handle authentication errors
         if (!response.ok) {
           if (response.status === 401) {
             setIsAuthError(true);
@@ -57,70 +55,85 @@ export default function JoinCreateSwitchGroupPage() {
           return;
         }
 
-        // Define card lists for each tab
         setLists({
           current: data.currentGroups,
           join: data.joinGroups,
           create: data.createGroups,
         });
       } catch (error) {
-        // Handle unexpected errors
         console.error("Error fetching groups:", error);
         setErrorMessage("An unexpected error occurred while fetching groups.");
       } finally {
         setIsFetching(false);
       }
     }
-    // Call the function to fetch group data
+
     fetchCardData();
   }, []);
 
-  // Handle card click based on the active tab
   const handleCardClick = async (card: GroupListCard) => {
-    // Reset any errors before event handling
     setErrorMessage("");
     setIsAuthError(false);
 
-    // If the user clicks on a card in the "Current Groups" tab, navigate them to the dashboard immediately
     if (tab === "current") {
-      router.push("/dashboard");
+      if (!card._id) {
+        setErrorMessage("Missing group id for selected group.");
+        return;
+      }
+
+      setIsActionLoading(true);
+
+      try {
+        const response = await fetch("/api/user/current-group", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ groupId: card._id }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to switch current group");
+        }
+
+        router.push("/dashboard");
+      } catch (error: any) {
+        setErrorMessage(error.message);
+      } finally {
+        setIsActionLoading(false);
+      }
+
       return;
     }
 
-    // Turn on the loading state so the user knows something is happening
     setIsActionLoading(true);
 
     try {
-      // Call the POST "/api/groups/join" route if the user is trying to join a group
       if (tab === "join") {
-        // We use POST to send data to the backend
         const response = await fetch("/api/groups/join", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ inviteCode: card.inviteCode }),
         });
 
-        // Standard error checking pattern
+        const data = await response.json();
+
         if (!response.ok) {
           if (response.status === 401) setIsAuthError(true);
-          const errorData = await response.json();
-          throw new Error(errorData.error);
+          throw new Error(data.error || "Failed to join group");
         }
 
-        // Send user to the dashboard on success
         router.push("/dashboard");
+        return;
       }
 
-      // If the user clicks on a card in the "Create Groups" tab, we need to create a new group and then navigate them to the set-group page to finish setup
       if (tab === "create") {
-        // Redirect to set-group page with parameters for API call
         router.push(
           `/set-group?repoName=${card.name}&repoOwner=${card.repoOwner}`,
         );
         return;
       }
     } catch (error: any) {
-      // Display the error message to the user in the UI
       setErrorMessage(error.message);
       if (
         error.message?.toLowerCase().includes("authentication") ||
@@ -129,7 +142,6 @@ export default function JoinCreateSwitchGroupPage() {
         setIsAuthError(true);
       }
     } finally {
-      // Turn off the loading state, whether it succeeded or failed
       setIsActionLoading(false);
     }
   };
@@ -143,7 +155,6 @@ export default function JoinCreateSwitchGroupPage() {
           <SprintHubTitle />
         </header>
 
-        {/* Error banner for redirection if any errors occur */}
         {errorMessage && (
           <div className="mx-auto mb-4 flex w-full flex-col items-center justify-center gap-3 rounded-md bg-red-100 p-4 text-center text-red-700 sm:mb-5">
             <p className="font-medium">{errorMessage}</p>
@@ -159,7 +170,6 @@ export default function JoinCreateSwitchGroupPage() {
         />
 
         <BorderedPanel className="w-full shrink-0 overflow-hidden p-4 sm:p-5 md:p-6">
-          {/* Display for loading and empty states */}
           {isFetching && (
             <p className="text-center text-gray-500">
               Loading your repositories...
@@ -177,15 +187,13 @@ export default function JoinCreateSwitchGroupPage() {
             </p>
           )}
 
-          {/* Displaying the repo/group cards */}
           {!isFetching && cards && cards.length > 0 && (
             <div className="scrollbar-thumb-accent max-h-[calc(100dvh-19rem)] overflow-y-auto pr-1 sm:max-h-[calc(100dvh-23rem)] sm:pr-2">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
                 {cards.map((card) => (
-                  // Button that uses card click handler to either join the group or start the group creation process, depending on the active tab.
                   <button
                     type="button"
-                    key={`${tab}-${card.name}-${card.repoOwner}`}
+                    key={`${tab}-${card._id ?? card.name}-${card.repoOwner}`}
                     onClick={() => handleCardClick(card)}
                     disabled={isActionLoading}
                     className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"

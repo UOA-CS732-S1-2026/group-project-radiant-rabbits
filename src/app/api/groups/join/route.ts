@@ -2,8 +2,9 @@ import { log } from "node:console";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import Group from "@/app/database/models/Group";
+import User from "@/app/database/models/User";
 import { checkRepoAccess } from "@/app/lib/githubService";
-import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 
 export async function POST(request: Request) {
@@ -12,15 +13,13 @@ export async function POST(request: Request) {
 
     const sessionWithToken = session as { accessToken?: string };
 
-    // Check if user has logged in with a valid Github account
-    if (!session?.user?.name) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
       );
     }
 
-    // Ensure user has access token
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "GitHub access token missing. Please sign in again." },
@@ -30,7 +29,6 @@ export async function POST(request: Request) {
 
     const { inviteCode } = await request.json();
 
-    // If the user does not input an invite code, return an error
     if (!inviteCode) {
       return NextResponse.json(
         { error: "Invite code is required" },
@@ -38,7 +36,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Checking that the inputted invite code is valid (8 alphanumeric characters)
     const isValidFormat =
       inviteCode.length === 8 && /^[A-Z0-9]+$/i.test(inviteCode);
 
@@ -49,34 +46,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // Connect to MongoDB and find a group that matches the invite code
     await connectMongoDB();
 
     const group = await Group.findOne({
       inviteCode: inviteCode.trim(),
     });
 
-    // If no group is found, return an error
     if (!group) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    // Check if user is already in that group
-    // If they are, return an error.
     if (
       group.members.some(
         (member: { toString: () => string }) =>
           member.toString() === session.user.id,
       )
     ) {
+      await User.findOneAndUpdate(
+        { githubId: session.user.id },
+        { currentGroupId: group._id },
+        { new: true },
+      );
+
       return NextResponse.json(
-        { error: "User is already a member" },
-        { status: 400 },
+        { message: "User is already a member", group },
+        { status: 200 },
       );
     }
 
-    // Check if the user has access to the associated repository with their GitHub account
-    // Using repo information associated with the group
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       group.repoOwner,
@@ -90,18 +87,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add the user to the group and return the updated group info
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
-      { $addToSet: { members: session.user.id } },
+      { $addToSet: { members: session.user.id }, updatedAt: new Date() },
       { new: true },
     );
+
+    await User.findOneAndUpdate(
+      { githubId: session.user.id },
+      { currentGroupId: updatedGroup._id },
+      { new: true },
+    );
+
     return NextResponse.json(
       { message: "Joined group successfully", group: updatedGroup },
       { status: 200 },
     );
-
-    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error joining group:", error);
     return NextResponse.json(
