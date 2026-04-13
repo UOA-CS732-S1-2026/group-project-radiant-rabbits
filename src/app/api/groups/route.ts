@@ -2,12 +2,12 @@ import { log } from "node:console";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import Group from "@/app/database/models/Group";
+import User from "@/app/database/models/User";
 import { checkRepoAccess } from "@/app/lib/githubService";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
-import { Group } from "../../lib/models";
 
-// Helper function to generate a random 8-character invite code
 function generateInviteCode() {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let inviteCode = "";
@@ -25,7 +25,6 @@ export async function POST(request: Request) {
 
     const sessionWithToken = session as { accessToken?: string };
 
-    // Check if user has logged in with a valid Github account
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -33,7 +32,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ensure user has access token
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "GitHub access token missing. Please sign in again." },
@@ -41,9 +39,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { description, repoOwner, repoName } = await request.json();
+    const { description, repoOwner, repoName, sprintSettings } =
+      await request.json();
 
-    // If the user does not input a name or description, return an error
     if (!description) {
       return NextResponse.json(
         { error: "Description is required" },
@@ -51,7 +49,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // If the user repository link lacks a repoOwner or repoName, return an error
     if (!repoOwner || !repoName) {
       return NextResponse.json(
         { error: "Repository name and owner is required" },
@@ -59,14 +56,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Connect to MongoDB and create a new group with the provided name, description
-    // Generate a unique invite code
     await connectMongoDB();
 
-    // Check if the group already exists for the associated repository
     const existingGroup = await Group.findOne({ repoOwner, repoName });
 
-    // If the group already exists for the repository, return an error
     if (existingGroup) {
       return NextResponse.json(
         { error: "A group already exists for this repository" },
@@ -74,7 +67,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if the user has access to the associated repository with their GitHub account
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       repoOwner,
@@ -88,17 +80,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Otherwise, create the group and generate a unique invite code
     const inviteCode = generateInviteCode();
 
     const group = await Group.create({
       name: repoName,
-      description: description,
-      inviteCode: inviteCode,
+      description,
+      inviteCode,
       members: [session.user.id],
-      repoOwner: repoOwner,
-      repoName: repoName,
+      repoOwner,
+      repoName,
       createdBy: session.user.id,
+      sprintSettings: {
+        startDate: sprintSettings?.startDate,
+        endDate: sprintSettings?.endDate,
+        sprintLength: sprintSettings?.sprintLength,
+        sprintLengthUnit: sprintSettings?.sprintLengthUnit,
+      },
       createdAt: new Date(),
       updatedAt: new Date(),
       lastSyncAt: new Date(),
@@ -106,30 +103,35 @@ export async function POST(request: Request) {
       syncError: null,
     });
 
-    // Fire-and-forget: start syncing GitHub data in the background.
-    // This doesn't block response — the user sees "Group Created" while the sync runs behind the scenes.
+    await User.findOneAndUpdate(
+      { githubId: session.user.id },
+      { currentGroupId: group._id },
+      { new: true },
+    );
+
     if (sessionWithToken.accessToken) {
       triggerSync(group._id.toString(), sessionWithToken.accessToken);
     }
 
-    // Return the created group info with a success message
     return NextResponse.json(
       {
         group: {
+          _id: group._id,
           name: group.name,
           description: group.description,
           inviteCode: group.inviteCode,
           members: group.members,
+          repoOwner: group.repoOwner,
+          repoName: group.repoName,
           createdBy: group.createdBy,
           createdAt: group.createdAt,
           updatedAt: group.updatedAt,
+          sprintSettings: group.sprintSettings,
         },
         message: "Group Successfully Created",
       },
       { status: 201 },
     );
-
-    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error creating group:", error);
     return NextResponse.json(
