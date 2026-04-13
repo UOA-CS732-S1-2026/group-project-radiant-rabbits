@@ -26,12 +26,12 @@ export default function LandingHowItWorksSection({
         />
 
         <ol
-          className={`grid list-none grid-cols-1 p-0 sm:grid-cols-2 lg:grid-cols-4 ${LANDING_STEP_GRID_GAP}`}
+          className={`grid list-none grid-cols-1 p-0 sm:[grid-template-columns:repeat(2,minmax(0,1fr))] lg:[grid-template-columns:repeat(4,minmax(0,1fr))] ${LANDING_STEP_GRID_GAP}`}
         >
           {LANDING_HOW_IT_WORKS_STEPS.map((step, index) => (
             <li
               key={step.title}
-              className={`group ${LANDING_STEP_INNER_STACK} items-center text-center`}
+              className={`group min-w-0 w-full ${LANDING_STEP_INNER_STACK} items-center text-center`}
             >
               <div
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-accent text-body-lg font-bold text-brand-dark shadow-sm transition duration-200 ease-out group-hover:scale-110 group-hover:bg-brand-primary group-hover:shadow-md motion-reduce:transition-none motion-reduce:group-hover:scale-100"
@@ -42,7 +42,7 @@ export default function LandingHowItWorksSection({
               <h3 className="text-body-lg font-extrabold text-brand-dark sm:text-h3 sm:leading-snug">
                 {step.title}
               </h3>
-              <p className="mx-auto max-w-xs text-body-sm font-semibold leading-relaxed text-brand-dark/85 sm:text-body-md">
+              <p className="w-full min-w-0 text-pretty text-body-sm font-semibold leading-relaxed text-brand-dark/85 sm:text-body-md">
                 {step.description}
               </p>
             </li>
