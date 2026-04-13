@@ -26,12 +26,16 @@ export const options: NextAuthOptions = {
     async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token;
+        token.id = account.providerAccountId;
       }
       return token;
     },
     // 3. Pass that token into the session so it's accessible in your pages
     async session({ session, token }: any) {
       session.accessToken = token.accessToken;
+      if (session.user) {
+        session.user.id = token.id;
+      }
       return session;
     },
   },
