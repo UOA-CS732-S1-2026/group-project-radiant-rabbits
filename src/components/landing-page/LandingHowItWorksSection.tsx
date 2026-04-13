@@ -53,10 +53,10 @@ export default function LandingHowItWorksSection({
               >
                 {index + 1}
               </div>
-              <h3 className="mt-md text-body-md font-bold text-brand-dark">
+              <h3 className="mt-md text-body-lg font-extrabold text-brand-dark sm:text-h3 sm:leading-snug">
                 {step.title}
               </h3>
-              <p className="mt-sm max-w-xs text-body-sm leading-snug text-brand-dark/70">
+              <p className="mt-sm max-w-xs text-body-sm leading-relaxed text-brand-dark/85 sm:text-body-md">
                 {step.description}
               </p>
             </li>

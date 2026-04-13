@@ -2,13 +2,13 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #091636;
+  --foreground: #0d1f4a;
 }
 
 @theme inline {
   /* Brand colors */
   --color-brand-primary: #7bbcfe;
-  --color-brand-dark: #091636;
+  --color-brand-dark: #0d1f4a;
   --color-brand-background: #ffffff;
   --color-brand-accent: #b8a9fe;
   --color-brand-surface: #ffffff;

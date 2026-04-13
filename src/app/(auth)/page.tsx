@@ -21,7 +21,7 @@ export default async function LoginPage() {
           aria-labelledby="landing-hero-heading"
         >
           <div className="flex justify-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/25 px-3 py-1.5 text-body-xs font-semibold uppercase tracking-widest text-brand-dark/75">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent px-3 py-1.5 text-body-xs font-semibold uppercase tracking-widest text-brand-dark">
               <span aria-hidden className="text-brand-dark/50">
                 •
               </span>
@@ -30,11 +30,11 @@ export default async function LoginPage() {
           </div>
           <h1
             id="landing-hero-heading"
-            className="mt-lg text-balance text-h1 font-bold leading-tight text-brand-dark sm:mt-xl"
+            className="mt-lg text-balance text-[2rem] font-extrabold leading-tight tracking-tight text-brand-dark sm:mt-xl sm:text-[2.25rem] md:text-[2.5rem]"
           >
             Sprint reviews that actually mean something
           </h1>
-          <p className="mx-auto mt-md w-full min-w-0 max-w-2xl text-body-md leading-relaxed text-brand-dark/70 sm:mt-lg">
+          <p className="mx-auto mt-md w-full min-w-0 max-w-2xl text-body-md leading-relaxed text-brand-dark/85 sm:mt-lg sm:text-body-lg">
             SprintHub connects to your GitHub repository and automatically
             generates data-driven sprint review reports — so your team can stop
             guessing and start improving.

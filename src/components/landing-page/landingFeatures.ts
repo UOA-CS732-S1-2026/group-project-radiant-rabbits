@@ -16,7 +16,7 @@ export const LANDING_FEATURES = [
     title: "AI Sprint Summaries",
     description:
       "Plain-language summaries of each contributor's work, including invisible work not linked to issues.",
-    accentColor: "#C4B5FD",
+    accentColor: "#B8A9FE",
   },
   {
     title: "Contributor Insights",
@@ -40,6 +40,6 @@ export const LANDING_FEATURES = [
     title: "Secure GitHub OAuth",
     description:
       "Sign in directly with GitHub. Only accesses repositories you explicitly connect.",
-    accentColor: "#D8B4FE",
+    accentColor: "#B8A9FE",
   },
 ] as const satisfies readonly LandingFeature[];
