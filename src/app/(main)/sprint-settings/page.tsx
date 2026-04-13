@@ -8,7 +8,7 @@ import PageContainer from "@/components/ui/PageContainer";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 export default function SprintSettings() {
-  const groupId = "69ca29a7c9329fe21b952367"; //temporary hardcoded group ID until we implement dynamic group handling
+  const [groupId, setGroupId] = useState<string | null>(null);
 
   const [projectStart, setProjectStart] = useState("2026-02-01");
   const [projectEnd, setProjectEnd] = useState("2026-06-04");
@@ -26,23 +26,47 @@ export default function SprintSettings() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const fetchSprintSettings = async () => {
+    const fetchCurrentGroupAndSettings = async () => {
       try {
-        const res = await fetch(`/api/sprint-settings?groupId=${groupId}`);
+        const currentGroupRes = await fetch("/api/user/current-group");
+        const currentGroupData = await currentGroupRes.json();
 
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error("Fetch sprint settings error:", errorData);
-          throw new Error(errorData.error || "Failed to fetch sprint settings");
+        if (!currentGroupRes.ok) {
+          throw new Error(
+            currentGroupData.error || "Failed to fetch current group",
+          );
         }
 
-        const data = await res.json();
+        const currentGroupId = currentGroupData.currentGroup?._id ?? null;
 
-        if (data) {
+        if (!currentGroupId) {
+          setMessage("No current group selected.");
+          return;
+        }
+
+        setGroupId(currentGroupId);
+
+        const settingsRes = await fetch(
+          `/api/sprint-settings?groupId=${currentGroupId}`,
+        );
+
+        const settingsData = await settingsRes.json();
+
+        if (!settingsRes.ok) {
+          throw new Error(
+            settingsData.error || "Failed to fetch sprint settings",
+          );
+        }
+
+        if (settingsData) {
           const formattedSettings = {
-            startDate: data.startDate ? data.startDate.split("T")[0] : "",
-            endDate: data.endDate ? data.endDate.split("T")[0] : "",
-            sprintLength: data.sprintLength ?? 1,
+            startDate: settingsData.startDate
+              ? settingsData.startDate.split("T")[0]
+              : "",
+            endDate: settingsData.endDate
+              ? settingsData.endDate.split("T")[0]
+              : "",
+            sprintLength: settingsData.sprintLength ?? 1,
           };
 
           setSavedSettings(formattedSettings);
@@ -51,12 +75,16 @@ export default function SprintSettings() {
           setSprintLength(formattedSettings.sprintLength);
         }
       } catch (error) {
-        console.error("Error fetching sprint settings:", error);
+        console.error(
+          "Error fetching current group or sprint settings:",
+          error,
+        );
+        setMessage("Failed to fetch current sprint settings.");
       }
     };
 
-    fetchSprintSettings();
-  }, []); //replace with group ID later
+    fetchCurrentGroupAndSettings();
+  }, []);
 
   const handleSave = async () => {
     setMessage("");
@@ -64,6 +92,11 @@ export default function SprintSettings() {
     setIsSaved(false);
 
     try {
+      if (!groupId) {
+        setMessage("No active group found.");
+        return;
+      }
+
       if (!projectStart || !projectEnd) {
         setMessage("Please select both a project start and end date.");
         return;
@@ -152,7 +185,7 @@ export default function SprintSettings() {
       <div className="space-y-lg">
         <Card>
           <h2 className="mb-lg text-h3 font-semibold text-brand-dark">
-            Current Sprint Settings
+            Current Sprint Configuration
           </h2>
 
           <div className="grid gap-md md:grid-cols-3">
@@ -241,7 +274,7 @@ export default function SprintSettings() {
             </div>
 
             <div className="ml-auto">
-              <Button onClick={handleSave} disabled={isSaving}>
+              <Button onClick={handleSave} disabled={isSaving || !groupId}>
                 {isSaving ? "Saving..." : isSaved ? "Saved ✓" : "Save Settings"}
               </Button>
             </div>
