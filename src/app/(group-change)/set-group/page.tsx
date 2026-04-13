@@ -11,14 +11,6 @@ const fieldColumnClass =
 
 const dateFieldClass = `${fieldColumnClass} min-h-12 rounded-lg border border-brand-accent/50 bg-brand-surface px-md py-2 text-body-md leading-tight text-brand-dark shadow-sm outline-none transition-shadow [color-scheme:light] focus:ring-2 focus:ring-brand-primary sm:min-h-[3.25rem]`;
 
-const SPRINT_UNITS = ["days", "weeks", "months"] as const;
-type SprintLengthUnit = (typeof SPRINT_UNITS)[number];
-
-function nextSprintUnit(current: SprintLengthUnit): SprintLengthUnit {
-  const i = SPRINT_UNITS.indexOf(current);
-  return SPRINT_UNITS[(i + 1) % SPRINT_UNITS.length];
-}
-
 function toDateInputValue(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -36,7 +28,6 @@ function SetGroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Get parameters from groups page
   const repoName = searchParams.get("repoName");
   const repoOwner = searchParams.get("repoOwner");
 
@@ -47,11 +38,8 @@ function SetGroupContent() {
     const today = new Date();
     return toDateInputValue(addCalendarMonths(today, 2));
   });
-  const [sprintLength, setSprintLength] = useState(7);
-  const [sprintLengthUnit, setSprintLengthUnit] =
-    useState<SprintLengthUnit>("days");
+  const [sprintLength, setSprintLength] = useState(1);
 
-  // States for the API call to create the group and error handling
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -63,31 +51,40 @@ function SetGroupContent() {
       return;
     }
 
+    if (sprintLength < 1 || sprintLength > 4) {
+      setErrorMessage("Sprint length must be between 1 and 4 weeks.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage("");
 
     try {
-      // Calling POST /api/groups to create the group with the selected repository and default description.
       const response = await fetch("/api/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          repoOwner: repoOwner,
-          repoName: repoName,
+          repoOwner,
+          repoName,
           description: `Group for ${repoOwner}/${repoName}`,
-          // Add Sprint details here once added to model
+          sprintSettings: {
+            startDate: projectStart,
+            endDate: projectEnd,
+            sprintLength,
+          },
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create group.");
+        throw new Error(data.error || "Failed to create group.");
       }
 
-      // Redirect to empty dashboard for created group
       router.push("/dashboard");
     } catch (error: any) {
       setErrorMessage(error.message);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -96,9 +93,8 @@ function SetGroupContent() {
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="flex flex-col justify-start px-0 pt-0 sm:px-lg">
         <div className="flex w-full max-w-full min-w-0 flex-col items-stretch gap-4 sm:mx-auto sm:w-fit sm:gap-5">
-          {/* Display an errors from group creation API*/}
           {errorMessage && (
-            <div className="rounded-md bg-red-100 p-3 text-sm text-red-700 text-center">
+            <div className="rounded-md bg-red-100 p-3 text-center text-sm text-red-700">
               {errorMessage}
             </div>
           )}
@@ -140,30 +136,29 @@ function SetGroupContent() {
                 Sprint Length
               </label>
               <div
-                className={`grid min-h-12 min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-brand-accent/50 bg-brand-surface shadow-sm focus-within:ring-2 focus-within:ring-brand-primary sm:min-h-[3.25rem] ${fieldColumnClass}`}
+                className={`grid min-h-12 min-w-0 grid-cols-[1fr_auto] overflow-hidden rounded-lg border border-brand-accent/50 bg-brand-surface shadow-sm focus-within:ring-2 focus-within:ring-brand-primary sm:min-h-[3.25rem] ${fieldColumnClass}`}
               >
                 <div className="flex min-h-0 min-w-0 items-center justify-center border-r border-brand-accent/30 py-1.5 sm:py-2">
                   <input
                     id="set-group-sprint"
                     type="number"
                     min={1}
+                    max={4}
+                    step={1}
                     value={sprintLength}
                     onChange={(e) => {
                       const n = Number(e.target.value);
-                      if (!Number.isNaN(n) && n >= 1) setSprintLength(n);
+                      if (!Number.isNaN(n)) {
+                        setSprintLength(Math.min(4, Math.max(1, n)));
+                      }
                     }}
-                    className="w-full min-w-0 border-0 bg-transparent text-center text-body-md text-brand-dark outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    aria-label="Sprint length amount"
+                    className="w-full min-w-0 border-0 bg-transparent text-center text-body-md text-brand-dark outline-none"
+                    aria-label="Sprint length in weeks"
                   />
                 </div>
-                <button
-                  type="button"
-                  className="flex min-h-0 min-w-0 cursor-pointer select-none items-center justify-center border-0 py-1.5 text-body-md text-brand-dark/75 transition-colors hover:bg-brand-accent/15 active:bg-brand-accent/25 sm:py-2"
-                  onClick={() => setSprintLengthUnit((u) => nextSprintUnit(u))}
-                  aria-label={`Unit: ${sprintLengthUnit}. Click to switch between days, weeks, and months.`}
-                >
-                  {sprintLengthUnit}
-                </button>
+                <div className="flex min-h-0 min-w-0 items-center justify-center px-4 py-1.5 text-body-md text-brand-dark/75 sm:py-2">
+                  weeks
+                </div>
               </div>
             </div>
           </GroupCard>
@@ -178,7 +173,6 @@ function SetGroupContent() {
               Back
             </Button>
 
-            {/* Changed from href link to a button that triggers the API call */}
             <Button
               size="lg"
               onClick={handleCreateGroup}
@@ -202,7 +196,6 @@ export default function SetGroupPage() {
           <SprintHubTitle />
         </header>
 
-        {/* Suspense is required by Next.js when using useSearchParams */}
         <Suspense fallback={<div className="text-center">Loading...</div>}>
           <SetGroupContent />
         </Suspense>
