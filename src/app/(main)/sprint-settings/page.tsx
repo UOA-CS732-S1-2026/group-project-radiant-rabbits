@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import Input from "@/components/ui/Input";
-import PageContainer from "@/components/ui/PageContainer";
-import SectionHeading from "@/components/ui/SectionHeading";
+import { useState } from "react";
+import Button from "@/components/shared/Button";
+import Card from "@/components/shared/Card";
+import Input from "@/components/shared/Input";
+import PageContainer from "@/components/shared/PageContainer";
+import SectionHeading from "@/components/shared/SectionHeading";
 
 export default function SprintSettings() {
   const [groupId, setGroupId] = useState<string | null>(null);

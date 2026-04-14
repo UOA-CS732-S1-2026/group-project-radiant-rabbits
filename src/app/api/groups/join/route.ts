@@ -2,9 +2,9 @@ import { log } from "node:console";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import Group from "@/app/database/models/Group";
-import User from "@/app/database/models/User";
 import { checkRepoAccess } from "@/app/lib/githubService";
+import { Group } from "@/app/lib/models/group.model";
+import { User } from "@/app/lib/models/user.model";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 
 export async function POST(request: Request) {

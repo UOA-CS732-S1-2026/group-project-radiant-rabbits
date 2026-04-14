@@ -1,11 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import Group from "@/app/database/models/Group";
-import User from "@/app/database/models/User";
+import { Group } from "@/app/lib/models/group.model";
+import { User } from "@/app/lib/models/user.model";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { normalizeUserRefString } from "@/app/lib/userRef";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<void> },
+) {
   try {
     const session = await getServerSession(options);
     const sessionWithToken = session as {
@@ -20,7 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = sessionWithToken.user.id;
+    const userId = normalizeUserRefString(sessionWithToken.user.id);
 
     const githubResponse = await fetch(
       "https://api.github.com/user/repos?per_page=100",
@@ -36,7 +40,10 @@ export async function GET(request: NextRequest) {
       throw new Error("Failed to fetch repositories from GitHub");
     }
 
-    const githubRepos = await githubResponse.json();
+    const githubRepos = (await githubResponse.json()) as Array<{
+      name: string;
+      owner: { login: string };
+    }>;
 
     await connectMongoDB();
 
@@ -52,11 +59,12 @@ export async function GET(request: NextRequest) {
     const createGroups: Array<{ repoName: string; repoOwner: string }> = [];
 
     allGroups.forEach((group) => {
+      // If the user is already a member, add to "Current Groups"
       if (group.members.map(String).includes(userId)) {
         currentGroups.push(group);
       } else {
         const hasGithubAccess = githubRepos.some(
-          (repo: any) =>
+          (repo) =>
             repo.name === group.repoName &&
             repo.owner.login === group.repoOwner,
         );
@@ -67,7 +75,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Sort the remaining GitHub repos into "Creatable Groups" if no existing group is associated with that repo in MongoDB
     githubRepos.forEach((repo: any) => {
+      // Check if a group already exists in MongoDB for this specific repo
       const groupExists = allGroups.some(
         (group) =>
           group.repoName === repo.name && group.repoOwner === repo.owner.login,

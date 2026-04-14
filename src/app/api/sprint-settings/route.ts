@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
-import Group from "@/app/database/models/Group";
+import { Group } from "@/app/lib/models/group.model";
 
 const MONGODB_URL = process.env.MONGODB_URL!;
 
