@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SignInButton from "@/components/auth/SignInButton";
 import BorderedPanel from "@/components/ui/BorderedPanel";
-import Button from "@/components/ui/Button";
 import GroupCard from "@/components/ui/GroupCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";

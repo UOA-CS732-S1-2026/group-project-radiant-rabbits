@@ -1,7 +1,7 @@
-import BorderedPanel from "@/components/ui/BorderedPanel";
-import Card from "@/components/ui/Card";
-import PageContainer from "@/components/ui/PageContainer";
-import SectionHeading from "@/components/ui/SectionHeading";
+import BorderedPanel from "@/components/shared/BorderedPanel";
+import Card from "@/components/shared/Card";
+import PageContainer from "@/components/shared/PageContainer";
+import SectionHeading from "@/components/shared/SectionHeading";
 
 const pastSprints = [
   {
