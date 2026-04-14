@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { isUserInGroup } from "@/app/lib/userRef";
 
 // Helper to load group + membership
 async function getGroupForUser(groupId: string, userId: string) {
@@ -10,7 +11,7 @@ async function getGroupForUser(groupId: string, userId: string) {
   if (!group) {
     return { status: 404, error: "Group not found" as const };
   }
-  if (!group.members.includes(userId)) {
+  if (!isUserInGroup(group.members, userId)) {
     return {
       status: 403,
       error: "You are not a member of this group" as const,
@@ -22,7 +23,7 @@ async function getGroupForUser(groupId: string, userId: string) {
 // GET /api/groups/:groupId/sprints/:sprintId
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
 ) {
   try {
@@ -104,7 +105,7 @@ export async function PUT(
 
     if (startDate) {
       start = new Date(startDate);
-      if (isNaN(start.getTime())) {
+      if (Number.isNaN(start.getTime())) {
         return NextResponse.json(
           { error: "Invalid startDate" },
           { status: 400 },
@@ -114,7 +115,7 @@ export async function PUT(
 
     if (endDate) {
       end = new Date(endDate);
-      if (isNaN(end.getTime())) {
+      if (Number.isNaN(end.getTime())) {
         return NextResponse.json({ error: "Invalid endDate" }, { status: 400 });
       }
     }
@@ -160,7 +161,7 @@ export async function PUT(
 // DELETE /api/groups/:groupId/sprints/:sprintId
 
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
 ) {
   try {

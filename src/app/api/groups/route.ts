@@ -5,6 +5,7 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import { checkRepoAccess } from "@/app/lib/githubService";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
+import { normalizeUserRef } from "@/app/lib/userRef";
 import { Group } from "../../lib/models";
 
 // Helper function to generate a random 8-character invite code
@@ -95,10 +96,10 @@ export async function POST(request: Request) {
       name: repoName,
       description: description,
       inviteCode: inviteCode,
-      members: [session.user.id],
+      members: [normalizeUserRef(session.user.id)],
       repoOwner: repoOwner,
       repoName: repoName,
-      createdBy: session.user.id,
+      createdBy: normalizeUserRef(session.user.id),
       createdAt: new Date(),
       updatedAt: new Date(),
       lastSyncAt: new Date(),

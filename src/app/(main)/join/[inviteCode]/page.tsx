@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { checkRepoAccess } from "@/app/lib/githubService";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
@@ -12,7 +14,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 // Function to retrieve conditional logic for join page via invite code
 export async function joinInviteLogic(
   inviteCode: string,
-  userName: string,
+  userId: string,
   accessToken: string,
 ) {
   try {
@@ -28,7 +30,7 @@ export async function joinInviteLogic(
     }
 
     // Check if the user is already a member of the linked group
-    const isAlreadyMember = group.members.includes(userName);
+    const isAlreadyMember = isUserInGroup(group.members, userId);
 
     // If user is already a member, return existing member error
     if (isAlreadyMember) {
@@ -51,7 +53,7 @@ export async function joinInviteLogic(
     // If they aren't a member yet, update group membership before redirecting
     await Group.updateOne(
       { _id: group._id },
-      { $addToSet: { members: userName } },
+      { $addToSet: { members: normalizeUserRef(userId) } },
     );
 
     return { success: true, group };
@@ -73,7 +75,7 @@ export default async function JoinInvitePage({
   const sessionWithToken = session as { accessToken?: string };
 
   // Check if user has logged in with a valid Github account
-  if (!session?.user?.name) {
+  if (!session?.user?.id) {
     // Redirect to login if no session exists
     redirect(`/?callbackUrl=/join/${inviteCode}`);
   }
@@ -81,7 +83,7 @@ export default async function JoinInvitePage({
   // Retrieving state from invite logic conditions
   const result = await joinInviteLogic(
     inviteCode,
-    session.user.name,
+    session.user.id,
     sessionWithToken.accessToken as string,
   );
 

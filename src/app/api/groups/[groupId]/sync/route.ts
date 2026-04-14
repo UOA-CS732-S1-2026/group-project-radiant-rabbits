@@ -4,13 +4,14 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
+import { isUserInGroup } from "@/app/lib/userRef";
 
 // POST /api/groups/:groupId/sync
 // Manually triggers a GitHub data sync for this group.
 // Used when a user wants to refresh the data without waiting for the next auto-sync.
 
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ groupId: string }> },
 ) {
   try {
@@ -35,7 +36,7 @@ export async function POST(
     }
 
     // Only group members can trigger a sync
-    if (!group.members.includes(session.user.id)) {
+    if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
         { status: 403 },
