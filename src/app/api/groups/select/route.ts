@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
+import { isUserInGroup } from "@/app/lib/userRef";
 
 export async function POST(request: Request) {
   try {
@@ -49,9 +49,15 @@ export async function POST(request: Request) {
       );
     }
 
-    await User.findByIdAndUpdate(normalizeUserRef(session.user.id), {
-      currentGroupId: group._id,
-    });
+    const updatedUser = await User.findOneAndUpdate(
+      { githubId: session.user.id },
+      { currentGroupId: group._id },
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
     return NextResponse.json(
       {
