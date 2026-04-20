@@ -2,9 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import Button from "@/components/ui/Button";
-import GroupCard from "@/components/ui/GroupCard";
-import SprintHubTitle from "@/components/ui/SprintHubTitle";
+import GroupCard from "@/components/group-change/GroupCard";
+import Button from "@/components/shared/Button";
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
+import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
 const fieldColumnClass =
   "w-full max-w-[18rem] min-w-0 justify-self-start sm:max-w-[17rem]";
@@ -201,6 +202,16 @@ export default function SetGroupPage() {
         <header className="mb-5 flex shrink-0 flex-col items-center text-center sm:mb-6">
           <SprintHubTitle />
         </header>
+
+        <div className="mb-4 flex shrink-0 justify-center sm:mb-5">
+          <HelpOverlayTrigger
+            label="Help for finishing group setup"
+            title="Overview"
+            size="comfortable"
+          >
+            <p className="text-center">Soon</p>
+          </HelpOverlayTrigger>
+        </div>
 
         {/* Suspense is required by Next.js when using useSearchParams */}
         <Suspense fallback={<div className="text-center">Loading...</div>}>
