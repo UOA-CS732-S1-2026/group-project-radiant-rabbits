@@ -206,10 +206,27 @@ export default function SetGroupPage() {
         <div className="mb-4 flex shrink-0 justify-center sm:mb-5">
           <HelpOverlayTrigger
             label="Help for finishing group setup"
-            title="Overview"
+            title="Creating your group"
             size="comfortable"
           >
-            <p className="text-center">Soon</p>
+            <div className="space-y-4 text-left">
+              <p>
+                <span className="font-semibold text-brand-dark">
+                  Project start and end
+                </span>{" "}
+                are the dates your project is meant to run between; together
+                they define the overall schedule you’re capturing when you
+                create this group.
+              </p>
+              <p>
+                <span className="font-semibold text-brand-dark">
+                  Sprint length
+                </span>{" "}
+                is how long one sprint should last: enter the amount, then tap
+                the unit to cycle between days, weeks, and months so the cadence
+                matches how your team wants to slice work into iterations.
+              </p>
+            </div>
           </HelpOverlayTrigger>
         </div>
 
