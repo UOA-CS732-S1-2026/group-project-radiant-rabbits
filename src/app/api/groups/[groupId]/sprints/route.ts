@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { isUserInGroup } from "@/app/lib/userRef";
 
 // POST /api/groups/:groupId/sprints
 // Creates a new sprint for the given group.
@@ -35,7 +36,7 @@ export async function POST(
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       return NextResponse.json(
         { error: "Invalid startDate or endDate" },
         { status: 400 },
@@ -56,7 +57,7 @@ export async function POST(
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    if (!group.members.includes(session.user.id)) {
+    if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
         { status: 403 },
@@ -149,7 +150,7 @@ export async function GET(
     }
 
     // If user is not a member, return empty list (but still 200)
-    if (!group.members.includes(session.user.id)) {
+    if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json([], { status: 200 });
     }
 

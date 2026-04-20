@@ -1,6 +1,7 @@
-import Card from "@/components/ui/Card";
-import PageContainer from "@/components/ui/PageContainer";
-import SectionHeading from "@/components/ui/SectionHeading";
+import BorderedPanel from "@/components/shared/BorderedPanel";
+import Card from "@/components/shared/Card";
+import PageContainer from "@/components/shared/PageContainer";
+import SectionHeading from "@/components/shared/SectionHeading";
 
 const teammates = [
   { name: "Anna James", avatarClass: "bg-brand-accent/60" },
@@ -31,7 +32,7 @@ export default function TeammatesPage() {
       />
 
       <Card className="border border-brand-dark/10 border-l-0 shadow-none">
-        <div className="rounded-xl border border-brand-dark/10 bg-brand-surface">
+        <BorderedPanel className="p-0">
           {/* Header */}
           <div className="border-b border-brand-dark/10 px-lg py-lg">
             <h2 className="text-h3 font-semibold text-brand-dark">
@@ -56,7 +57,7 @@ export default function TeammatesPage() {
               ))}
             </div>
           </div>
-        </div>
+        </BorderedPanel>
       </Card>
     </PageContainer>
   );

@@ -1,29 +1,36 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import SignInButton from "@/components/auth/SignInButton";
-import { options } from "../api/auth/[...nextauth]/options";
+import { options } from "@/app/api/auth/[...nextauth]/options";
+import LandingClosingCtaSection from "@/components/landing-page/LandingClosingCtaSection";
+import LandingFeaturesSection from "@/components/landing-page/LandingFeaturesSection";
+import LandingHeroSection from "@/components/landing-page/LandingHeroSection";
+import LandingHowItWorksSection from "@/components/landing-page/LandingHowItWorksSection";
 
 export default async function LoginPage() {
   const session = await getServerSession(options);
 
   if (session) {
-    redirect("/dashboard");
+    redirect("/join-create-switch-group");
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-primary to-brand-accent px-xl">
-      <section className="w-full max-w-form rounded-2xl bg-brand-surface p-xl shadow-lg">
-        <header className="text-center">
-          <h1 className="text-h1 font-semibold text-brand-dark">SprintHub</h1>
-          <p className="mt-sm text-body-sm text-brand-dark/70">
-            Automate sprint insights for GitHub student projects.
-          </p>
-        </header>
+    <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col items-stretch justify-start gap-20 sm:gap-24 md:gap-28">
+      {/* Full-width row so children are block-level: mx-auto + max-w works (not flex items with margin:auto). */}
+      <div className="w-full min-w-0">
+        <LandingHeroSection />
+      </div>
 
-        <div className="mt-xl flex justify-center">
-          <SignInButton />
-        </div>
-      </section>
-    </main>
+      <div className="w-full min-w-0">
+        <LandingFeaturesSection />
+      </div>
+
+      <div className="w-full min-w-0">
+        <LandingHowItWorksSection />
+      </div>
+
+      <div className="w-full min-w-0">
+        <LandingClosingCtaSection />
+      </div>
+    </div>
   );
 }

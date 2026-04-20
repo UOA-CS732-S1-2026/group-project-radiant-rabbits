@@ -5,6 +5,7 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import { checkRepoAccess } from "@/app/lib/githubService";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     const sessionWithToken = session as { accessToken?: string };
 
     // Check if user has logged in with a valid Github account
-    if (!session?.user?.name) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
@@ -63,12 +64,7 @@ export async function POST(request: Request) {
 
     // Check if user is already in that group
     // If they are, return an error.
-    if (
-      group.members.some(
-        (member: { toString: () => string }) =>
-          member.toString() === session.user.id,
-      )
-    ) {
+    if (isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "User is already a member" },
         { status: 400 },
@@ -93,7 +89,7 @@ export async function POST(request: Request) {
     // Add the user to the group and return the updated group info
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
-      { $addToSet: { members: session.user.id } },
+      { $addToSet: { members: normalizeUserRef(session.user.id) } },
       { new: true },
     );
     return NextResponse.json(

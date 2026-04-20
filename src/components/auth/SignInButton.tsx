@@ -2,13 +2,24 @@
 
 import { signIn } from "next-auth/react";
 
-export default function SignInButton() {
+type SignInButtonProps = {
+  className?: string;
+  children?: React.ReactNode;
+};
+
+export default function SignInButton({
+  className = "",
+  children = "Sign in with GitHub",
+}: SignInButtonProps) {
   return (
     <button
       type="button"
-      onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+      className={className}
+      onClick={() =>
+        signIn("github", { callbackUrl: "/join-create-switch-group" })
+      }
     >
-      Sign In With GitHub
+      {children}
     </button>
   );
 }

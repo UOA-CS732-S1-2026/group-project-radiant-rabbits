@@ -1,5 +1,10 @@
-import Card from "@/components/ui/Card";
-import PageContainer from "@/components/ui/PageContainer";
+"use client";
+
+import { useMemo, useState } from "react";
+import BorderedPanel from "@/components/shared/BorderedPanel";
+import Card from "@/components/shared/Card";
+import PageContainer from "@/components/shared/PageContainer";
+import SegmentedControl from "@/components/shared/SegmentedControl";
 
 const sprintTasks = [
   { id: "#124", title: "Build Dashboard", status: "Closed" },
@@ -70,7 +75,7 @@ function BreakdownTile({
   dotClass: string;
 }) {
   return (
-    <div className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md shadow-md">
+    <BorderedPanel shadow>
       <div className="flex items-center gap-sm">
         <span className={`h-sm w-sm rounded-full ${dotClass}`} />
         <span className="text-body-md font-medium text-brand-dark">
@@ -78,7 +83,7 @@ function BreakdownTile({
         </span>
       </div>
       <p className="mt-xs pl-lg text-body-md text-brand-dark/60">{value}</p>
-    </div>
+    </BorderedPanel>
   );
 }
 
@@ -106,6 +111,18 @@ function FilterChip({
 }
 
 export default function CurrentSprintPage() {
+  const [issueFilter, setIssueFilter] = useState<string>("all");
+
+  const filteredSprintTasks = useMemo(() => {
+    if (issueFilter === "open") {
+      return sprintTasks.filter((t) => t.status === "Open");
+    }
+    if (issueFilter === "closed") {
+      return sprintTasks.filter((t) => t.status === "Closed");
+    }
+    return sprintTasks;
+  }, [issueFilter]);
+
   return (
     <div className="min-h-screen bg-brand-background">
       <PageContainer>
@@ -113,7 +130,7 @@ export default function CurrentSprintPage() {
           <div className="space-y-lg">
             <h2 className="text-h2 font-semibold text-brand-dark">Sprint 4</h2>
 
-            <section className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md">
+            <BorderedPanel as="section">
               <div className="flex items-start justify-between gap-md">
                 <div>
                   <h3 className="text-body-lg font-medium text-brand-dark">
@@ -127,9 +144,9 @@ export default function CurrentSprintPage() {
 
                 <span className="text-body-md text-brand-dark/70">✎</span>
               </div>
-            </section>
+            </BorderedPanel>
 
-            <section className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md">
+            <BorderedPanel as="section">
               <div className="mb-md grid grid-cols-1 gap-sm text-body-md text-brand-dark/60 md:grid-cols-3">
                 <p>
                   <span className="font-medium text-brand-dark">
@@ -154,7 +171,7 @@ export default function CurrentSprintPage() {
               <div className="h-sm w-full rounded-full bg-brand-accent/20">
                 <div className="h-sm w-2/3 rounded-full bg-brand-accent" />
               </div>
-            </section>
+            </BorderedPanel>
 
             <section>
               <h3 className="mb-md text-h3 font-semibold text-brand-dark">
@@ -163,7 +180,7 @@ export default function CurrentSprintPage() {
 
               <div className="grid gap-lg lg:grid-cols-[2.2fr_1fr]">
                 <div className="space-y-md">
-                  <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                  <BorderedPanel>
                     <div className="grid gap-md md:grid-cols-3">
                       <BreakdownTile
                         label="To Do"
@@ -181,9 +198,9 @@ export default function CurrentSprintPage() {
                         dotClass="bg-green-500"
                       />
                     </div>
-                  </div>
+                  </BorderedPanel>
 
-                  <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                  <BorderedPanel>
                     <h4 className="text-body-lg font-semibold text-brand-dark">
                       Sprint Tasks
                     </h4>
@@ -196,7 +213,7 @@ export default function CurrentSprintPage() {
 
                     <div className="mt-lg overflow-y-auto pr-sm">
                       <div className="space-y-md">
-                        {sprintTasks.map((task) => (
+                        {filteredSprintTasks.map((task) => (
                           <div
                             key={task.id}
                             className="grid grid-cols-[5rem_1fr_5rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
@@ -214,9 +231,9 @@ export default function CurrentSprintPage() {
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </BorderedPanel>
 
-                  <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                  <BorderedPanel>
                     <h4 className="text-body-lg font-semibold text-brand-dark">
                       Activity Timeline
                     </h4>
@@ -242,10 +259,10 @@ export default function CurrentSprintPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </BorderedPanel>
                 </div>
 
-                <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">
+                <BorderedPanel>
                   <h4 className="text-body-lg font-semibold text-brand-dark">
                     Contribution Breakdown
                   </h4>
@@ -268,7 +285,7 @@ export default function CurrentSprintPage() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </BorderedPanel>
               </div>
             </section>
           </div>

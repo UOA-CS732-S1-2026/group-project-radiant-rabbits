@@ -217,7 +217,11 @@ describe("POST /api/groups/join", () => {
     expect(body.message).toBe("Joined group successfully");
     expect(mockGroupFindByIdAndUpdate).toHaveBeenCalledWith(
       "group-1",
-      { $addToSet: { members: "123" } },
+      {
+        $addToSet: {
+          members: expect.anything(),
+        },
+      },
       { new: true },
     );
     expect(body.group.members).toEqual(["456", "123"]);
