@@ -6,6 +6,10 @@ import GroupCard from "@/components/group-change/GroupCard";
 import Button from "@/components/shared/Button";
 import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import SprintHubTitle from "@/components/shared/SprintHubTitle";
+import {
+  joinCreateSwitchGroupHref,
+  safeDashboardReturn,
+} from "@/lib/safeDashboardReturn";
 
 const fieldColumnClass =
   "w-full max-w-[18rem] min-w-0 justify-self-start sm:max-w-[17rem]";
@@ -40,6 +44,9 @@ function SetGroupContent() {
   // Get parameters from groups page
   const repoName = searchParams.get("repoName");
   const repoOwner = searchParams.get("repoOwner");
+  const joinPickerHref = joinCreateSwitchGroupHref(
+    safeDashboardReturn(searchParams.get("returnTo")),
+  );
 
   const [projectStart, setProjectStart] = useState(() =>
     toDateInputValue(new Date()),
@@ -173,7 +180,7 @@ function SetGroupContent() {
             <Button
               variant="grey"
               size="lg"
-              href="/join-create-switch-group"
+              href={joinPickerHref}
               className="min-h-11 w-full justify-center py-2.5 font-semibold sm:w-auto sm:px-7"
             >
               Back

@@ -1,12 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import SignInButton from "@/components/auth/SignInButton";
+import Button from "@/components/shared/Button";
 import BorderedPanel from "@/components/ui/BorderedPanel";
 import GroupCard from "@/components/ui/GroupCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
+import { safeDashboardReturn } from "@/lib/safeDashboardReturn";
 
 const TAB_OPTIONS = [
   { id: "join", label: "Join a Group" },
@@ -16,8 +18,14 @@ const TAB_OPTIONS = [
 
 type GroupListCard = { name: string; repoOwner: string; inviteCode?: string };
 
-export default function JoinCreateSwitchGroupPage() {
+function JoinCreateSwitchGroupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const dashboardReturn = useMemo(
+    () => safeDashboardReturn(searchParams.get("returnTo")),
+    [searchParams],
+  );
+
   const [tab, setTab] = useState<string>("join");
 
   // State to hold the lists of groups for each tab
@@ -111,10 +119,12 @@ export default function JoinCreateSwitchGroupPage() {
 
       // If the user clicks on a card in the "Create Groups" tab, we need to create a new group and then navigate them to the set-group page to finish setup
       if (tab === "create") {
-        // Redirect to set-group page with parameters for API call
-        router.push(
-          `/set-group?repoName=${card.name}&repoOwner=${card.repoOwner}`,
-        );
+        const q = new URLSearchParams({
+          repoName: card.name,
+          repoOwner: card.repoOwner,
+        });
+        if (dashboardReturn) q.set("returnTo", dashboardReturn);
+        router.push(`/set-group?${q.toString()}`);
         return;
       }
     } catch (error: any) {
@@ -149,12 +159,36 @@ export default function JoinCreateSwitchGroupPage() {
           </div>
         )}
 
-        <SegmentedControl
-          className="mx-auto mb-4 shrink-0 sm:mb-5"
-          options={TAB_OPTIONS}
-          value={tab}
-          onChange={setTab}
-        />
+        {dashboardReturn ? (
+          <div className="mb-4 grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:mb-5 sm:gap-x-3">
+            <div className="flex min-w-0 justify-self-start">
+              <Button
+                variant="grey"
+                size="sm"
+                href={dashboardReturn}
+                className="shrink-0 whitespace-nowrap px-3 py-2 font-semibold sm:px-4"
+              >
+                Back to dashboard
+              </Button>
+            </div>
+            <div className="flex justify-center justify-self-center">
+              <SegmentedControl
+                options={TAB_OPTIONS}
+                value={tab}
+                onChange={setTab}
+              />
+            </div>
+            <div className="min-w-0" aria-hidden="true" />
+          </div>
+        ) : (
+          <div className="mb-4 flex w-full shrink-0 justify-center sm:mb-5">
+            <SegmentedControl
+              options={TAB_OPTIONS}
+              value={tab}
+              onChange={setTab}
+            />
+          </div>
+        )}
 
         <BorderedPanel className="w-full shrink-0 overflow-hidden p-4 sm:p-5 md:p-6">
           {/* Display for loading and empty states */}
@@ -206,5 +240,19 @@ export default function JoinCreateSwitchGroupPage() {
         </BorderedPanel>
       </div>
     </div>
+  );
+}
+
+export default function JoinCreateSwitchGroupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-dvh items-center justify-center bg-brand-background px-5 text-body-md text-brand-dark/70">
+          Loading…
+        </div>
+      }
+    >
+      <JoinCreateSwitchGroupContent />
+    </Suspense>
   );
 }

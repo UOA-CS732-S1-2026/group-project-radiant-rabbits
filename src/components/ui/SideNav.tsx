@@ -26,6 +26,12 @@ const bottomItems = [
 export default function SideNav() {
   const pathname = usePathname();
 
+  const dashboardReturnTarget =
+    pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+      ? pathname
+      : "/dashboard";
+  const changeGroupHref = `/join-create-switch-group?returnTo=${encodeURIComponent(dashboardReturnTarget)}`;
+
   return (
     <nav className="flex h-full w-56 shrink-0 flex-col overflow-hidden border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
       <div className="flex min-h-0 flex-1 flex-col">
@@ -69,11 +75,15 @@ export default function SideNav() {
           {bottomItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
+            const href =
+              item.href === "/join-create-switch-group"
+                ? changeGroupHref
+                : item.href;
 
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={href}
                 className={
                   isActive
                     ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
