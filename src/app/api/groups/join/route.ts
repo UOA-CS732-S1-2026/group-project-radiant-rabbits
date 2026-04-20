@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { checkRepoAccess } from "@/app/lib/githubService";
-import { Group } from "@/app/lib/models";
+import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
 
@@ -40,8 +40,10 @@ export async function POST(request: Request) {
     }
 
     // Checking that the inputted invite code is valid (8 alphanumeric characters)
+    const trimmedInviteCode = inviteCode.trim().toUpperCase();
+
     const isValidFormat =
-      inviteCode.length === 8 && /^[A-Z0-9]+$/i.test(inviteCode);
+      trimmedInviteCode.length === 8 && /^[A-Z0-9]+$/.test(trimmedInviteCode);
 
     if (!isValidFormat) {
       return NextResponse.json(
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
     await connectMongoDB();
 
     const group = await Group.findOne({
-      inviteCode: inviteCode.trim(),
+      inviteCode: trimmedInviteCode,
     });
 
     // If no group is found, return an error
@@ -63,7 +65,6 @@ export async function POST(request: Request) {
     }
 
     // Check if user is already in that group
-    // If they are, return an error.
     if (isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "User is already a member" },
@@ -72,7 +73,6 @@ export async function POST(request: Request) {
     }
 
     // Check if the user has access to the associated repository with their GitHub account
-    // Using repo information associated with the group
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       group.repoOwner,
@@ -86,18 +86,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add the user to the group and return the updated group info
+    // Add the user to the group
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
       { $addToSet: { members: normalizeUserRef(session.user.id) } },
       { new: true },
     );
+
+    // Update the user's current group
+    await User.findByIdAndUpdate(normalizeUserRef(session.user.id), {
+      currentGroupId: group._id,
+    });
+
     return NextResponse.json(
       { message: "Joined group successfully", group: updatedGroup },
       { status: 200 },
     );
-
-    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error joining group:", error);
     return NextResponse.json(
