@@ -4,6 +4,7 @@ import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import AppLogoMark from "@/components/shared/AppLogoMark";
 import SprintHubTitle from "@/components/ui/SprintHubTitle";
 
 const navItems = [
@@ -31,7 +32,7 @@ export default function SideNav() {
         {/* Logo */}
         <div className="mb-xl flex shrink-0 flex-col items-center gap-md px-sm pb-md pt-2">
           <div className="p-3">
-            <div className="h-16 w-16 shrink-0 rounded-xl bg-brand-accent/30" />
+            <AppLogoMark />
           </div>
           <SprintHubTitle
             as="p"

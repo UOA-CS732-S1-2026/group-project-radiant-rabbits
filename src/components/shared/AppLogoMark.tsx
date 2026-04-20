@@ -1,15 +1,25 @@
+import Image from "next/image";
+
 type AppLogoMarkProps = {
   className?: string;
 };
 
-/** Rounded square used beside SprintHub in SideNav and landing header. */
+/** Radiant Rabbits mark beside SprintHub in SideNav and landing header. */
 export default function AppLogoMark({
   className = "h-16 w-16",
 }: AppLogoMarkProps) {
   return (
     <div
-      className={`shrink-0 rounded-xl bg-brand-accent/30 ${className}`}
+      className={`relative shrink-0 overflow-hidden rounded-xl bg-brand-dark ${className}`}
       aria-hidden
-    />
+    >
+      <Image
+        src="/logo-options/radiant-rabbits-mark.png"
+        alt=""
+        fill
+        className="object-cover"
+        sizes="64px"
+      />
+    </div>
   );
 }
