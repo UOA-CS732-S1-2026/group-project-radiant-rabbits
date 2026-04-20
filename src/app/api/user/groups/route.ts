@@ -48,20 +48,20 @@ export async function GET(_request: NextRequest) {
     const allGroups = await Group.find({}).lean();
 
     // Intialising groups
-    const currentGroups: typeof allGroups = [];
+    const yourGroups: typeof allGroups = [];
     const joinGroups: typeof allGroups = [];
     const createGroups: Array<{ repoName: string; repoOwner: string }> = [];
 
     // Sort exisiting groups from database
     allGroups.forEach((group) => {
-      // If the user is already a member, add to "Current Groups"
+      // If the user is already a member, add to "Your Groups"
       if (
         userId &&
         group.members
           .map((member: unknown) => normalizeUserRefString(member))
           .includes(userId)
       ) {
-        currentGroups.push(group);
+        yourGroups.push(group);
       }
       // If they aren't a member, check if they have GitHub access to the associated repo
       else {
@@ -95,7 +95,7 @@ export async function GET(_request: NextRequest) {
     });
 
     return NextResponse.json({
-      currentGroups: currentGroups.map((group) => ({
+      yourGroups: yourGroups.map((group) => ({
         name: group.repoName,
         repoOwner: group.repoOwner,
       })),

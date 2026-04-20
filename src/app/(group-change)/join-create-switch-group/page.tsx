@@ -11,7 +11,7 @@ import SprintHubTitle from "@/components/ui/SprintHubTitle";
 const TAB_OPTIONS = [
   { id: "join", label: "Join a Group" },
   { id: "create", label: "Create a Group" },
-  { id: "current", label: "Current Groups" },
+  { id: "current", label: "Your Groups" },
 ] as const;
 
 type GroupListCard = { name: string; repoOwner: string; inviteCode?: string };
@@ -57,7 +57,7 @@ export default function JoinCreateSwitchGroupPage() {
 
         // Define card lists for each tab
         setLists({
-          current: data.currentGroups,
+          current: data.yourGroups,
           join: data.joinGroups,
           create: data.createGroups,
         });
@@ -79,7 +79,7 @@ export default function JoinCreateSwitchGroupPage() {
     setErrorMessage("");
     setIsAuthError(false);
 
-    // If the user clicks on a card in the "Current Groups" tab, navigate them to the dashboard immediately
+    // If the user clicks on a card in the "Your Groups" tab, navigate them to the dashboard immediately
     if (tab === "current") {
       router.push("/dashboard");
       return;
