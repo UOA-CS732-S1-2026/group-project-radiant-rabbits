@@ -96,11 +96,13 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({
       currentGroups: currentGroups.map((group) => ({
+        id: group._id?.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
       })),
 
       joinGroups: joinGroups.map((group) => ({
+        id: group._id?.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
         inviteCode: group.inviteCode,
