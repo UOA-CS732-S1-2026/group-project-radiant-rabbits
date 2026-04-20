@@ -39,20 +39,25 @@ export async function GET(_request: NextRequest) {
     }
 
     const githubRepos = (await githubResponse.json()) as Array<{
+      id: number;
       name: string;
       owner: { login: string };
     }>;
 
-    // Fetch all groups from monogdb
+    // Fetch all groups from mongodb
     await connectMongoDB();
     const allGroups = await Group.find({}).lean();
 
-    // Intialising groups
+    // Initialising groups
     const currentGroups: typeof allGroups = [];
     const joinGroups: typeof allGroups = [];
-    const createGroups: Array<{ repoName: string; repoOwner: string }> = [];
+    const createGroups: Array<{
+      id: string;
+      repoName: string;
+      repoOwner: string;
+    }> = [];
 
-    // Sort exisiting groups from database
+    // Sort existing groups from database
     allGroups.forEach((group) => {
       // If the user is already a member, add to "Current Groups"
       if (
@@ -70,6 +75,7 @@ export async function GET(_request: NextRequest) {
             repo.name === group.repoName &&
             repo.owner.login === group.repoOwner,
         );
+
         // If they have access, add to "Joinable Groups"
         if (hasGithubAccess) {
           joinGroups.push(group);
@@ -77,17 +83,16 @@ export async function GET(_request: NextRequest) {
       }
     });
 
-    // Sort the remaining GitHub repos into "Creatable Groups" if no existing group is associated with that repo in MongoDB
+    // Sort the remaining GitHub repos into "Creatable Groups"
     githubRepos.forEach((repo) => {
-      // Check if a group already exists in MongoDB for this specific repo
       const groupExists = allGroups.some(
         (group) =>
           group.repoName === repo.name && group.repoOwner === repo.owner.login,
       );
 
-      // If no group exists, the user can create one!
       if (!groupExists) {
         createGroups.push({
+          id: repo.id.toString(),
           repoName: repo.name,
           repoOwner: repo.owner.login,
         });
@@ -96,17 +101,20 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({
       currentGroups: currentGroups.map((group) => ({
+        id: group._id.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
       })),
 
       joinGroups: joinGroups.map((group) => ({
+        id: group._id.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
         inviteCode: group.inviteCode,
       })),
 
       createGroups: createGroups.map((repo) => ({
+        id: repo.id,
         name: repo.repoName,
         repoOwner: repo.repoOwner,
       })),
