@@ -3,11 +3,11 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import SignInButton from "@/components/auth/SignInButton";
+import BorderedPanel from "@/components/shared/BorderedPanel";
 import Button from "@/components/shared/Button";
-import BorderedPanel from "@/components/ui/BorderedPanel";
-import GroupCard from "@/components/ui/GroupCard";
-import SegmentedControl from "@/components/ui/SegmentedControl";
-import SprintHubTitle from "@/components/ui/SprintHubTitle";
+import GroupCard from "@/components/shared/GroupCard";
+import SegmentedControl from "@/components/shared/SegmentedControl";
+import SprintHubTitle from "@/components/shared/SprintHubTitle";
 import { safeDashboardReturn } from "@/lib/safeDashboardReturn";
 
 const TAB_OPTIONS = [
@@ -127,13 +127,12 @@ function JoinCreateSwitchGroupContent() {
         router.push(`/set-group?${q.toString()}`);
         return;
       }
-    } catch (error: any) {
-      // Display the error message to the user in the UI
-      setErrorMessage(error.message);
-      if (
-        error.message?.toLowerCase().includes("authentication") ||
-        error.message?.toLowerCase().includes("token")
-      ) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong.";
+      setErrorMessage(message);
+      const lower = message.toLowerCase();
+      if (lower.includes("authentication") || lower.includes("token")) {
         setIsAuthError(true);
       }
     } finally {

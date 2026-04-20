@@ -94,8 +94,10 @@ function SetGroupContent() {
 
       // Redirect to empty dashboard for created group
       router.push("/dashboard");
-    } catch (error: any) {
-      setErrorMessage(error.message);
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
       setIsSubmitting(false);
     }
   };

@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import PageTopBar from "@/components/ui/PageTopBar";
-import SideNav from "@/components/ui/SideNav";
+import PageTopBar from "@/components/shared/PageTopBar";
+import SideNav from "@/components/shared/SideNav";
 
 export default async function MainLayout({
   children,

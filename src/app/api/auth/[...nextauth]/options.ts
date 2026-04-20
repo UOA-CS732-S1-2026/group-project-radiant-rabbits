@@ -1,4 +1,5 @@
-import type { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import GitHubProvider from "next-auth/providers/github";
 
 const githubId = process.env.AUTH_GITHUB_ID;
@@ -31,9 +32,9 @@ export const options: NextAuthOptions = {
       return token;
     },
     // 3. Pass that token into the session so it's accessible in your pages
-    async session({ session, token }: any) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       session.accessToken = token.accessToken;
-      if (session.user) {
+      if (session.user && token.id) {
         session.user.id = token.id;
       }
       return session;

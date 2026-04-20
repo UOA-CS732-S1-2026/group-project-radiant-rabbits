@@ -314,7 +314,7 @@ async function retryWithBackoff(
       // Try the full sync again
       await syncGroup(groupId, accessToken);
       return; // Success - stop retrying
-    } catch (error) {
+    } catch (_error) {
       if (attempt === maxRetries - 1) {
         // Last attempt also failed - give up
         await Group.findByIdAndUpdate(groupId, {

@@ -1,5 +1,5 @@
-import type { Sprint } from "@/components/ui/ProjectTimeline";
-import ProjectTimeline from "@/components/ui/ProjectTimeline";
+import type { Sprint } from "@/components/shared/ProjectTimeline";
+import ProjectTimeline from "@/components/shared/ProjectTimeline";
 
 type Stat = {
   value: string;
