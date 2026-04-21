@@ -1,6 +1,18 @@
 import mongoose from "mongoose";
-import { Commit, Issue, PullRequest, Sprint } from "@/app/lib/models";
+import {
+  fetchCommits,
+  fetchIssues,
+  fetchPullRequests,
+} from "@/app/lib/githubService";
+import {
+  Commit,
+  Contributor,
+  Issue,
+  PullRequest,
+  Sprint,
+} from "@/app/lib/models";
 
+// Constants for fallback dashboard calculation
 const FALLBACK_SPRINT_LENGTH_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -16,6 +28,7 @@ export type GithubMetrics = {
   lastSprintEnd: Date;
 };
 
+// Resolves the last sprint window based on completed sprints, current sprint, or fallback to a default length
 async function resolveLastSprintWindow(
   groupObjectId: mongoose.Types.ObjectId,
   sprintLengthDays?: number | null,
@@ -27,6 +40,7 @@ async function resolveLastSprintWindow(
     .sort({ endDate: -1 })
     .lean();
 
+  // If there's a completed sprint with valid dates, use that as the last sprint window
   if (completedSprint?.startDate && completedSprint?.endDate) {
     return {
       start: new Date(completedSprint.startDate as Date),
@@ -34,6 +48,7 @@ async function resolveLastSprintWindow(
     };
   }
 
+  // If there is no completed sprint, check if there's a current sprint
   const currentSprint = await Sprint.findOne({
     group: groupObjectId,
     isCurrent: true,
@@ -41,6 +56,7 @@ async function resolveLastSprintWindow(
     .sort({ startDate: -1 })
     .lean();
 
+  // If there's a current sprint with a valid start date, use it to calculate the last sprint window
   if (currentSprint?.startDate && currentSprint?.endDate) {
     const currentStart = new Date(currentSprint.startDate as Date);
     const currentEnd = new Date(currentSprint.endDate as Date);
@@ -55,6 +71,7 @@ async function resolveLastSprintWindow(
     };
   }
 
+  // If there are no completed or current sprints, fallback to using the provided sprint length or default length
   const lengthDays =
     sprintLengthDays && sprintLengthDays > 0
       ? sprintLengthDays
@@ -65,6 +82,66 @@ async function resolveLastSprintWindow(
   return { start, end };
 }
 
+// Live calculation of metrics for the dashboard
+export async function calculateGithubMetricsLive(
+  accessToken: string,
+  groupId: string,
+  owner: string,
+  name: string,
+  sprintLengthDays?: number | null,
+): Promise<GithubMetrics> {
+  const gid = new mongoose.Types.ObjectId(groupId);
+  const { start, end } = await resolveLastSprintWindow(gid, sprintLengthDays);
+
+  // Fetch all relevant data from GitHub from the repository
+  const [commits, pullRequests, issues] = await Promise.all([
+    fetchCommits(accessToken, owner, name),
+    fetchPullRequests(accessToken, owner, name),
+    fetchIssues(accessToken, owner, name),
+  ]);
+
+  // Calculate metrics based on the fetched data and the resolved sprint window and return
+  const inWindow = (value: string | null | undefined) => {
+    if (!value) return false;
+    const date = new Date(value);
+    return date >= start && date <= end;
+  };
+
+  const commitsLastSprint = commits.filter((commit) =>
+    inWindow(commit.date),
+  ).length;
+
+  const pullRequestsMergedLastSprint = pullRequests.filter(
+    (pr) => pr.state === "MERGED" && inWindow(pr.mergedAt),
+  ).length;
+
+  const closedIssues = issues.filter((issue) => issue.state === "CLOSED");
+  const issuesClosedLastSprint = closedIssues.filter((issue) =>
+    inWindow(issue.closedAt),
+  ).length;
+
+  const contributorKeys = new Set<string>();
+  for (const commit of commits) {
+    const key =
+      commit.author.login || commit.author.email || commit.author.name;
+    if (key) contributorKeys.add(key);
+  }
+
+  return {
+    totalCommits: commits.length,
+    commitsLastSprint,
+    totalPullRequests: pullRequests.length,
+    pullRequestsMergedLastSprint,
+    totalIssuesClosed: closedIssues.length,
+    issuesClosedLastSprint,
+    activeContributors: contributorKeys.size,
+    lastSprintStart: start,
+    lastSprintEnd: end,
+  };
+}
+
+// Database calculation of metrics for the dashboard
+// Used as a fallback if live calculation fails and serves as an endpoint for the dashboard
 export async function calculateGithubMetrics(
   groupId: string,
   sprintLengthDays?: number | null,
@@ -79,6 +156,8 @@ export async function calculateGithubMetrics(
     pullRequestsMergedLastSprint,
     totalIssuesClosed,
     issuesClosedLastSprint,
+    contributorCount,
+    distinctCommitAuthors,
   ] = await Promise.all([
     Commit.countDocuments({ group: gid }),
     Commit.countDocuments({ group: gid, date: { $gte: start, $lte: end } }),
@@ -94,6 +173,11 @@ export async function calculateGithubMetrics(
       state: "CLOSED",
       closedAt: { $gte: start, $lte: end },
     }),
+    Contributor.countDocuments({ group: gid }),
+    Commit.distinct("author.name", {
+      group: gid,
+      "author.name": { $nin: [null, ""] },
+    }),
   ]);
 
   return {
@@ -103,7 +187,8 @@ export async function calculateGithubMetrics(
     pullRequestsMergedLastSprint,
     totalIssuesClosed,
     issuesClosedLastSprint,
-    activeContributors: 0,
+    activeContributors:
+      contributorCount > 0 ? contributorCount : distinctCommitAuthors.length,
     lastSprintStart: start,
     lastSprintEnd: end,
   };

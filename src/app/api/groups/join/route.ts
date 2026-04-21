@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { checkRepoAccess } from "@/app/lib/githubService";
-import { Group } from "@/app/lib/models";
+import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
 
@@ -92,6 +92,12 @@ export async function POST(request: Request) {
       { $addToSet: { members: normalizeUserRef(session.user.id) } },
       { new: true },
     );
+
+    // Update the user's currentGroupId to the newly joined group
+    await User.findByIdAndUpdate(normalizeUserRef(session.user.id), {
+      currentGroupId: group._id,
+    });
+
     return NextResponse.json(
       { message: "Joined group successfully", group: updatedGroup },
       { status: 200 },

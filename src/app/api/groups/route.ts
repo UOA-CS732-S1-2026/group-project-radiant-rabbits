@@ -6,7 +6,7 @@ import { checkRepoAccess } from "@/app/lib/githubService";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
-import { Group } from "../../lib/models";
+import { Group, User } from "../../lib/models";
 
 // Helper function to generate a random 8-character invite code
 function generateInviteCode() {
@@ -105,6 +105,11 @@ export async function POST(request: Request) {
       lastSyncAt: new Date(),
       syncStatus: "pending",
       syncError: null,
+    });
+
+    // Update the user's currentGroupId to the newly created group
+    await User.findByIdAndUpdate(normalizeUserRef(session.user.id), {
+      currentGroupId: group._id,
     });
 
     // Fire-and-forget: start syncing GitHub data in the background.
