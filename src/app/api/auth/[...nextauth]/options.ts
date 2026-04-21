@@ -67,6 +67,9 @@ export const options: NextAuthOptions = {
                   email,
                   avatarUrl,
                 },
+                $setOnInsert: {
+                  currentGroupId: null,
+                },
               },
               {
                 upsert: true,
