@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { calculateGithubMetrics } from "@/app/lib/githubCalculator";
 import { Commit, Group, Issue, PullRequest, Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup } from "@/app/lib/userRef";
@@ -241,10 +242,35 @@ export async function GET(
       sprintId,
     );
 
-    // Cache result
-    await setCache(cacheKey, JSON.stringify(data));
+    // Calculate GitHub metrics
+    const githubMetrics = await calculateGithubMetrics(
+      groupId,
+      group.sprintLengthDays,
+    );
 
-    return NextResponse.json(data);
+    // Build repository info
+    const repository = {
+      owner: group.repoOwner,
+      name: group.repoName,
+      isConnected: Boolean(group.repoOwner && group.repoName),
+      syncStatus: group.syncStatus,
+      syncError: group.syncError,
+      validationError:
+        group.repoOwner && group.repoName
+          ? null
+          : "No repository is connected to this group.",
+    };
+
+    const payload = {
+      ...data,
+      githubMetrics,
+      repository,
+    };
+
+    // Cache result
+    await setCache(cacheKey, JSON.stringify(payload));
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("Dashboard error:", error);
     return NextResponse.json(
