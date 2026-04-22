@@ -53,7 +53,7 @@ const groupSchema = new Schema(
       type: Date,
       default: null,
     },
-    sprintLengthDays: {
+    sprintLengthWeeks: {
       type: Number,
       min: 1,
       default: null,

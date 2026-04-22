@@ -40,8 +40,10 @@ export async function POST(request: Request) {
     }
 
     // Checking that the inputted invite code is valid (8 alphanumeric characters)
+    const trimmedInviteCode = inviteCode.trim().toUpperCase();
+
     const isValidFormat =
-      inviteCode.length === 8 && /^[A-Z0-9]+$/i.test(inviteCode);
+      trimmedInviteCode.length === 8 && /^[A-Z0-9]+$/.test(trimmedInviteCode);
 
     if (!isValidFormat) {
       return NextResponse.json(
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
     await connectMongoDB();
 
     const group = await Group.findOne({
-      inviteCode: inviteCode.trim(),
+      inviteCode: trimmedInviteCode,
     });
 
     // If no group is found, return an error
@@ -62,7 +64,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    // Check if user is already in that group
     // If they are, return an error.
     if (isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
@@ -72,7 +73,6 @@ export async function POST(request: Request) {
     }
 
     // Check if the user has access to the associated repository with their GitHub account
-    // Using repo information associated with the group
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       group.repoOwner,
@@ -102,7 +102,6 @@ export async function POST(request: Request) {
       { message: "Joined group successfully", group: updatedGroup },
       { status: 200 },
     );
-
     // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error joining group:", error);
