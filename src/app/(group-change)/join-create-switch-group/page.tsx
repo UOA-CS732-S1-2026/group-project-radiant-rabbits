@@ -14,7 +14,12 @@ const TAB_OPTIONS = [
   { id: "current", label: "Current Groups" },
 ] as const;
 
-type GroupListCard = { name: string; repoOwner: string; inviteCode?: string };
+type GroupListCard = {
+  id: string;
+  name: string;
+  repoOwner: string;
+  inviteCode?: string;
+};
 
 export default function JoinCreateSwitchGroupPage() {
   const router = useRouter();
@@ -79,9 +84,30 @@ export default function JoinCreateSwitchGroupPage() {
     setErrorMessage("");
     setIsAuthError(false);
 
-    // If the user clicks on a card in the "Current Groups" tab, navigate them to the dashboard immediately
     if (tab === "current") {
-      router.push("/dashboard");
+      setIsActionLoading(true);
+
+      try {
+        const response = await fetch("/api/groups/select", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ groupId: card.id }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 401) setIsAuthError(true);
+          throw new Error(data.error || "Failed to switch group.");
+        }
+
+        router.push("/dashboard");
+      } catch (error: any) {
+        setErrorMessage(error.message);
+      } finally {
+        setIsActionLoading(false);
+      }
+
       return;
     }
 
@@ -183,7 +209,7 @@ export default function JoinCreateSwitchGroupPage() {
                   // Button that uses card click handler to either join the group or start the group creation process, depending on the active tab.
                   <button
                     type="button"
-                    key={`${tab}-${card.name}-${card.repoOwner}`}
+                    key={card.id}
                     onClick={() => handleCardClick(card)}
                     disabled={isActionLoading}
                     className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
