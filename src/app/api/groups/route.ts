@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Ensure user has access token
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "GitHub access token missing. Please sign in again." },
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
       sprintLengthWeeks,
     } = await request.json();
 
-    // Base validation
+    // If the user does not input a name or description, return an error
     if (!description) {
       return NextResponse.json(
         { error: "Description is required" },
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // If the user repository link lacks a repoOwner or repoName, return an error
     if (!repoOwner || !repoName) {
       return NextResponse.json(
         { error: "Repository name and owner is required" },
@@ -64,6 +66,8 @@ export async function POST(request: Request) {
       );
     }
 
+    // Connect to MongoDB and create a new group with the provided name, description
+    // Generate a unique invite code
     if (!projectStartDate || !projectEndDate) {
       return NextResponse.json(
         { error: "Project start date and end date are required" },
@@ -104,9 +108,10 @@ export async function POST(request: Request) {
 
     await connectMongoDB();
 
-    // Check if group already exists
+    // Check if group already exists for the associated repository
     const existingGroup = await Group.findOne({ repoOwner, repoName });
 
+    // If the group already exists for the repository, return an error
     if (existingGroup) {
       return NextResponse.json(
         { error: "A group already exists for this repository" },
@@ -114,7 +119,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check GitHub access
+    // Check if the user has access to the associated repository with their GitHub account
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       repoOwner,
@@ -128,7 +133,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create group
+    // Otherwise, create the group and generate a unique invite code
     const inviteCode = generateInviteCode();
 
     const group = await Group.create({
@@ -141,13 +146,13 @@ export async function POST(request: Request) {
       createdBy: normalizeUserRef(session.user.id),
       projectStartDate: startDate,
       projectEndDate: endDate,
-      sprintLengthWeeks: sprintLengthNumber, // ✅ FIXED
+      sprintLengthWeeks: sprintLengthNumber, //
       lastSyncAt: new Date(),
       syncStatus: "pending",
       syncError: null,
     });
 
-    // ✅ FIXED: update user using githubId
+    // Update user using githubId
     await User.findOneAndUpdate(
       { githubId: session.user.id },
       { currentGroupId: group._id },
@@ -156,6 +161,7 @@ export async function POST(request: Request) {
     // Trigger background sync
     triggerSync(group._id.toString(), sessionWithToken.accessToken);
 
+    // Return the created group info with a success message
     return NextResponse.json(
       {
         group: {
@@ -173,6 +179,7 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
+    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error creating group:", error);
     return NextResponse.json(

@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add the user to the group
+    // Add the user to the group and return the updated group info
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
       { $addToSet: { members: normalizeUserRef(session.user.id) } },
@@ -102,6 +102,7 @@ export async function POST(request: Request) {
       { message: "Joined group successfully", group: updatedGroup },
       { status: 200 },
     );
+    // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error joining group:", error);
     return NextResponse.json(

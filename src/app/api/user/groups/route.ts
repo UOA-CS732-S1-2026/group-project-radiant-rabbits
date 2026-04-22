@@ -83,13 +83,15 @@ export async function GET(_request: NextRequest) {
       }
     });
 
-    // Sort the remaining GitHub repos into "Creatable Groups"
+    // Sort the remaining GitHub repos into "Creatable Groups" if no existing group is associated with that repo in MongoDB
     githubRepos.forEach((repo) => {
+      // Check if a group already exists in MongoDB for this specific repo
       const groupExists = allGroups.some(
         (group) =>
           group.repoName === repo.name && group.repoOwner === repo.owner.login,
       );
 
+      // If no group exists, the user can create one!
       if (!groupExists) {
         createGroups.push({
           id: repo.id.toString(),
