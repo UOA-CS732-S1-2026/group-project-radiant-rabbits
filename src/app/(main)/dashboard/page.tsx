@@ -99,6 +99,11 @@ export default async function DashboardPage() {
   let statusMessage: string | undefined;
   let githubMetrics: GithubMetrics | undefined;
 
+  // Convert sprint length from weeks to days
+  const sprintLengthDays = group.sprintLengthWeeks
+    ? group.sprintLengthWeeks * 7
+    : null;
+
   // Validate that the group actually has a repository
   if (!group.repoOwner || !group.repoName) {
     status = "error";
@@ -114,7 +119,7 @@ export default async function DashboardPage() {
         group._id.toString(),
         group.repoOwner,
         group.repoName,
-        group.sprintLengthDays,
+        sprintLengthDays,
       );
     } catch (error) {
       console.error("Failed to calculate dashboard metrics:", error);
@@ -144,7 +149,7 @@ export default async function DashboardPage() {
         timeline={{
           projectStartDate: group.projectStartDate,
           projectEndDate: group.projectEndDate,
-          sprintLengthDays: group.sprintLengthDays,
+          sprintLengthDays,
         }}
       />
     </div>
