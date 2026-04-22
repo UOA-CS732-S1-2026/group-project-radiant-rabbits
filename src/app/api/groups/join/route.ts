@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    // Check if user is already in that group
+    // If they are, return an error.
     if (isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "User is already a member" },

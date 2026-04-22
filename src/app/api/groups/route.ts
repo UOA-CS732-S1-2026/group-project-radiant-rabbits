@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const session = await getServerSession(options);
     const sessionWithToken = session as { accessToken?: string };
 
-    // Auth checks
+    // Check if user has logged in with a valid Github account
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
