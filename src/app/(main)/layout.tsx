@@ -1,5 +1,7 @@
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { Group, User } from "@/app/lib/models";
+import connectMongoDB from "@/app/lib/mongodbConnection";
 import PageTopBar from "@/components/ui/PageTopBar";
 import SideNav from "@/components/ui/SideNav";
 
@@ -10,12 +12,34 @@ export default async function MainLayout({
 }>) {
   const session = await getServerSession(options);
 
+  let repoName = "Repo Name"; // Default value if repo name cannot be fetched
+
+  try {
+    await connectMongoDB();
+
+    // Fetching user's current group repo name
+    const userWithGroup = (await User.findOne({ githubId: session?.user?.id })
+      .populate({
+        path: "currentGroupId",
+        model: Group,
+        select: "repoName",
+      })
+      .lean()) as any;
+
+    if (userWithGroup?.currentGroupId?.repoName) {
+      repoName = userWithGroup.currentGroupId.repoName;
+    }
+  } catch (error) {
+    // Database connection error
+    console.error("Failed to fetch group data for layout:", error);
+  }
+
   return (
     <div className="flex h-screen min-h-0 overflow-hidden">
       <SideNav />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <PageTopBar
-          repoName="Repo name"
+          repoName={repoName}
           pageLabel="Current Sprint"
           // Use session-backed avatar
           profileImageUrl={session?.user?.image ?? undefined}
