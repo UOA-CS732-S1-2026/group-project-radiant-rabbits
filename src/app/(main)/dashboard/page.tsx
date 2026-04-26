@@ -86,7 +86,7 @@ export default async function DashboardPage() {
   // If user is not part of any group, show error message
   if (!group) {
     return (
-      <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 border-2 border-gray-200 border-spacing-2 rounded-lg shadow-lg">
+      <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 border-2 border-brand-border border-spacing-2 rounded-lg shadow-lg">
         <Dashboard
           status="empty"
           statusMessage="No group selected yet. Create or join a group to see dashboard metrics."
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
 
   // Display the dashboard with the fetched metrics
   return (
-    <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 overflow-hidden border-2 border-gray-200 border-spacing-2 rounded-lg shadow-lg">
+    <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 overflow-hidden border-2 border-brand-border border-spacing-2 rounded-lg shadow-lg">
       <Dashboard
         status={status}
         statusMessage={statusMessage}

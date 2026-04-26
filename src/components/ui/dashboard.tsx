@@ -63,7 +63,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      <div className="border-b border-gray-200 my-0" />
+      <div className="border-b border-brand-border my-0" />
 
       {/* Project Timeline & Sprint Velocity */}
       <div className="mx-6 mb-6 flex flex-col gap-lg">
