@@ -67,11 +67,11 @@ export default function ProjectTimeline({
 
   return (
     <div className="flex flex-col gap-md">
+      <h3 className="mx-2 text-body-lg font-semibold text-brand-dark">
+        Project Timeline
+      </h3>
       {/* Project Timeline */}
       <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
-          Project Timeline
-        </h3>
         <div>
           {/* Sprint labels — each sits in a column equal to 1/totalSprints */}
           <div className="mb-xs flex">

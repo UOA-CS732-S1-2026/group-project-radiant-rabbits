@@ -12,6 +12,11 @@
   --color-brand-background: #ffffff;
   --color-brand-accent: #b8a9fe;
   --color-brand-surface: #ffffff;
+  --color-brand-border: #e5e7eb;
+  --color-brand-todo: #ff0000;
+  --color-brand-in-progress: #ff9900;
+  --color-brand-completed: #00cc66;
+  --color-brand-open:#0099ff;
 
   /* App colors */
   --color-background: var(--background);

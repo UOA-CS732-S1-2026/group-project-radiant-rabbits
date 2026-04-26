@@ -86,12 +86,23 @@ export const options: NextAuthOptions = {
       return token;
     },
     // 3. Pass that token into the session so it's accessible in your pages
-    async session({ session, token }: any) {
-      session.accessToken = token.accessToken;
-      if (session.user) {
-        session.user.id = token.id;
+    async session({ session, token }) {
+      // Specifically type the session and token
+      const sessionWithToken = session as typeof session & {
+        accessToken?: string;
+      };
+
+      // Ensure the access token is included in the session object
+      sessionWithToken.accessToken = (
+        token as { accessToken?: string }
+      ).accessToken;
+
+      const tokenId = (token as { id?: string }).id;
+      if (sessionWithToken.user && tokenId) {
+        sessionWithToken.user.id = tokenId;
       }
-      return session;
+
+      return sessionWithToken;
     },
   },
   pages: {

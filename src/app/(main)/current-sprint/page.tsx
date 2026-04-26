@@ -53,8 +53,8 @@ const timeline = [
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "Closed"
-      ? "bg-brand-primary text-brand-surface"
-      : "bg-brand-accent text-brand-surface";
+      ? "bg-brand-completed text-brand-surface"
+      : "bg-brand-open text-brand-surface";
 
   return (
     <span
@@ -87,11 +87,28 @@ function BreakdownTile({
   );
 }
 
-const ISSUE_FILTER_OPTIONS = [
-  { id: "all", label: "All Issues" },
-  { id: "open", label: "Open" },
-  { id: "closed", label: "Closed" },
-] as const;
+function FilterChip({
+  label,
+  active = false,
+}: {
+  label: string;
+  active?: boolean;
+}) {
+  return (
+    <div className="bg-brand-border inline-flex p-1">
+      <button
+        type="button"
+        className={
+          active
+            ? "rounded-md bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-sm"
+            : "px-sm py-xs text-body-xs text-brand-dark/70"
+        }
+      >
+        {label}
+      </button>
+    </div>
+  );
+}
 
 export default function CurrentSprintPage() {
   const [issueFilter, setIssueFilter] = useState<string>("all");
@@ -109,7 +126,7 @@ export default function CurrentSprintPage() {
   return (
     <div className="min-h-screen bg-brand-background">
       <PageContainer>
-        <Card className="border border-brand-dark/10 border-l-0 p-xl shadow-none">
+        <Card className="border border-brand-dark/10 p-xl shadow-none">
           <div className="space-y-lg">
             <h2 className="text-h2 font-semibold text-brand-dark">Sprint 4</h2>
 
@@ -168,17 +185,17 @@ export default function CurrentSprintPage() {
                       <BreakdownTile
                         label="To Do"
                         value="2 Issues"
-                        dotClass="bg-brand-dark/30"
+                        dotClass="bg-brand-todo"
                       />
                       <BreakdownTile
                         label="In Progress"
                         value="4 Issues"
-                        dotClass="bg-brand-primary"
+                        dotClass="bg-brand-in-progress"
                       />
                       <BreakdownTile
                         label="Done"
                         value="2 Issues"
-                        dotClass="bg-brand-accent"
+                        dotClass="bg-brand-completed"
                       />
                     </div>
                   </BorderedPanel>
@@ -188,13 +205,11 @@ export default function CurrentSprintPage() {
                       Sprint Tasks
                     </h4>
 
-                    <SegmentedControl
-                      className="mt-md !justify-start"
-                      size="sm"
-                      options={ISSUE_FILTER_OPTIONS}
-                      value={issueFilter}
-                      onChange={setIssueFilter}
-                    />
+                    <div className="py-3 inline-flex rounded-lg bg-brand-background">
+                      <FilterChip label="All Issues" active />
+                      <FilterChip label="Open" />
+                      <FilterChip label="Closed" />
+                    </div>
 
                     <div className="mt-lg overflow-y-auto pr-sm">
                       <div className="space-y-md">

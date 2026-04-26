@@ -26,17 +26,17 @@ export default function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-full w-56 shrink-0 flex-col overflow-hidden border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
+    <nav className="flex h-full lg:w-70 w-56 shrink-0 flex-col overflow-hidden border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
       <div className="flex min-h-0 flex-1 flex-col">
         {/* Logo */}
         <div className="mb-xl flex shrink-0 flex-col items-center gap-md px-sm pb-md pt-2">
           <div className="p-3">
-            <div className="h-16 w-16 shrink-0 rounded-xl bg-brand-accent/30" />
+            <div className="lg:h-24 lg:w-24 h-16 w-16 shrink-0 rounded-xl bg-brand-accent/30" />
           </div>
           <SprintHubTitle
             as="p"
             size="lg"
-            className="w-full text-center leading-tight"
+            className="lg:text-4xl w-full text-center leading-tight"
           />
         </div>
 

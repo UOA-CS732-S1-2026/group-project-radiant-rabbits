@@ -46,7 +46,9 @@ export default async function MainLayout({
           profileName={session?.user?.name ?? undefined}
         />
 
-        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto lg:overflow-y-hidden">
+          {children}
+        </main>
       </div>
     </div>
   );

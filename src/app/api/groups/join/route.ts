@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       { new: true },
     );
 
-    // Update the user's current group
+    // Update the user's currentGroupId to the newly joined group
     await User.findByIdAndUpdate(normalizeUserRef(session.user.id), {
       currentGroupId: group._id,
     });
