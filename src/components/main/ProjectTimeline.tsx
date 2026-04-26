@@ -68,10 +68,10 @@ export default function ProjectTimeline({
   return (
     <div className="flex flex-col gap-md">
       {/* Project Timeline */}
+      <h3 className="text-body-lg font-semibold text-brand-dark">
+        Project Timeline
+      </h3>
       <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
-          Project Timeline
-        </h3>
         <div>
           {/* Sprint labels — each sits in a column equal to 1/totalSprints */}
           <div className="mb-xs flex">
@@ -98,7 +98,7 @@ export default function ProjectTimeline({
       </div>
 
       {/* Sprint Velocity */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
+      <div className="mb-lg rounded-2xl bg-brand-surface p-lg shadow-md">
         <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
           Sprint Velocity
         </h3>

@@ -165,29 +165,27 @@ export default function Dashboard({
 
   // Display the dashboard with the fetched metrics and timeline chart
   return (
-    <div className="flex flex-col gap-lg">
+    <div className="ml-lg mr-lg mt-md flex flex-col gap-md">
       {/* Project Overview */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h2 className="mb-md text-h3 font-bold text-brand-dark">
-          Project Overview
-        </h2>
-        <div className="grid grid-cols-2 gap-md md:grid-cols-4">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl border border-brand-dark/10 p-md"
-            >
-              <p className="text-h2 font-bold text-brand-dark">
-                {stat.value}{" "}
-                <span className="text-body-sm font-medium">{stat.label}</span>
-              </p>
-              <p className="mt-xs text-body-xs text-brand-dark/50">
-                {stat.detail}
-              </p>
-            </div>
-          ))}
-        </div>
+      <h2 className="text-h3 font-bold text-brand-dark">Project Overview</h2>
+      <div className="grid grid-cols-2 gap-md md:grid-cols-4">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl border border-brand-dark/10 p-md"
+          >
+            <p className="text-h2 font-bold text-brand-dark">
+              {stat.value}{" "}
+              <span className="text-body-sm font-medium">{stat.label}</span>
+            </p>
+            <p className="mt-xs text-body-xs text-brand-dark/50">
+              {stat.detail}
+            </p>
+          </div>
+        ))}
       </div>
+
+      <hr className="border-t border-brand-dark/10" />
 
       {/* Project Timeline & Sprint Velocity */}
       <ProjectTimeline
