@@ -176,7 +176,7 @@ export default function Dashboard({
             key={stat.label}
             className="rounded-xl border border-brand-dark/10 p-sm"
           >
-            <p className="line-height:0.5 lg:text-2xl text-h3 font-bold text-brand-dark">
+            <p className="leading-none lg:text-2xl text-h3 font-bold text-brand-dark">
               {stat.value}{" "}
               <span className="lg:text-body-md text-body-sm font-medium">
                 {stat.label}
