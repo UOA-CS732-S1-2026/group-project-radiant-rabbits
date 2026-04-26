@@ -127,22 +127,22 @@ export default function Dashboard({
     {
       value: String(metrics.totalCommits),
       label: "Commits",
-      detail: `${metrics.commitsLastSprint} in last sprint`,
+      detail: `+ ${metrics.commitsLastSprint} last sprint`,
     },
     {
       value: String(metrics.totalPullRequests),
       label: "Pull Requests",
-      detail: `${metrics.pullRequestsMergedLastSprint} merged last sprint`,
+      detail: `+ ${metrics.pullRequestsMergedLastSprint} merged last sprint`,
     },
     {
       value: String(metrics.totalIssuesClosed),
       label: "Issues Closed",
-      detail: `${metrics.issuesClosedLastSprint} closed last sprint`,
+      detail: `+ ${metrics.issuesClosedLastSprint} closed last sprint`,
     },
     {
       value: String(metrics.activeContributors),
       label: "Active Contributors",
-      detail: "Unique commit authors",
+      detail: "",
     },
   ];
 
