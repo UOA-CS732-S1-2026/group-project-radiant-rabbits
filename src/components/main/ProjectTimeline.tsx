@@ -41,7 +41,7 @@ export default function ProjectTimeline({
   // Scale SVG width with sprint count so labels don't overlap
   const baseWidth = 400;
   const chartWidth = Math.max(baseWidth, sprints.length * 60);
-  const chartHeight = 160;
+  const chartHeight = 120;
   const paddingX = 30;
   const paddingY = 20;
   const usableWidth = chartWidth - paddingX * 2;
@@ -66,15 +66,15 @@ export default function ProjectTimeline({
     sprints.length <= 6 ? 9 : sprints.length <= 10 ? 7.5 : 6;
 
   return (
-    <div className="flex flex-col gap-md">
+    <div className="flex flex-col gap-md mb-lg">
       {/* Project Timeline */}
       <h3 className="text-body-lg font-semibold text-brand-dark">
         Project Timeline
       </h3>
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
+      <div className="rounded-2xl bg-brand-surface p-md shadow-md">
         <div>
           {/* Sprint labels — each sits in a column equal to 1/totalSprints */}
-          <div className="mb-xs flex">
+          <div className="mb-sm flex">
             {sprintLabels.map((label, i) => (
               <span
                 key={label}
@@ -98,8 +98,8 @@ export default function ProjectTimeline({
       </div>
 
       {/* Sprint Velocity */}
-      <div className="mb-lg rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
+      <div className="rounded-2xl bg-brand-surface p-md shadow-md">
+        <h3 className="mb-sm text-body-lg font-semibold text-brand-dark">
           Sprint Velocity
         </h3>
         <div className="overflow-x-auto">
