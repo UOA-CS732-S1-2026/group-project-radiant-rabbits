@@ -53,8 +53,8 @@ const timeline = [
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "Closed"
-      ? "bg-green-500  text-brand-surface"
-      : "bg-blue-500 text-brand-surface";
+      ? "bg-brand-completed text-brand-surface"
+      : "bg-brand-open text-brand-surface";
 
   return (
     <span
@@ -95,7 +95,7 @@ function FilterChip({
   active?: boolean;
 }) {
   return (
-    <div className="bg-gray-200 inline-flex p-1">
+    <div className="bg-brand-border inline-flex p-1">
       <button
         type="button"
         className={
@@ -126,7 +126,7 @@ export default function CurrentSprintPage() {
   return (
     <div className="min-h-screen bg-brand-background">
       <PageContainer>
-        <Card className="border border-brand-dark/10 border-l-0 p-xl shadow-none">
+        <Card className="border border-brand-dark/10 p-xl shadow-none">
           <div className="space-y-lg">
             <h2 className="text-h2 font-semibold text-brand-dark">Sprint 4</h2>
 
@@ -185,17 +185,17 @@ export default function CurrentSprintPage() {
                       <BreakdownTile
                         label="To Do"
                         value="2 Issues"
-                        dotClass="bg-red-500"
+                        dotClass="bg-brand-todo"
                       />
                       <BreakdownTile
                         label="In Progress"
                         value="4 Issues"
-                        dotClass="bg-yellow-500"
+                        dotClass="bg-brand-in-progress"
                       />
                       <BreakdownTile
                         label="Done"
                         value="2 Issues"
-                        dotClass="bg-green-500"
+                        dotClass="bg-brand-completed"
                       />
                     </div>
                   </BorderedPanel>
