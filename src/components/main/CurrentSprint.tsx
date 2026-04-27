@@ -126,19 +126,17 @@ function FilterChip({
   onClick?: () => void;
 }) {
   return (
-    <div className="bg-brand-border inline-flex p-1">
-      <button
-        type="button"
-        onClick={onClick}
-        className={
-          active
-            ? "rounded-md bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-sm"
-            : "px-sm py-xs text-body-xs text-brand-dark/70"
-        }
-      >
-        {label}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        active
+          ? "rounded-md bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-sm"
+          : "rounded-md px-sm py-xs text-body-xs text-brand-dark/70 transition hover:text-brand-dark"
+      }
+    >
+      {label}
+    </button>
   );
 }
 
@@ -365,7 +363,7 @@ export default function CurrentSprint({
                       Sprint Tasks
                     </h4>
 
-                    <div className="py-3 inline-flex rounded-lg bg-brand-background">
+                    <div className="inline-flex gap-0.5 rounded-md bg-brand-border p-1">
                       <FilterChip
                         label="All Issues"
                         active={issueFilter === "all"}
