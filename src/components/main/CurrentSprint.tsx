@@ -260,7 +260,7 @@ export default function CurrentSprint({
   return (
     <div className="min-h-screen bg-brand-background">
       <PageContainer>
-        <Card className="border border-brand-dark/10 p-xl shadow-none">
+        <Card className="border border-brand-dark/10 shadow-none">
           <div className="space-y-lg">
             {refreshError ? (
               <p className="text-body-md">{refreshError}</p>
@@ -268,7 +268,7 @@ export default function CurrentSprint({
 
             {/* Current Sprint */}
             <div className="flex items-start justify-between gap-md">
-              <h2 className="text-h2 font-semibold text-brand-dark">
+              <h2 className="lg:text-3xl text-h3 font-bold text-brand-dark">
                 {sprint.name}
               </h2>
               <Button
@@ -381,7 +381,7 @@ export default function CurrentSprint({
                       />
                     </div>
 
-                    <div className="mt-lg overflow-y-auto pr-sm">
+                    <div className="mt-lg max-h-42 overflow-y-auto pr-sm">
                       <div className="space-y-md">
                         {filteredSprintTasks.length === 0 ? (
                           <p className="text-body-md text-brand-dark/60">
@@ -415,7 +415,7 @@ export default function CurrentSprint({
                       Activity Timeline
                     </h4>
 
-                    <div className="mt-md space-y-md">
+                    <div className="mt-md max-h-36 space-y-md overflow-y-auto pr-sm">
                       {timeline.length === 0 ? (
                         <p className="text-body-md text-brand-dark/60">
                           No activity captured for this sprint period.
@@ -446,36 +446,38 @@ export default function CurrentSprint({
                 </div>
 
                 {/* Contribution Breakdown */}
-                <BorderedPanel>
-                  <h4 className="text-body-lg font-semibold text-brand-dark">
-                    Contribution Breakdown
-                  </h4>
+                <div className="lg:relative">
+                  <BorderedPanel className="p-md lg:absolute lg:inset-0 lg:flex lg:flex-col">
+                    <h4 className="text-body-lg font-semibold text-brand-dark">
+                      Contribution Breakdown
+                    </h4>
 
-                  <div className="mt-md space-y-lg">
-                    {contributors.length === 0 ? (
-                      <p className="text-body-md text-brand-dark/60">
-                        No contributor activity in this sprint period.
-                      </p>
-                    ) : (
-                      contributors.map((person) => (
-                        <div
-                          key={person.name}
-                          className="border-b border-brand-dark/10 pb-md"
-                        >
-                          <p className="text-body-lg font-semibold text-brand-dark">
-                            {person.name}
-                          </p>
-                          <p className="mt-xs text-body-md text-brand-dark/50">
-                            {person.commits}
-                          </p>
-                          <p className="text-body-md text-brand-dark/50">
-                            {person.issue}
-                          </p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </BorderedPanel>
+                    <div className="mt-md space-y-lg overflow-y-auto pr-sm lg:min-h-0 lg:flex-1">
+                      {contributors.length === 0 ? (
+                        <p className="text-body-md text-brand-dark/60">
+                          No contributor activity in this sprint period.
+                        </p>
+                      ) : (
+                        contributors.map((person) => (
+                          <div
+                            key={person.name}
+                            className="border-b border-brand-dark/10 pb-md"
+                          >
+                            <p className="text-body-lg font-semibold text-brand-dark">
+                              {person.name}
+                            </p>
+                            <p className="mt-xs text-body-md text-brand-dark/50">
+                              {person.commits}
+                            </p>
+                            <p className="text-body-md text-brand-dark/50">
+                              {person.issue}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </BorderedPanel>
+                </div>
               </div>
             </section>
           </div>
