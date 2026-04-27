@@ -2,7 +2,7 @@
 export default function DashboardLoading() {
   return (
     <div className="mt-6 mx-5 mb-6 border-2 border-brand-border rounded-lg shadow-lg">
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
+      <div className="rounded-lg bg-brand-surface p-lg shadow-md">
         <h2 className="text-h3 font-bold text-brand-dark">
           Loading dashboard...
         </h2>
