@@ -62,7 +62,9 @@ export async function GET(_request: NextRequest) {
     // Normalize member ids so they can be matched with User profile documents.
     const memberIds = (group.members ?? [])
       .map((member: unknown) => normalizeUserRefString(member))
-      .filter((memberId): memberId is string => Boolean(memberId));
+      .filter((memberId: string | null): memberId is string =>
+        Boolean(memberId),
+      );
 
     // Fetch only fields needed by the teammates UI.
     const profiles = (await User.find(
@@ -83,7 +85,7 @@ export async function GET(_request: NextRequest) {
     );
 
     // Preserve group member order while attaching profile data.
-    const members = memberIds.map((memberId) => {
+    const members = memberIds.map((memberId: string) => {
       const profile = profilesById.get(memberId);
       const displayName =
         profile?.name?.trim() ||

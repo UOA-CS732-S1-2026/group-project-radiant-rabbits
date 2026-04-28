@@ -32,12 +32,12 @@ jest.mock("@/app/lib/githubCalculator", () => ({
   calculateGithubMetricsLive: jest.fn(),
 }));
 
-jest.mock("@/components/main/Dashboard", () => ({
+jest.mock("@/components/dashboard/Dashboard", () => ({
   __esModule: true,
   default: jest.fn(() => null),
 }));
 
-import Dashboard from "@/components/main/Dashboard";
+import Dashboard from "@/components/dashboard/Dashboard";
 
 // Define the mocked functions with proper types
 const mockGetServerSession = getServerSession as jest.MockedFunction<
@@ -371,7 +371,7 @@ describe("DashboardPage — Dashboard renders timeline validation errors", () =>
 
   beforeEach(() => {
     const RealDashboard = jest.requireActual(
-      "@/components/main/Dashboard",
+      "@/components/dashboard/Dashboard",
     ).default;
     MockDashboard.mockImplementation(RealDashboard);
     mockGetServerSession.mockResolvedValue(

@@ -2,7 +2,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth/next";
 import { Group, Sprint } from "@/app/lib/models";
-import connectMongoDB from "@/app/lib/mongodbConnection";
 import {
   DELETE,
   GET,
@@ -150,7 +149,7 @@ describe("PUT /api/groups/:groupId/sprints/:sprintId", () => {
   it("rejects updates that cause overlap with another sprint", async () => {
     const group = await createMemberGroup();
 
-    const sprint1 = await Sprint.create({
+    await Sprint.create({
       name: "Sprint 1",
       group: group._id,
       startDate: new Date("2026-01-01T00:00:00.000Z"),

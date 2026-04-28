@@ -1,5 +1,5 @@
-import type { Sprint } from "@/components/main/ProjectTimeline";
-import ProjectTimeline from "@/components/main/ProjectTimeline";
+import type { Sprint } from "@/components/dashboard/ProjectTimeline";
+import ProjectTimeline from "@/components/dashboard/ProjectTimeline";
 
 // Fetch all data required to display the dashboard metrics and pass it to the Dashboard component for rendering
 type RepositoryInfo = {

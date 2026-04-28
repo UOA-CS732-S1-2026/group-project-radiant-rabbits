@@ -1,4 +1,5 @@
-import type { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import GitHubProvider from "next-auth/providers/github";
 import { User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
@@ -86,22 +87,12 @@ export const options: NextAuthOptions = {
       return token;
     },
     // 3. Pass that token into the session so it's accessible in your pages
-    async session({ session, token }) {
-      // Specifically type the session and token
-      const sessionWithToken = session as typeof session & {
-        accessToken?: string;
-      };
-
-      // Ensure the access token is included in the session object
-      sessionWithToken.accessToken = (
-        token as { accessToken?: string }
-      ).accessToken;
-
-      const tokenId = (token as { id?: string }).id;
-      if (sessionWithToken.user && tokenId) {
-        sessionWithToken.user.id = tokenId;
+    async session({ session, token }: { session: Session; token: JWT }) {
+      const sessionWithToken = session as Session & { accessToken?: string };
+      sessionWithToken.accessToken = token.accessToken;
+      if (sessionWithToken.user && token.id) {
+        (sessionWithToken.user as { id: string }).id = token.id;
       }
-
       return sessionWithToken;
     },
   },

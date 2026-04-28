@@ -2,9 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import Button from "@/components/ui/Button";
-import GroupCard from "@/components/ui/GroupCard";
-import SprintHubTitle from "@/components/ui/SprintHubTitle";
+import GroupCard from "@/components/group-change/GroupCard";
+import Button from "@/components/shared/Button";
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
+import SprintHubTitle from "@/components/shared/SprintHubTitle";
+import {
+  joinCreateSwitchGroupHref,
+  safeDashboardReturn,
+} from "@/lib/safeDashboardReturn";
 
 const fieldColumnClass =
   "w-full max-w-[18rem] min-w-0 justify-self-start sm:max-w-[17rem]";
@@ -30,6 +35,9 @@ function SetGroupContent() {
 
   const repoName = searchParams.get("repoName");
   const repoOwner = searchParams.get("repoOwner");
+  const joinPickerHref = joinCreateSwitchGroupHref(
+    safeDashboardReturn(searchParams.get("returnTo")),
+  );
 
   const [projectStart, setProjectStart] = useState(() =>
     toDateInputValue(new Date()),
@@ -96,8 +104,10 @@ function SetGroupContent() {
       }
 
       router.push("/dashboard");
-    } catch (error: any) {
-      setErrorMessage(error.message || "Failed to create group.");
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to create group.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +191,7 @@ function SetGroupContent() {
             <Button
               variant="grey"
               size="lg"
-              href="/join-create-switch-group"
+              href={joinPickerHref}
               className="min-h-11 w-full justify-center py-2.5 font-semibold sm:w-auto sm:px-7"
             >
               Back
@@ -210,6 +220,33 @@ export default function SetGroupPage() {
           <SprintHubTitle />
         </header>
 
+        <div className="mb-4 flex shrink-0 justify-center sm:mb-5">
+          <HelpOverlayTrigger
+            label="Help for finishing group setup"
+            title="Creating your group"
+            size="comfortable"
+          >
+            <div className="space-y-4 text-left">
+              <p>
+                <span className="font-semibold text-brand-dark">
+                  Project start and end
+                </span>{" "}
+                are the dates your project is meant to run between; together
+                they define the overall schedule you’re capturing when you
+                create this group.
+              </p>
+              <p>
+                <span className="font-semibold text-brand-dark">
+                  Sprint length
+                </span>{" "}
+                is how long each sprint lasts, in whole weeks (1–3), for this
+                group’s default cadence.
+              </p>
+            </div>
+          </HelpOverlayTrigger>
+        </div>
+
+        {/* Suspense is required by Next.js when using useSearchParams */}
         <Suspense fallback={<div className="text-center">Loading...</div>}>
           <SetGroupContent />
         </Suspense>

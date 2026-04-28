@@ -1,9 +1,13 @@
 import { getServerSession } from "next-auth";
+import PageTopBar from "@/app/(main)/components/PageTopBar";
+import SideNav from "@/app/(main)/components/SideNav";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import PageTopBar from "@/components/ui/PageTopBar";
-import SideNav from "@/components/ui/SideNav";
+
+type LeanUserWithCurrentGroup = {
+  currentGroupId?: { repoName?: string } | null;
+} | null;
 
 export default async function MainLayout({
   children,
@@ -24,7 +28,7 @@ export default async function MainLayout({
         model: Group,
         select: "repoName",
       })
-      .lean()) as any;
+      .lean()) as LeanUserWithCurrentGroup;
 
     if (userWithGroup?.currentGroupId?.repoName) {
       repoName = userWithGroup.currentGroupId.repoName;

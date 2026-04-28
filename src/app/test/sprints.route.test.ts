@@ -2,7 +2,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth/next";
 import { Group, Sprint } from "@/app/lib/models";
-import connectMongoDB from "@/app/lib/mongodbConnection";
 import { GET, POST } from "../api/groups/[groupId]/sprints/route";
 
 // Mock next-auth session and the MongoDB connection helper.

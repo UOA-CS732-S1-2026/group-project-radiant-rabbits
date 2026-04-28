@@ -59,7 +59,7 @@ export async function GET(_request: NextRequest) {
 
     // Sort existing groups from database
     allGroups.forEach((group) => {
-      // If the user is already a member, add to "Current Groups"
+      // If the user is already a member, add to "Your Groups"
       if (
         userId &&
         group.members

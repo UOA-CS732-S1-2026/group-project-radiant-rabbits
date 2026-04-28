@@ -8,7 +8,7 @@ import {
 import { Commit, Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { normalizeUserRef } from "@/app/lib/userRef";
-import Dashboard from "@/components/main/Dashboard";
+import Dashboard from "@/components/dashboard/Dashboard";
 
 type DashboardStatus = "ready" | "loading" | "empty" | "error";
 
