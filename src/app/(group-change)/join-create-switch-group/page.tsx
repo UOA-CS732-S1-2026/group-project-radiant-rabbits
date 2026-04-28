@@ -3,9 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import SignInButton from "@/components/auth/SignInButton";
+import GroupCard from "@/components/group-change/GroupCard";
 import BorderedPanel from "@/components/shared/BorderedPanel";
 import Button from "@/components/shared/Button";
-import GroupCard from "@/components/shared/GroupCard";
 import SegmentedControl from "@/components/shared/SegmentedControl";
 import SprintHubTitle from "@/components/shared/SprintHubTitle";
 import { safeDashboardReturn } from "@/lib/safeDashboardReturn";
@@ -16,7 +16,12 @@ const TAB_OPTIONS = [
   { id: "current", label: "Your Groups" },
 ] as const;
 
-type GroupListCard = { name: string; repoOwner: string; inviteCode?: string };
+type GroupListCard = {
+  id: string;
+  name: string;
+  repoOwner: string;
+  inviteCode?: string;
+};
 
 function JoinCreateSwitchGroupContent() {
   const router = useRouter();
@@ -65,7 +70,7 @@ function JoinCreateSwitchGroupContent() {
 
         // Define card lists for each tab
         setLists({
-          current: data.yourGroups,
+          current: data.currentGroups,
           join: data.joinGroups,
           create: data.createGroups,
         });
@@ -87,9 +92,32 @@ function JoinCreateSwitchGroupContent() {
     setErrorMessage("");
     setIsAuthError(false);
 
-    // If the user clicks on a card in the "Your Groups" tab, navigate them to the dashboard immediately
     if (tab === "current") {
-      router.push("/dashboard");
+      setIsActionLoading(true);
+
+      try {
+        const response = await fetch("/api/groups/select", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ groupId: card.id }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 401) setIsAuthError(true);
+          throw new Error(data.error || "Failed to switch group.");
+        }
+
+        router.push("/dashboard");
+      } catch (error: unknown) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Something went wrong.",
+        );
+      } finally {
+        setIsActionLoading(false);
+      }
+
       return;
     }
 
@@ -216,7 +244,7 @@ function JoinCreateSwitchGroupContent() {
                   // Button that uses card click handler to either join the group or start the group creation process, depending on the active tab.
                   <button
                     type="button"
-                    key={`${tab}-${card.name}-${card.repoOwner}`}
+                    key={card.id}
                     onClick={() => handleCardClick(card)}
                     disabled={isActionLoading}
                     className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"

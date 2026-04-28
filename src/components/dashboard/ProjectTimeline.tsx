@@ -22,10 +22,10 @@ export default function ProjectTimeline({
   // Font size shrinks as sprint count grows
   const labelSize =
     totalSprints <= 6
-      ? "text-body-xs"
+      ? "lg:text-body-lg text-body-xs"
       : totalSprints <= 10
-        ? "text-[0.65rem]"
-        : "text-[0.55rem]";
+        ? "lg:text-body-md text-[0.65rem]"
+        : "lg:text-body-sm text-[0.55rem]";
 
   // Progress bar fills to the centre of the current sprint's column
   const progressPercent = Math.min(
@@ -41,7 +41,7 @@ export default function ProjectTimeline({
   // Scale SVG width with sprint count so labels don't overlap
   const baseWidth = 400;
   const chartWidth = Math.max(baseWidth, sprints.length * 60);
-  const chartHeight = 160;
+  const chartHeight = 120;
   const paddingX = 30;
   const paddingY = 20;
   const usableWidth = chartWidth - paddingX * 2;
@@ -66,19 +66,19 @@ export default function ProjectTimeline({
     sprints.length <= 6 ? 9 : sprints.length <= 10 ? 7.5 : 6;
 
   return (
-    <div className="flex flex-col gap-md">
+    <div className="flex flex-col gap-md mb-lg">
       {/* Project Timeline */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
-          Project Timeline
-        </h3>
+      <h3 className="text-body-lg font-semibold text-brand-dark">
+        Project Timeline
+      </h3>
+      <div className="rounded-2xl lg:h-23 h-18 bg-brand-surface p-md shadow-md">
         <div>
           {/* Sprint labels — each sits in a column equal to 1/totalSprints */}
-          <div className="mb-xs flex">
+          <div className="flex">
             {sprintLabels.map((label, i) => (
               <span
                 key={label}
-                className={`flex-1 text-center ${labelSize} ${
+                className={`mt-1 flex-1 text-center ${labelSize} ${
                   i < currentSprint
                     ? "font-medium text-brand-dark"
                     : "text-brand-dark/40"
@@ -88,7 +88,7 @@ export default function ProjectTimeline({
               </span>
             ))}
           </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-brand-accent/20">
+          <div className="mt-2 lg:h-5 h-3 w-full overflow-hidden rounded-full bg-brand-accent/20">
             <div
               className="h-full rounded-full bg-brand-accent transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
@@ -98,8 +98,8 @@ export default function ProjectTimeline({
       </div>
 
       {/* Sprint Velocity */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
+      <div className="rounded-2xl bg-brand-surface p-md shadow-md">
+        <h3 className="text-body-lg font-semibold text-brand-dark">
           Sprint Velocity
         </h3>
         <div className="overflow-x-auto">

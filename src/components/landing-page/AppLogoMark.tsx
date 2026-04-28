@@ -4,7 +4,7 @@ type AppLogoMarkProps = {
   className?: string;
 };
 
-/** Radiant Rabbits mark beside SprintHub in SideNav and landing header. */
+/** Radiant Rabbits mark for the marketing header and (via SideNav) the app shell. */
 export default function AppLogoMark({
   className = "h-16 w-16",
 }: AppLogoMarkProps) {

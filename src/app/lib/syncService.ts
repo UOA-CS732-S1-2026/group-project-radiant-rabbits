@@ -66,9 +66,14 @@ export async function syncGroup(groupId: string, accessToken: string) {
   });
 
   try {
+    const hasExistingSyncedData = await hasExistingGroupData(groupId);
+
     // If we've synced before, only fetch data newer than lastSyncAt (incremental).
     // On first sync, `since` is undefined so we fetch everything.
-    const since = group.lastSyncAt ? group.lastSyncAt.toISOString() : undefined;
+    const since =
+      group.lastSyncAt && hasExistingSyncedData
+        ? group.lastSyncAt.toISOString()
+        : undefined;
 
     // Fetch all data from GitHub in parallel - can run them at the same time
     const [commits, pullRequests, issues, projectTasks] = await Promise.all([
@@ -100,6 +105,17 @@ export async function syncGroup(groupId: string, accessToken: string) {
     // Handle different error types with appropriate status
     await handleSyncError(groupId, error, accessToken);
   }
+}
+
+// Helper function to check for any existing group data
+async function hasExistingGroupData(groupId: string): Promise<boolean> {
+  const [commitDoc, pullRequestDoc, issueDoc] = await Promise.all([
+    Commit.findOne({ group: groupId }).select("_id").lean(),
+    PullRequest.findOne({ group: groupId }).select("_id").lean(),
+    Issue.findOne({ group: groupId }).select("_id").lean(),
+  ]);
+
+  return Boolean(commitDoc || pullRequestDoc || issueDoc);
 }
 
 // Upsert functions (update if exists, insert if not)

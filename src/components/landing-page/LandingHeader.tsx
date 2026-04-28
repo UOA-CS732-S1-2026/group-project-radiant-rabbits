@@ -1,5 +1,5 @@
 import SignInButton from "@/components/auth/SignInButton";
-import AppLogoMark from "@/components/shared/AppLogoMark";
+import AppLogoMark from "@/components/landing-page/AppLogoMark";
 import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
 type LandingHeaderProps = {
