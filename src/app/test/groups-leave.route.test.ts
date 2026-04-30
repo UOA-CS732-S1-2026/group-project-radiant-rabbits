@@ -306,4 +306,46 @@ describe("PUT /api/groups/leave", () => {
 
     consoleSpy.mockRestore();
   });
+
+  // Test case 9: Group has no members left after user leaves, group should be deleted
+  it("should delete the group if there are no members left after user leaves", async () => {
+    mockGetServerSession.mockResolvedValue({
+      user: { id: "123", name: "Test" },
+      accessToken: "token123",
+    });
+
+    mockConnectMongoDB.mockResolvedValue(undefined);
+
+    mockUserFindOne.mockResolvedValue({
+      githubId: "123",
+      currentGroupId: "group-1",
+    });
+
+    mockGroupFindById.mockResolvedValue({
+      _id: "group-1",
+      members: ["123"],
+      repoOwner: "test-owner",
+      repoName: "test-name",
+    });
+
+    mockIsUserInGroup.mockReturnValue(true);
+
+    (Group.findByIdAndUpdate as jest.Mock).mockResolvedValue({
+      _id: "group-1",
+      members: [],
+    });
+
+    const request = new Request("http://localhost:3000/api/groups/leave", {
+      method: "PUT",
+      body: JSON.stringify({}),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const response = await PUT(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ message: "Successfully left the group" });
+    expect(Group.findByIdAndDelete).toHaveBeenCalledWith("group-1");
+  });
 });
