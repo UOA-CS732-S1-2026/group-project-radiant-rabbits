@@ -100,7 +100,7 @@ describe("PUT /api/groups/leave", () => {
     mockGetServerSession.mockResolvedValue(null);
 
     const request = new Request("http://localhost:3000/api/groups/leave", {
-      method: "POST",
+      method: "PUT",
       body: JSON.stringify({}),
       headers: { "Content-Type": "application/json" },
     });
