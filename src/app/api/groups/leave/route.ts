@@ -64,11 +64,9 @@ export async function PUT(request: Request) {
     }
 
     // Remove the user from the group's members array
-    group.members = group.members.filter(
-      (member: { githubId: any }) => member.githubId !== user.githubId,
-    );
-
-    await group.save();
+    await Group.findByIdAndUpdate(groupId, {
+      $pull: { members: { githubId: user.githubId } },
+    });
 
     if (group.members.length === 0) {
       // If the group has no members left, delete the group
@@ -76,8 +74,10 @@ export async function PUT(request: Request) {
     }
 
     // Update the user's currentGroupId to null
-    user.currentGroupId = null;
-    await user.save();
+    await User.findOneAndUpdate(
+      { githubId: userId },
+      { $set: { currentGroupId: null } },
+    );
 
     return NextResponse.json(
       { message: "Successfully left the group" },
