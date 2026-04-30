@@ -27,26 +27,24 @@ jest.mock(
 );
 
 jest.mock(
-  "@/app/lib/models",
-  () => ({
-    Group: {
-      findById: jest.fn(),
-    },
-    User: {
-      findOne: jest.fn(),
-      findByIdAndUpdate: jest.fn(),
-    },
-  }),
-  { virtual: true },
-);
-
-jest.mock(
   "@/app/lib/userRef",
   () => ({
     isUserInGroup: jest.fn(),
   }),
   { virtual: true },
 );
+
+jest.mock("@/app/lib/models", () => ({
+  Group: {
+    findById: jest.fn(),
+    findByIdAndUpdate: jest.fn(), // Add this
+    findByIdAndDelete: jest.fn(), // Add this
+  },
+  User: {
+    findOne: jest.fn(),
+    findOneAndUpdate: jest.fn(), // Add this
+  },
+}));
 
 type SessionLike = {
   user?: {
@@ -82,8 +80,8 @@ const mockUserFindOne = User.findOne as jest.MockedFunction<
   typeof User.findOne
 >;
 
-const mockUserFindByIdAndUpdate = User.findByIdAndUpdate as jest.MockedFunction<
-  typeof User.findByIdAndUpdate
+const mockUserFindOneAndUpdate = User.findOneAndUpdate as jest.MockedFunction<
+  typeof User.findOneAndUpdate
 >;
 
 const mockIsUserInGroup = isUserInGroup as jest.MockedFunction<
@@ -225,6 +223,8 @@ describe("PUT /api/groups/leave", () => {
       repoName: "test-name",
     });
 
+    mockIsUserInGroup.mockReturnValue(false);
+
     const request = new Request("http://localhost:3000/api/groups/leave", {
       method: "PUT",
       body: JSON.stringify({}),
@@ -261,7 +261,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockIsUserInGroup.mockReturnValue(true);
 
-    mockUserFindByIdAndUpdate.mockResolvedValue({
+    mockUserFindOneAndUpdate.mockResolvedValue({
       githubId: "123",
     });
 
@@ -280,6 +280,10 @@ describe("PUT /api/groups/leave", () => {
 
   // Test case 8: Database connection error
   it("should return 500 if there is a database connection error", async () => {
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     mockGetServerSession.mockResolvedValue({
       user: { id: "123", name: "Test" },
       accessToken: "token123",
@@ -299,5 +303,7 @@ describe("PUT /api/groups/leave", () => {
 
     expect(response.status).toBe(500);
     expect(body).toEqual({ error: "Failed to leave group" });
+
+    consoleSpy.mockRestore();
   });
 });

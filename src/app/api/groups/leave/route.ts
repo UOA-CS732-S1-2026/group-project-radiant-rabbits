@@ -64,12 +64,13 @@ export async function PUT(request: Request) {
     }
 
     // Remove the user from the group's members array
-    await Group.findByIdAndUpdate(groupId, {
-      $pull: { members: { githubId: user.githubId } },
-    });
+    const updatedGroup = await Group.findByIdAndUpdate(
+      groupId,
+      { $pull: { members: { githubId: user.githubId } } },
+      { new: true },
+    );
 
-    if (group.members.length === 0) {
-      // If the group has no members left, delete the group
+    if (updatedGroup && updatedGroup.members.length === 0) {
       await Group.findByIdAndDelete(groupId);
     }
 
