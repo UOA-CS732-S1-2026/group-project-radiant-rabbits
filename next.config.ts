@@ -1,3 +1,7 @@
+import dns from "node:dns/promises";
+
+dns.setServers(["1.1.1.1"]);
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
