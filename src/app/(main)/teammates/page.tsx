@@ -116,18 +116,16 @@ export default function TeammatesPage() {
   }, [group]);
 
   return (
-    <PageContainer>
-      <SectionHeading title="Teammates" subtitle={groupSubtitle} />
-
-      <Card className="border border-brand-dark/10 border-l-0 shadow-none">
-        <BorderedPanel className="p-0">
-          <div className="border-b border-brand-dark/10 px-lg py-lg">
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Team Members
-            </h2>
+    <div className="min-h-screen bg-brand-background">
+      <PageContainer>
+        <Card className="border border-brand-dark/10 shadow-none">
+          <h2 className="lg:text-3xl text-h3 font-bold text-brand-dark">
+            Team Members
+          </h2>
+          <div className="mt-xs text-body-md text-brand-dark/70">
             {group ? (
-              <p className="mt-1 text-body-sm text-brand-dark/70">
-                {group.name}
+              <p className="mt-1 text-body-md text-brand-dark/70">
+                {group.name}/{group.repoOwner}
               </p>
             ) : null}
           </div>
@@ -159,7 +157,7 @@ export default function TeammatesPage() {
             )}
 
             {!isLoading && !errorMessage && group && members.length > 0 && (
-              <div className="space-y-md">
+              <div className="mt-lg space-y-md">
                 {members.map((person) => (
                   <div
                     key={person.id}
@@ -202,8 +200,8 @@ export default function TeammatesPage() {
               </div>
             )}
           </div>
-        </BorderedPanel>
-      </Card>
-    </PageContainer>
+        </Card>
+      </PageContainer>
+    </div>
   );
 }
