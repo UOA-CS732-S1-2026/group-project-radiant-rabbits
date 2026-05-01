@@ -41,16 +41,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const {
-      description,
-      repoOwner,
-      repoName,
-      projectStartDate,
-      projectEndDate,
-      sprintLengthWeeks,
-    } = await request.json();
+    const { description, repoOwner, repoName } = await request.json();
 
-    // If the user does not input a name or description, return an error
+    // If the user does not input a description, return an error
     if (!description) {
       return NextResponse.json(
         { error: "Description is required" },
@@ -62,46 +55,6 @@ export async function POST(request: Request) {
     if (!repoOwner || !repoName) {
       return NextResponse.json(
         { error: "Repository name and owner is required" },
-        { status: 400 },
-      );
-    }
-
-    // Connect to MongoDB and create a new group with the provided name, description
-    // Generate a unique invite code
-    if (!projectStartDate || !projectEndDate) {
-      return NextResponse.json(
-        { error: "Project start date and end date are required" },
-        { status: 400 },
-      );
-    }
-
-    const startDate = new Date(projectStartDate);
-    const endDate = new Date(projectEndDate);
-
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid project start or end date" },
-        { status: 400 },
-      );
-    }
-
-    if (endDate <= startDate) {
-      return NextResponse.json(
-        { error: "Project end date must be after project start date" },
-        { status: 400 },
-      );
-    }
-
-    // ✅ Sprint length validation (FIXED)
-    const sprintLengthNumber = Number(sprintLengthWeeks);
-
-    if (
-      !Number.isInteger(sprintLengthNumber) ||
-      sprintLengthNumber < 1 ||
-      sprintLengthNumber > 3
-    ) {
-      return NextResponse.json(
-        { error: "Sprint length must be between 1 and 3 weeks." },
         { status: 400 },
       );
     }
@@ -144,9 +97,6 @@ export async function POST(request: Request) {
       repoOwner,
       repoName,
       createdBy: normalizeUserRef(session.user.id),
-      projectStartDate: startDate,
-      projectEndDate: endDate,
-      sprintLengthWeeks: sprintLengthNumber, //
       lastSyncAt: new Date(),
       syncStatus: "pending",
       syncError: null,
@@ -171,9 +121,6 @@ export async function POST(request: Request) {
           inviteCode: group.inviteCode,
           repoOwner: group.repoOwner,
           repoName: group.repoName,
-          projectStartDate: group.projectStartDate,
-          projectEndDate: group.projectEndDate,
-          sprintLengthWeeks: group.sprintLengthWeeks,
         },
         message: "Group Successfully Created",
       },
