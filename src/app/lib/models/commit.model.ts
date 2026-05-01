@@ -35,7 +35,9 @@ const commitSchema = new Schema(
   },
 );
 
-commitSchema.index({ sha: 1 }, { unique: true });
+// Commits are unique per group/repo in this app.
+// The sync path already matches on { sha, group }, so the index must use the same compound key
+commitSchema.index({ sha: 1, group: 1 }, { unique: true });
 commitSchema.index({ group: 1, date: 1 });
 commitSchema.index({ group: 1, "author.name": 1 });
 
