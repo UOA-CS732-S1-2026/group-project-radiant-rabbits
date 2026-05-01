@@ -1,4 +1,3 @@
-import type { Sprint } from "@/components/dashboard/ProjectTimeline";
 import ProjectTimeline from "@/components/dashboard/ProjectTimeline";
 
 // Fetch all data required to display the dashboard metrics and pass it to the Dashboard component for rendering
@@ -9,6 +8,12 @@ type RepositoryInfo = {
   syncStatus?: string | null;
   syncError?: string | null;
   validationError?: string | null;
+};
+
+type SprintForDashboard = {
+  name: string;
+  velocity: number;
+  isCurrent: boolean;
 };
 
 type DashboardProps = {
@@ -24,14 +29,8 @@ type DashboardProps = {
     issuesClosedLastSprint: number;
     activeContributors: number;
   };
-  timeline?: {
-    projectStartDate?: Date | string | null;
-    projectEndDate?: Date | string | null;
-    sprintLengthDays?: number | null;
-  };
+  sprints?: SprintForDashboard[];
 };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Reusable status/error block so every failure surfaces in the dashboard UI
 function StatusBlock({ message }: { message: string }) {
@@ -43,66 +42,13 @@ function StatusBlock({ message }: { message: string }) {
   );
 }
 
-type SprintProgress =
-  | { ok: true; currentSprint: number; totalSprints: number }
-  | { ok: false; error: string };
-
-// Helper function to compute current sprint and total sprints based on project timeline
-function computeSprintProgress(
-  timeline?: DashboardProps["timeline"],
-): SprintProgress {
-  const start = timeline?.projectStartDate
-    ? new Date(timeline.projectStartDate)
-    : null;
-  const end = timeline?.projectEndDate
-    ? new Date(timeline.projectEndDate)
-    : null;
-
-  // Check that all the required information is fetched to build the dashboard
-  // If any of the required timeline information is missing or invalid, return the error UI with the error message
-  if (
-    !start ||
-    !end ||
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime()) ||
-    end <= start
-  ) {
-    return {
-      ok: false,
-      error:
-        "Project timeline is missing or invalid: a valid project start and end date are required.",
-    };
-  }
-
-  if (!timeline?.sprintLengthDays || timeline.sprintLengthDays <= 0) {
-    return {
-      ok: false,
-      error:
-        "Sprint length is missing or invalid: a positive sprint length is required.",
-    };
-  }
-
-  const sprintLength = timeline.sprintLengthDays;
-
-  const totalSprints = Math.max(
-    1,
-    Math.ceil((end.getTime() - start.getTime()) / (sprintLength * DAY_MS)),
-  );
-
-  const elapsedDays = (Date.now() - start.getTime()) / DAY_MS;
-  const rawCurrent = Math.floor(elapsedDays / sprintLength) + 1;
-  const currentSprint = Math.min(Math.max(rawCurrent, 1), totalSprints);
-
-  return { ok: true, currentSprint, totalSprints };
-}
-
 // Page component that shows when the dashboard is loading or if it has an error
 export default function Dashboard({
   status,
   statusMessage,
   repository: _repository,
   metrics,
-  timeline,
+  sprints,
 }: DashboardProps) {
   if (status !== "ready") {
     return (
@@ -146,22 +92,11 @@ export default function Dashboard({
     },
   ];
 
-  // Placeholder data for the timeline chart until sprint velocity calculation is implemented
-  const defaultSprints: Sprint[] = [
-    { name: "Sprint 1", velocity: 5 },
-    { name: "Sprint 2", velocity: 12 },
-    { name: "Sprint 3", velocity: 18 },
-    { name: "Sprint 4", velocity: 28 },
-    { name: "Sprint 5", velocity: 38 },
-    { name: "Sprint 6", velocity: 45 },
-    { name: "Sprint 7", velocity: 50 },
-    { name: "Sprint 8", velocity: 55 },
-  ];
-  const sprintProgress = computeSprintProgress(timeline);
-  if (!sprintProgress.ok) {
-    return <StatusBlock message={sprintProgress.error} />;
-  }
-  const { currentSprint, totalSprints } = sprintProgress;
+  // Sprint progress is derived directly from the synced GitHub iterations.
+  // Fall back to sprint 1 of N when no sprint is currently active (between iterations).
+  const totalSprints = sprints?.length ?? 0;
+  const currentSprintIndex = sprints?.findIndex((s) => s.isCurrent) ?? -1;
+  const currentSprint = currentSprintIndex >= 0 ? currentSprintIndex + 1 : 1;
 
   // Display the dashboard with the fetched metrics and timeline chart
   return (
@@ -191,12 +126,24 @@ export default function Dashboard({
 
       <hr className="border-t border-brand-dark/10" />
 
-      {/* Project Timeline & Sprint Velocity */}
-      <ProjectTimeline
-        sprints={defaultSprints}
-        currentSprint={currentSprint}
-        totalSprints={totalSprints}
-      />
+      {/* Project Timeline & Sprint Velocity — only render when iterations exist */}
+      {sprints && sprints.length > 0 ? (
+        <ProjectTimeline
+          sprints={sprints}
+          currentSprint={currentSprint}
+          totalSprints={totalSprints}
+        />
+      ) : (
+        <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
+          <h3 className="text-body-lg font-semibold text-brand-dark">
+            Project Timeline
+          </h3>
+          <p className="mt-sm text-body-sm text-brand-dark/70">
+            No sprints have been synced yet. Set up an iteration field on your
+            GitHub Project and assign tickets to it, then refresh.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

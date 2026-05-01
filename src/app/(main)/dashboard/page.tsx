@@ -5,12 +5,52 @@ import {
   calculateGithubMetricsLive,
   type GithubMetrics,
 } from "@/app/lib/githubCalculator";
-import { Commit, Group, User } from "@/app/lib/models";
+import { Commit, Group, Sprint, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
 
 type DashboardStatus = "ready" | "loading" | "empty" | "error";
+
+type SprintForDashboard = {
+  name: string;
+  velocity: number;
+  isCurrent: boolean;
+};
+
+// Read all sprints for the group from the DB and count commits in each sprint's
+// date range to derive velocity. Sprints come from synced GitHub iterations
+// (see syncService.upsertSprints). Returns [] when no iterations have been synced.
+async function loadSprintsForDashboard(
+  groupId: import("mongoose").Types.ObjectId,
+): Promise<SprintForDashboard[]> {
+  const sprints = await Sprint.find({ group: groupId })
+    .sort({ startDate: 1 })
+    .lean<
+      Array<{
+        name: string;
+        startDate: Date;
+        endDate: Date;
+        isCurrent: boolean;
+      }>
+    >();
+
+  if (sprints.length === 0) return [];
+
+  return Promise.all(
+    sprints.map(async (sprint) => {
+      const velocity = await Commit.countDocuments({
+        group: groupId,
+        date: { $gte: sprint.startDate, $lte: sprint.endDate },
+      });
+      return {
+        name: sprint.name,
+        velocity,
+        isCurrent: sprint.isCurrent,
+      };
+    }),
+  );
+}
 
 // Fetch all data required to display the dashboard metrics
 // Could take a while as it may involve multiple calls for githubCalculator
@@ -99,11 +139,6 @@ export default async function DashboardPage() {
   let statusMessage: string | undefined;
   let githubMetrics: GithubMetrics | undefined;
 
-  // Convert sprint length from weeks to days
-  const sprintLengthDays = group.sprintLengthWeeks
-    ? group.sprintLengthWeeks * 7
-    : null;
-
   // Validate that the group actually has a repository
   if (!group.repoOwner || !group.repoName) {
     status = "error";
@@ -119,7 +154,7 @@ export default async function DashboardPage() {
         group._id.toString(),
         group.repoOwner,
         group.repoName,
-        sprintLengthDays,
+        null,
       );
     } catch (error) {
       console.error("Failed to calculate dashboard metrics:", error);
@@ -127,6 +162,10 @@ export default async function DashboardPage() {
       statusMessage = error instanceof Error ? error.message : String(error);
     }
   }
+
+  // Sprint data is sourced from synced GitHub iterations — empty array when
+  // none have been synced yet. The Dashboard component handles the empty state.
+  const sprints = await loadSprintsForDashboard(group._id);
 
   // Display the dashboard with the fetched metrics
   return (
@@ -146,11 +185,7 @@ export default async function DashboardPage() {
               : "No repository is connected to this group.",
         }}
         metrics={githubMetrics}
-        timeline={{
-          projectStartDate: group.projectStartDate,
-          projectEndDate: group.projectEndDate,
-          sprintLengthDays,
-        }}
+        sprints={sprints}
       />
     </div>
   );
