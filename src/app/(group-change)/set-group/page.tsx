@@ -11,24 +11,6 @@ import {
   safeDashboardReturn,
 } from "@/lib/safeDashboardReturn";
 
-const fieldColumnClass =
-  "w-full max-w-[18rem] min-w-0 justify-self-start sm:max-w-[17rem]";
-
-const dateFieldClass = `${fieldColumnClass} min-h-12 rounded-lg border border-brand-accent/50 bg-brand-surface px-md py-2 text-body-md leading-tight text-brand-dark shadow-sm outline-none transition-shadow [color-scheme:light] focus:ring-2 focus:ring-brand-primary sm:min-h-[3.25rem]`;
-
-function toDateInputValue(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function addCalendarMonths(base: Date, months: number): Date {
-  const d = new Date(base.getTime());
-  d.setMonth(d.getMonth() + months);
-  return d;
-}
-
 function SetGroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,15 +21,6 @@ function SetGroupContent() {
     safeDashboardReturn(searchParams.get("returnTo")),
   );
 
-  const [projectStart, setProjectStart] = useState(() =>
-    toDateInputValue(new Date()),
-  );
-  const [projectEnd, setProjectEnd] = useState(() => {
-    const today = new Date();
-    return toDateInputValue(addCalendarMonths(today, 2));
-  });
-  const [sprintLengthWeeks, setSprintLengthWeeks] = useState<number>(1);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -56,27 +29,6 @@ function SetGroupContent() {
       setErrorMessage(
         "Missing repository information. Please go back and select a repository again.",
       );
-      return;
-    }
-
-    if (!projectStart || !projectEnd) {
-      setErrorMessage("Please provide both project dates.");
-      return;
-    }
-
-    if (new Date(projectEnd) <= new Date(projectStart)) {
-      setErrorMessage("Project end date must be after project start date.");
-      return;
-    }
-
-    const sprintLengthNumber = Number(sprintLengthWeeks);
-
-    if (
-      !Number.isInteger(sprintLengthNumber) ||
-      sprintLengthNumber < 1 ||
-      sprintLengthNumber > 3
-    ) {
-      setErrorMessage("Sprint length must be between 1 and 3 weeks.");
       return;
     }
 
@@ -91,9 +43,6 @@ function SetGroupContent() {
           repoOwner,
           repoName,
           description: `Group for ${repoOwner}/${repoName}`,
-          projectStartDate: projectStart,
-          projectEndDate: projectEnd,
-          sprintLengthWeeks: sprintLengthNumber,
         }),
       });
 
@@ -124,66 +73,24 @@ function SetGroupContent() {
           )}
 
           <GroupCard>
-            <div className="grid w-full min-w-0 grid-cols-1 gap-y-2.5 sm:grid-cols-[minmax(0,13rem)_1fr] sm:items-center sm:gap-x-7 sm:gap-y-4">
-              <label
-                htmlFor="set-group-start"
-                className="text-body-md font-semibold text-brand-dark sm:text-body-lg"
-              >
-                Project Start
-              </label>
-              <input
-                id="set-group-start"
-                type="date"
-                value={projectStart}
-                onChange={(e) => {
-                  setErrorMessage("");
-                  setProjectStart(e.target.value);
-                }}
-                className={dateFieldClass}
-              />
-
-              <label
-                htmlFor="set-group-end"
-                className="text-body-md font-semibold text-brand-dark sm:text-body-lg"
-              >
-                Project End
-              </label>
-              <input
-                id="set-group-end"
-                type="date"
-                value={projectEnd}
-                onChange={(e) => {
-                  setErrorMessage("");
-                  setProjectEnd(e.target.value);
-                }}
-                className={dateFieldClass}
-              />
-
-              <label
-                htmlFor="set-group-sprint"
-                className="text-body-md font-semibold text-brand-dark sm:text-body-lg"
-              >
-                Sprint Length
-              </label>
-              <div className={fieldColumnClass}>
-                <input
-                  id="set-group-sprint"
-                  type="number"
-                  min={1}
-                  max={3}
-                  value={sprintLengthWeeks}
-                  onChange={(e) => {
-                    setErrorMessage("");
-                    const n = Number(e.target.value);
-                    if (Number.isInteger(n) && n >= 1 && n <= 3) {
-                      setSprintLengthWeeks(n);
-                    }
-                  }}
-                  className={`${dateFieldClass} w-24 text-center`}
-                  aria-label="Sprint length in weeks"
-                />
-                <p className="mt-1 text-body-sm text-brand-dark/60">weeks</p>
-              </div>
+            <div className="flex w-full min-w-0 flex-col gap-md text-body-md text-brand-dark sm:gap-lg sm:text-body-lg">
+              <p>
+                You&apos;re about to create a group for{" "}
+                <span className="font-semibold">
+                  {repoOwner && repoName
+                    ? `${repoOwner}/${repoName}`
+                    : "this repository"}
+                </span>
+                .
+              </p>
+              <p className="text-brand-dark/70">
+                Sprints, dates, and ticket assignments are pulled from the{" "}
+                <span className="font-semibold text-brand-dark">
+                  iteration field
+                </span>{" "}
+                on your GitHub Project. Set those up there, then refresh from
+                the dashboard whenever you want the latest data.
+              </p>
             </div>
           </GroupCard>
 
@@ -228,19 +135,20 @@ export default function SetGroupPage() {
           >
             <div className="space-y-4 text-left">
               <p>
-                <span className="font-semibold text-brand-dark">
-                  Project start and end
-                </span>{" "}
-                are the dates your project is meant to run between; together
-                they define the overall schedule you’re capturing when you
-                create this group.
+                Sprint dates and ticket assignments are pulled directly from
+                your GitHub Project, so there&apos;s nothing to fill in here.
               </p>
               <p>
+                Make sure your Project has an{" "}
                 <span className="font-semibold text-brand-dark">
-                  Sprint length
+                  iteration field
                 </span>{" "}
-                is how long each sprint lasts, in whole weeks (1–3), for this
-                group’s default cadence.
+                (default name &ldquo;Sprint&rdquo;) and that tickets are
+                assigned to the right iteration. Click{" "}
+                <span className="font-semibold text-brand-dark">
+                  Create Group
+                </span>{" "}
+                to finish setup and trigger the first sync.
               </p>
             </div>
           </HelpOverlayTrigger>

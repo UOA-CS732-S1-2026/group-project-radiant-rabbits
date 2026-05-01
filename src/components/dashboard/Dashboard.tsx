@@ -92,12 +92,6 @@ export default function Dashboard({
     },
   ];
 
-  // Sprint progress is derived directly from the synced GitHub iterations.
-  // Fall back to sprint 1 of N when no sprint is currently active (between iterations).
-  const totalSprints = sprints?.length ?? 0;
-  const currentSprintIndex = sprints?.findIndex((s) => s.isCurrent) ?? -1;
-  const currentSprint = currentSprintIndex >= 0 ? currentSprintIndex + 1 : 1;
-
   // Display the dashboard with the fetched metrics and timeline chart
   return (
     <div className="ml-lg mr-lg mt-md flex flex-col lg:gap-lg gap-md">
@@ -126,17 +120,13 @@ export default function Dashboard({
 
       <hr className="border-t border-brand-dark/10" />
 
-      {/* Project Timeline & Sprint Velocity — only render when iterations exist */}
+      {/* Sprint Velocity — only render when iterations exist */}
       {sprints && sprints.length > 0 ? (
-        <ProjectTimeline
-          sprints={sprints}
-          currentSprint={currentSprint}
-          totalSprints={totalSprints}
-        />
+        <ProjectTimeline sprints={sprints} />
       ) : (
         <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
           <h3 className="text-body-lg font-semibold text-brand-dark">
-            Project Timeline
+            Sprint Velocity
           </h3>
           <p className="mt-sm text-body-sm text-brand-dark/70">
             No sprints have been synced yet. Set up an iteration field on your
