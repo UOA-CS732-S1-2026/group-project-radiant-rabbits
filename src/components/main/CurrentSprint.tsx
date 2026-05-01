@@ -8,7 +8,13 @@ import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 
 // Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
-type SprintTask = { id: string; title: string; status: "Open" | "Closed" };
+type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+type SprintTaskRow = {
+  id: string;
+  ref: string; // "#42" for linked issues, otherwise the task id
+  title: string;
+  status: TaskStatus;
+};
 type ContributorRow = { name: string; commits: string; issue: string };
 type TimelineRow = { date: string; text: string; initials: string };
 
@@ -34,13 +40,14 @@ type SprintMetrics = {
   pullRequestsMerged: number;
   activeContributors: number;
   contributors: Array<{ name: string; commitCount: number }>;
-  issues: Array<{
+  // Tasks from the GitHub Project, linked to this sprint via the iteration field
+  tasks: Array<{
     id: string;
-    number: number;
     title: string;
-    status: "Open" | "Closed";
-    createdAt: string | Date;
+    status: TaskStatus;
+    issueNumber: number | null;
   }>;
+  taskBreakdown: { todo: number; inProgress: number; done: number };
   timeline: Array<{
     date: string | Date;
     text: string;
@@ -76,18 +83,23 @@ function formatShortDate(value: string | Date) {
   });
 }
 
-// Helper function to create the issue badge with different colors based on open vs closed status
-function StatusBadge({ status }: { status: string }) {
-  const styles =
-    status === "Closed"
-      ? "bg-brand-completed text-brand-surface"
-      : "bg-brand-open text-brand-surface";
-
+// Helper function to create the task badge — colour and label match the breakdown tiles
+function StatusBadge({ status }: { status: TaskStatus }) {
+  const styles: Record<TaskStatus, string> = {
+    TODO: "bg-brand-todo text-brand-surface",
+    IN_PROGRESS: "bg-brand-in-progress text-brand-surface",
+    DONE: "bg-brand-completed text-brand-surface",
+  };
+  const labels: Record<TaskStatus, string> = {
+    TODO: "To Do",
+    IN_PROGRESS: "In Progress",
+    DONE: "Done",
+  };
   return (
     <span
-      className={`inline-flex min-w-16 justify-center rounded-lg px-sm py-xs text-body-xs font-medium ${styles}`}
+      className={`inline-flex min-w-16 justify-center rounded-lg px-sm py-xs text-body-xs font-medium ${styles[status]}`}
     >
-      {status}
+      {labels[status]}
     </span>
   );
 }
@@ -196,14 +208,15 @@ export default function CurrentSprint({
     });
   }, [groupId, router]);
 
-  const sprintTasks: SprintTask[] = useMemo(
+  const sprintTasks: SprintTaskRow[] = useMemo(
     () =>
-      (metrics?.issues || []).map((issue) => ({
-        id: `#${issue.number}`,
-        title: issue.title,
-        status: issue.status,
+      (metrics?.tasks || []).map((task) => ({
+        id: task.id,
+        ref: task.issueNumber ? `#${task.issueNumber}` : "",
+        title: task.title,
+        status: task.status,
       })),
-    [metrics?.issues],
+    [metrics?.tasks],
   );
 
   const contributors: ContributorRow[] = useMemo(
@@ -227,11 +240,14 @@ export default function CurrentSprint({
   );
 
   const filteredSprintTasks = useMemo(() => {
-    if (issueFilter === "open") {
-      return sprintTasks.filter((t) => t.status === "Open");
+    if (issueFilter === "todo") {
+      return sprintTasks.filter((t) => t.status === "TODO");
     }
-    if (issueFilter === "closed") {
-      return sprintTasks.filter((t) => t.status === "Closed");
+    if (issueFilter === "in_progress") {
+      return sprintTasks.filter((t) => t.status === "IN_PROGRESS");
+    }
+    if (issueFilter === "done") {
+      return sprintTasks.filter((t) => t.status === "DONE");
     }
     return sprintTasks;
   }, [issueFilter, sprintTasks]);
@@ -250,11 +266,9 @@ export default function CurrentSprint({
     );
   }
 
-  const todoCount = sprintTasks.filter((task) => task.status === "Open").length;
-  const doneCount = sprintTasks.filter(
-    (task) => task.status === "Closed",
-  ).length;
-  const inProgressCount = 0;
+  const todoCount = metrics?.taskBreakdown.todo ?? 0;
+  const inProgressCount = metrics?.taskBreakdown.inProgress ?? 0;
+  const doneCount = metrics?.taskBreakdown.done ?? 0;
 
   // Display the current sprint page with the fetched metrics
   return (
@@ -365,19 +379,24 @@ export default function CurrentSprint({
 
                     <div className="inline-flex gap-0.5 rounded-md bg-brand-border p-1">
                       <FilterChip
-                        label="All Issues"
+                        label="All"
                         active={issueFilter === "all"}
                         onClick={() => setIssueFilter("all")}
                       />
                       <FilterChip
-                        label="Open"
-                        active={issueFilter === "open"}
-                        onClick={() => setIssueFilter("open")}
+                        label="To Do"
+                        active={issueFilter === "todo"}
+                        onClick={() => setIssueFilter("todo")}
                       />
                       <FilterChip
-                        label="Closed"
-                        active={issueFilter === "closed"}
-                        onClick={() => setIssueFilter("closed")}
+                        label="In Progress"
+                        active={issueFilter === "in_progress"}
+                        onClick={() => setIssueFilter("in_progress")}
+                      />
+                      <FilterChip
+                        label="Done"
+                        active={issueFilter === "done"}
+                        onClick={() => setIssueFilter("done")}
                       />
                     </div>
 
@@ -385,16 +404,18 @@ export default function CurrentSprint({
                       <div className="space-y-md">
                         {filteredSprintTasks.length === 0 ? (
                           <p className="text-body-md text-brand-dark/60">
-                            No issues found for this sprint period.
+                            No tasks linked to this sprint. Assign tickets to
+                            this iteration in your GitHub Project to see them
+                            here.
                           </p>
                         ) : (
                           filteredSprintTasks.map((task) => (
                             <div
                               key={task.id}
-                              className="grid grid-cols-[5rem_1fr_5rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
+                              className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
                             >
                               <span className="text-brand-dark/60">
-                                {task.id}
+                                {task.ref}
                               </span>
                               <span className="text-brand-dark/70">
                                 {task.title}

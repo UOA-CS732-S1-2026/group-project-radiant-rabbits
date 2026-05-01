@@ -1,4 +1,5 @@
 import { log } from "node:console";
+import type mongoose from "mongoose";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import {
@@ -6,7 +7,15 @@ import {
   fetchIssues,
   fetchPullRequests,
 } from "@/app/lib/githubService";
-import { Commit, Group, Issue, PullRequest, User } from "@/app/lib/models";
+import {
+  Commit,
+  Group,
+  Issue,
+  PullRequest,
+  Sprint,
+  SprintTask,
+  User,
+} from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -17,12 +26,12 @@ type ContributorActivity = {
   commitCount: number;
 };
 
-type SprintIssue = {
+type SprintTaskRow = {
   id: string;
-  number: number;
   title: string;
-  status: "Open" | "Closed";
-  createdAt: Date;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  issueNumber: number | null;
+  assignees: string[];
 };
 
 type SprintActivity = {
@@ -31,7 +40,7 @@ type SprintActivity = {
   initials: string;
 };
 
-type ComputedSprint = {
+type ResolvedSprint = {
   id: string;
   number: number;
   name: string;
@@ -53,8 +62,10 @@ export type CurrentSprintMetrics = {
   pullRequestsMerged: number;
   activeContributors: number;
   contributors: ContributorActivity[];
-  issues: SprintIssue[];
   timeline: SprintActivity[];
+  // Tasks come from synced GitHub Project items linked to the sprint's iteration
+  tasks: SprintTaskRow[];
+  taskBreakdown: { todo: number; inProgress: number; done: number };
 };
 
 export type CurrentSprintBody = {
@@ -64,7 +75,7 @@ export type CurrentSprintBody = {
     syncStatus?: string;
     lastSyncAt?: Date | string | null;
   };
-  sprint?: ComputedSprint | null;
+  sprint?: ResolvedSprint | null;
   selectionReason?: "current-flag" | "active" | "latest";
   metrics?: CurrentSprintMetrics;
   message?: string;
@@ -107,63 +118,89 @@ function computeProgress(now: Date, startDate: Date, endDate: Date) {
   };
 }
 
-// Compute the current sprint based on project start/end dates, sprint length, and current date
-function computeCurrentSprint(
-  now: Date,
-  projectStartDate: Date,
-  projectEndDate: Date,
-  sprintLengthWeeks: number,
-): ComputedSprint {
-  const inclusiveProjectEndDate = new Date(projectEndDate);
-  inclusiveProjectEndDate.setUTCHours(23, 59, 59, 999);
+// Activity counts and contributor/timeline data for the sprint window.
+// Tasks and breakdown come from a separate query (SprintTask via iteration link).
+type PeriodActivity = Omit<CurrentSprintMetrics, "tasks" | "taskBreakdown">;
 
-  const sprintLengthDays = sprintLengthWeeks * 7;
-  const totalProjectDays = Math.max(
-    1,
-    Math.ceil(
-      (inclusiveProjectEndDate.getTime() - projectStartDate.getTime()) / DAY_MS,
-    ),
-  );
-  const totalSprints = Math.max(
-    1,
-    Math.ceil(totalProjectDays / sprintLengthDays),
-  );
+// Resolve the current sprint by reading synced Sprint docs.
+// Prefers the one flagged isCurrent (set during sync if today falls in its window).
+// Falls back to the most recently started sprint so the page still has something
+// to show when we're between iterations or after the last one ended.
+async function loadCurrentSprintAndPosition(
+  groupId: mongoose.Types.ObjectId,
+): Promise<{
+  sprint: ResolvedSprint;
+  sprintObjectId: mongoose.Types.ObjectId;
+} | null> {
+  const sprints = await Sprint.find({ group: groupId })
+    .sort({ startDate: 1 })
+    .lean<
+      Array<{
+        _id: mongoose.Types.ObjectId;
+        name: string;
+        startDate: Date;
+        endDate: Date;
+        isCurrent: boolean;
+      }>
+    >();
 
-  let sprintNumber = 1;
-  if (now > inclusiveProjectEndDate) {
-    sprintNumber = totalSprints;
-  } else if (now >= projectStartDate) {
-    const elapsedProjectDays = Math.floor(
-      (now.getTime() - projectStartDate.getTime()) / DAY_MS,
-    );
-    sprintNumber = Math.min(
-      totalSprints,
-      Math.floor(elapsedProjectDays / sprintLengthDays) + 1,
-    );
-  }
+  if (sprints.length === 0) return null;
 
-  const sprintStartDate = new Date(
-    projectStartDate.getTime() + (sprintNumber - 1) * sprintLengthDays * DAY_MS,
-  );
-  const sprintEndExclusive = new Date(
-    sprintStartDate.getTime() + sprintLengthDays * DAY_MS,
-  );
-  const sprintEndDate = new Date(
-    Math.min(
-      sprintEndExclusive.getTime() - 1,
-      inclusiveProjectEndDate.getTime(),
-    ),
-  );
+  const currentIdx = sprints.findIndex((s) => s.isCurrent);
+  const idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
+  const doc = sprints[idx];
+  const now = new Date();
 
   return {
-    id: `computed-sprint-${sprintNumber}`,
-    number: sprintNumber,
-    name: `Sprint ${sprintNumber}`,
-    startDate: sprintStartDate,
-    endDate: sprintEndDate,
-    status: computeStatus(now, sprintStartDate, sprintEndDate),
-    progress: computeProgress(now, sprintStartDate, sprintEndDate),
+    sprint: {
+      id: String(doc._id),
+      number: idx + 1,
+      name: doc.name,
+      startDate: doc.startDate,
+      endDate: doc.endDate,
+      status: computeStatus(now, doc.startDate, doc.endDate),
+      progress: computeProgress(now, doc.startDate, doc.endDate),
+    },
+    sprintObjectId: doc._id,
   };
+}
+
+// Load SprintTask docs assigned to this sprint via the synced iteration link.
+// Tasks without a sprint link (i.e. backlog items not yet in any iteration) are excluded.
+async function loadSprintTasks(
+  groupId: mongoose.Types.ObjectId,
+  sprintId: mongoose.Types.ObjectId,
+): Promise<{
+  tasks: SprintTaskRow[];
+  breakdown: { todo: number; inProgress: number; done: number };
+}> {
+  const docs = await SprintTask.find({ group: groupId, sprint: sprintId })
+    .select("title status assignees issueNumber")
+    .lean<
+      Array<{
+        _id: mongoose.Types.ObjectId;
+        title: string;
+        status: "TODO" | "IN_PROGRESS" | "DONE";
+        assignees: string[];
+        issueNumber: number | null;
+      }>
+    >();
+
+  const tasks: SprintTaskRow[] = docs.map((t) => ({
+    id: String(t._id),
+    title: t.title,
+    status: t.status,
+    issueNumber: t.issueNumber ?? null,
+    assignees: t.assignees ?? [],
+  }));
+
+  const breakdown = {
+    todo: tasks.filter((t) => t.status === "TODO").length,
+    inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
+    done: tasks.filter((t) => t.status === "DONE").length,
+  };
+
+  return { tasks, breakdown };
 }
 
 // Helper function to check if a given date value falls within the sprint period
@@ -185,7 +222,7 @@ async function getLivePeriodActivity(
   repoName: string,
   sprintStartDate: Date,
   sprintEndDate: Date,
-): Promise<CurrentSprintMetrics> {
+): Promise<PeriodActivity> {
   const [commits, githubIssues, pullRequests] = await Promise.all([
     fetchCommits(accessToken, repoOwner, repoName),
     fetchIssues(accessToken, repoOwner, repoName),
@@ -200,14 +237,6 @@ async function getLivePeriodActivity(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-
-  const sprintIssues: SprintIssue[] = issuesInPeriodRaw.map((issue) => ({
-    id: `${issue.number}`,
-    number: issue.number,
-    title: issue.title,
-    status: issue.state === "CLOSED" ? "Closed" : "Open",
-    createdAt: new Date(issue.createdAt),
-  }));
 
   const commitsInPeriod = commits.filter((commit) =>
     isInWindow(commit.date, sprintStartDate, sprintEndDate),
@@ -295,7 +324,6 @@ async function getLivePeriodActivity(
     pullRequestsMerged,
     activeContributors: contributors.length,
     contributors,
-    issues: sprintIssues,
     timeline,
   };
 }
@@ -305,14 +333,13 @@ async function getPeriodActivityFromDb(
   groupId: unknown,
   sprintStartDate: Date,
   sprintEndDate: Date,
-): Promise<CurrentSprintMetrics> {
+): Promise<PeriodActivity> {
   const [
     issuesCreated,
     commitsCount,
     prOpened,
     prMerged,
     topContributorsRaw,
-    issuesInPeriod,
     recentCommits,
     recentIssues,
     recentMergedPRs,
@@ -358,13 +385,6 @@ async function getPeriodActivityFromDb(
         },
       },
     ]),
-    Issue.find({
-      group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
-    })
-      .select("_id number title state createdAt")
-      .sort({ createdAt: -1 })
-      .lean(),
     Commit.find({
       group: groupId,
       date: { $gte: sprintStartDate, $lte: sprintEndDate },
@@ -391,14 +411,6 @@ async function getPeriodActivityFromDb(
       .limit(6)
       .lean(),
   ]);
-
-  const issues: SprintIssue[] = issuesInPeriod.map((issue) => ({
-    id: String(issue._id),
-    number: issue.number,
-    title: issue.title,
-    status: issue.state === "CLOSED" ? "Closed" : "Open",
-    createdAt: issue.createdAt,
-  }));
 
   const timelineFromCommits: SprintActivity[] = recentCommits.map((commit) => {
     const authorName = commit.author?.name?.trim() || "Unknown";
@@ -442,25 +454,15 @@ async function getPeriodActivityFromDb(
     pullRequestsMerged: prMerged,
     activeContributors: topContributorsRaw.length,
     contributors: topContributorsRaw,
-    issues,
     timeline,
   };
 }
 
-// Helper function to determine why a particular sprint was selected (current-flag, active, or latest)
-function getSelectionReason(
-  now: Date,
-  projectStartDate: Date,
-  projectEndDate: Date,
-) {
-  if (now < projectStartDate) return "current-flag" as const;
-  if (now > projectEndDate) return "latest" as const;
+// Categorise the sprint relative to today, mirroring the flag we set during sync.
+function getSelectionReason(now: Date, sprintStart: Date, sprintEnd: Date) {
+  if (now < sprintStart) return "current-flag" as const;
+  if (now > sprintEnd) return "latest" as const;
   return "active" as const;
-}
-
-// Helper function to validate that a value is a valid Date object
-function isValidDate(value: unknown): value is Date {
-  return value instanceof Date && !Number.isNaN(value.getTime());
 }
 
 export async function getCurrentSprintData(): Promise<{
@@ -491,7 +493,7 @@ export async function getCurrentSprintData(): Promise<{
     }
 
     const group = await Group.findById(user.currentGroupId).select(
-      "name projectStartDate projectEndDate sprintLengthWeeks syncStatus lastSyncAt repoOwner repoName",
+      "name syncStatus lastSyncAt repoOwner repoName",
     );
 
     if (!group) {
@@ -501,74 +503,60 @@ export async function getCurrentSprintData(): Promise<{
       };
     }
 
-    if (
-      !isValidDate(group.projectStartDate) ||
-      !isValidDate(group.projectEndDate) ||
-      !group.sprintLengthWeeks ||
-      !Number.isInteger(group.sprintLengthWeeks) ||
-      group.sprintLengthWeeks < 1
-    ) {
+    // Resolve the current sprint from synced GitHub iterations.
+    // Empty state when no iterations have been synced yet.
+    const resolved = await loadCurrentSprintAndPosition(group._id);
+    if (!resolved) {
       return {
         status: 200,
         body: {
           group: {
             id: String(group._id),
             name: group.name,
+            syncStatus: group.syncStatus,
+            lastSyncAt: group.lastSyncAt,
           },
           sprint: null,
           message:
-            "Sprint settings are incomplete. Please set project dates and sprint length.",
+            "No sprints found. Set up an iteration field on your GitHub Project, assign tickets to it, and refresh.",
         },
       };
     }
 
-    if (group.projectEndDate <= group.projectStartDate) {
-      return {
-        status: 200,
-        body: {
-          group: {
-            id: String(group._id),
-            name: group.name,
-          },
-          sprint: null,
-          message: "Project end date must be after project start date.",
-        },
-      };
-    }
+    const { sprint, sprintObjectId } = resolved;
+    const sessionWithToken = session as { accessToken?: string };
+
+    // Activity metrics are date-bucketed against the sprint window. Tasks come
+    // from SprintTask docs linked to this sprint via the iteration map.
+    const [periodActivity, taskData] = await Promise.all([
+      (async () => {
+        if (sessionWithToken.accessToken && group.repoOwner && group.repoName) {
+          try {
+            return await getLivePeriodActivity(
+              sessionWithToken.accessToken,
+              group.repoOwner,
+              group.repoName,
+              sprint.startDate,
+              sprint.endDate,
+            );
+          } catch {
+            return getPeriodActivityFromDb(
+              group._id,
+              sprint.startDate,
+              sprint.endDate,
+            );
+          }
+        }
+        return getPeriodActivityFromDb(
+          group._id,
+          sprint.startDate,
+          sprint.endDate,
+        );
+      })(),
+      loadSprintTasks(group._id, sprintObjectId),
+    ]);
 
     const now = new Date();
-    const computedSprint = computeCurrentSprint(
-      now,
-      group.projectStartDate,
-      group.projectEndDate,
-      group.sprintLengthWeeks,
-    );
-
-    const sessionWithToken = session as { accessToken?: string };
-    let periodActivity: CurrentSprintMetrics;
-    if (sessionWithToken.accessToken && group.repoOwner && group.repoName) {
-      try {
-        periodActivity = await getLivePeriodActivity(
-          sessionWithToken.accessToken,
-          group.repoOwner,
-          group.repoName,
-          computedSprint.startDate,
-          computedSprint.endDate,
-        );
-      } catch {
-        periodActivity = await getPeriodActivityFromDb(
-          group._id,
-          computedSprint.startDate,
-          computedSprint.endDate,
-        );
-      }
-    } else {
-      periodActivity = await getPeriodActivityFromDb(
-        group._id,
-        computedSprint.startDate,
-        computedSprint.endDate,
-      );
-    }
 
     return {
       status: 200,
@@ -579,13 +567,17 @@ export async function getCurrentSprintData(): Promise<{
           syncStatus: group.syncStatus,
           lastSyncAt: group.lastSyncAt,
         },
-        sprint: computedSprint,
+        sprint,
         selectionReason: getSelectionReason(
           now,
-          group.projectStartDate,
-          group.projectEndDate,
+          sprint.startDate,
+          sprint.endDate,
         ),
-        metrics: periodActivity,
+        metrics: {
+          ...periodActivity,
+          tasks: taskData.tasks,
+          taskBreakdown: taskData.breakdown,
+        },
       },
     };
   } catch (error) {

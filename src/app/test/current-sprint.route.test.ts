@@ -10,6 +10,7 @@ import {
   Issue,
   PullRequest,
   Sprint,
+  SprintTask,
   User,
 } from "@/app/lib/models";
 import { GET } from "../api/groups/current/current-sprint/route";
@@ -60,6 +61,7 @@ afterEach(async () => {
   await Promise.all([
     Group.deleteMany({}),
     Sprint.deleteMany({}),
+    SprintTask.deleteMany({}),
     User.deleteMany({}),
     Issue.deleteMany({}),
     Commit.deleteMany({}),
@@ -68,24 +70,14 @@ afterEach(async () => {
   jest.clearAllMocks();
 });
 
-// Helper function to create a group and user for testing, with optional overrides for project settings
-async function createGroupAndUser(
-  githubId = "user1",
-  overrides?: Partial<{
-    projectStartDate: Date;
-    projectEndDate: Date;
-    sprintLengthWeeks: number;
-  }>,
-) {
+// Helper to create a group and user with the given group as the user's currentGroupId
+async function createGroupAndUser(githubId = "user1") {
   const group = await Group.create({
     name: "tester",
     description: "tester group",
-    inviteCode: "test123",
+    inviteCode: `test-${Date.now()}-${Math.random()}`,
     members: [githubId],
     createdBy: githubId,
-    projectStartDate: overrides?.projectStartDate,
-    projectEndDate: overrides?.projectEndDate,
-    sprintLengthWeeks: overrides?.sprintLengthWeeks,
   });
 
   await User.create({
@@ -112,7 +104,7 @@ describe("GET /api/groups/current/current-sprint", () => {
     expect(body).toEqual({ error: "Authentication required" });
   });
 
-  // Test 2: test case for user with no group or incomplete sprint settings
+  // Test 2: empty state when no Sprint docs exist for the group
   it("should return a clear empty state when no sprint exists", async () => {
     await createGroupAndUser("user1");
     mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
@@ -122,18 +114,24 @@ describe("GET /api/groups/current/current-sprint", () => {
 
     expect(res.status).toBe(200);
     expect(body.sprint).toBeNull();
-    expect(body.message).toBe(
-      "Sprint settings are incomplete. Please set project dates and sprint length.",
-    );
+    expect(body.message).toMatch(/No sprints found/i);
   });
 
-  // Test 3: test case for computing the active sprint from the project dates and sprint length
-  it("should compute the active sprint from project dates and sprint length", async () => {
+  // Test 3: resolves the active sprint from the synced Sprint doc and aggregates activity in its window
+  it("should resolve the active sprint from synced iterations and aggregate activity", async () => {
     const now = new Date();
-    const group = await createGroupAndUser("user1", {
-      projectStartDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
-      projectEndDate: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000),
-      sprintLengthWeeks: 1,
+    const group = await createGroupAndUser("user1");
+    const sprintStart = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    const sprintEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    await Sprint.create({
+      group: group._id,
+      iterationId: "iter_active",
+      name: "Sprint Active",
+      startDate: sprintStart,
+      endDate: sprintEnd,
+      status: "ACTIVE",
+      isCurrent: true,
     });
 
     mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
@@ -185,7 +183,7 @@ describe("GET /api/groups/current/current-sprint", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.sprint?.name).toBe("Sprint 2");
+    expect(body.sprint?.name).toBe("Sprint Active");
     expect(body.selectionReason).toBe("active");
     expect(body.sprint?.status).toBe("ACTIVE");
     expect(body.metrics?.issuesCreated).toBe(1);
@@ -196,49 +194,110 @@ describe("GET /api/groups/current/current-sprint", () => {
     expect(body.metrics?.contributors?.[0]?.name).toBe("Anna");
   });
 
-  // Test 4: test case for returning the latest selection reason when the project is complete
-  it("should return the latest selection reason when project is complete", async () => {
-    await createGroupAndUser("user1", {
-      projectStartDate: new Date("2026-01-01T00:00:00.000Z"),
-      projectEndDate: new Date("2026-01-15T00:00:00.000Z"),
-      sprintLengthWeeks: 1,
-    });
+  // Test 4: when no sprint is currently active, fall back to the latest one
+  it("should fall back to the latest sprint when none is current", async () => {
+    const group = await createGroupAndUser("user1");
+
+    await Sprint.create([
+      {
+        group: group._id,
+        iterationId: "iter_old",
+        name: "Sprint Old",
+        startDate: new Date("2026-01-01T00:00:00.000Z"),
+        endDate: new Date("2026-01-14T23:59:59.999Z"),
+        status: "COMPLETED",
+        isCurrent: false,
+      },
+      {
+        group: group._id,
+        iterationId: "iter_recent",
+        name: "Sprint Recent",
+        startDate: new Date("2026-01-15T00:00:00.000Z"),
+        endDate: new Date("2026-01-28T23:59:59.999Z"),
+        status: "COMPLETED",
+        isCurrent: false,
+      },
+    ]);
+
     mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
 
     const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.sprint?.name).toBe("Sprint 3");
+    expect(body.sprint?.name).toBe("Sprint Recent");
     expect(body.selectionReason).toBe("latest");
   });
 
-  // Test 5: test case for mapping a CLOSED issue to status "Closed" in the metrics output
-  it("should map a closed issue to status 'Closed' in metrics.issues", async () => {
+  // Test 5: SprintTasks linked to the resolved sprint show up in metrics.tasks with a 3-state breakdown
+  it("should include linked SprintTasks and their breakdown in metrics", async () => {
     const now = new Date();
-    const group = await createGroupAndUser("user1", {
-      projectStartDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
-      projectEndDate: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000),
-      sprintLengthWeeks: 1,
+    const group = await createGroupAndUser("user1");
+    const sprintStart = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    const sprintEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    const sprint = await Sprint.create({
+      group: group._id,
+      iterationId: "iter_active",
+      name: "Sprint Active",
+      startDate: sprintStart,
+      endDate: sprintEnd,
+      status: "ACTIVE",
+      isCurrent: true,
     });
+
+    await SprintTask.create([
+      {
+        title: "Set up CI",
+        status: "DONE",
+        assignees: ["anna"],
+        issueNumber: 5,
+        sprint: sprint._id,
+        group: group._id,
+      },
+      {
+        title: "Write tests",
+        status: "IN_PROGRESS",
+        assignees: ["ben"],
+        issueNumber: 6,
+        sprint: sprint._id,
+        group: group._id,
+      },
+      {
+        title: "Plan release",
+        status: "TODO",
+        assignees: [],
+        issueNumber: 7,
+        sprint: sprint._id,
+        group: group._id,
+      },
+      // Backlog task — not linked to this sprint, must be excluded
+      {
+        title: "Backlog item",
+        status: "TODO",
+        assignees: [],
+        issueNumber: 999,
+        sprint: null,
+        group: group._id,
+      },
+    ]);
 
     mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
-
-    await Issue.create({
-      number: 202,
-      title: "Closed issue in period",
-      state: "CLOSED",
-      createdAt: now,
-      group: group._id,
-      author: "anna",
-    });
 
     const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.metrics?.issues).toHaveLength(1);
-    expect(body.metrics?.issues?.[0]?.number).toBe(202);
-    expect(body.metrics?.issues?.[0]?.status).toBe("Closed");
+    expect(body.metrics?.tasks).toHaveLength(3);
+    expect(body.metrics?.taskBreakdown).toEqual({
+      todo: 1,
+      inProgress: 1,
+      done: 1,
+    });
+    expect(
+      body.metrics?.tasks
+        ?.map((t: { issueNumber: number }) => t.issueNumber)
+        .sort(),
+    ).toEqual([5, 6, 7]);
   });
 });
