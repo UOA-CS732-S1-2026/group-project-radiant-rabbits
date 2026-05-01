@@ -35,6 +35,7 @@ export interface ProjectTaskData {
   status: "TODO" | "IN_PROGRESS" | "DONE";
   assignees: string[];
   issueNumber: number | null;
+  iterationId: string | null;
 }
 
 // Error classes to represent different failure modes when talking to GitHub API.
@@ -54,6 +55,13 @@ export class GitHubRateLimitError extends Error {
     super(message);
     this.name = "GitHubRateLimitError";
   }
+}
+
+export interface IterationData {
+  id: string; // stable iteration ID, e.g. "045a8e1c"
+  title: string; // e.g. "Sprint 1"
+  startDate: string; // YYYY-MM-DD
+  duration: number; // days
 }
 
 // GraphQL helper functions that every fetch function uses to talk to GitHub.
@@ -336,9 +344,14 @@ const PROJECT_TASKS_QUERY = `
               endCursor
             }
             nodes {
-              fieldValueByName(name: "Status") {
+              status: fieldValueByName(name: "Status") {
                 ... on ProjectV2ItemFieldSingleSelectValue {
                   name
+                }
+              }
+              iteration: fieldValueByName(name: "Sprint") {
+                ... on ProjectV2ItemFieldIterationValue {
+                  iterationId
                 }
               }
               content {
@@ -425,7 +438,8 @@ export async function fetchProjectTasks(
               number?: number;
               assignees?: { nodes: Array<{ login: string }> };
             } | null;
-            fieldValueByName: { name: string } | null;
+            status: { name: string } | null;
+            iteration: { iterationId: string } | null;
           }>;
           pageInfo: { hasNextPage: boolean; endCursor: string | null };
         };
@@ -456,8 +470,8 @@ export async function fetchProjectTasks(
           if (!content) continue;
 
           // Read the "Status" column value - defaults to "Todo" if not set
-          const statusField = item.fieldValueByName;
-          const statusName = statusField?.name || "Todo";
+          const statusName = item.status?.name || "Todo";
+          const iterationId = item.iteration?.iterationId ?? null;
 
           tasks.push({
             title: content.title || "Untitled",
@@ -469,6 +483,7 @@ export async function fetchProjectTasks(
               ) || [],
             // Issues and PRs have a number; DraftIssues don't
             issueNumber: content.number || null,
+            iterationId,
           });
         }
 
@@ -509,4 +524,66 @@ export async function checkRepoAccess(
     console.error(`Access check failed for ${owner}/${repo}:`, error);
     return false;
   }
+}
+
+const ITERATIONS_QUERY = `
+  query($owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+      projectsV2(first: 5) {
+        nodes {
+          id
+          title
+          fields(first: 30) {
+            nodes {
+              ... on ProjectV2IterationField {
+                id
+                name
+                configuration {
+                  duration
+                  iterations          { id title startDate duration }
+                  completedIterations { id title startDate duration }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function fetchIterations(
+  token: string,
+  owner: string,
+  repo: string,
+): Promise<IterationData[]> {
+  const data = await graphqlRequest(token, ITERATIONS_QUERY, { owner, repo });
+  const projects = data.repository.projectsV2?.nodes ?? [];
+
+  const seen = new Set<string>();
+  const iterations: IterationData[] = [];
+
+  for (const project of projects) {
+    // Find the first iteration-typed field on this project.
+    // GitHub default name is "Sprint" but teams can rename it.
+    const iterationField = project.fields?.nodes?.find(
+      (f: { configuration?: { iterations?: unknown } } | null) =>
+        f && f.configuration && Array.isArray(f.configuration.iterations),
+    );
+    if (!iterationField) continue;
+
+    const cfg = iterationField.configuration;
+    for (const iter of [...cfg.iterations, ...cfg.completedIterations]) {
+      if (seen.has(iter.id)) continue; // dedupe across multiple projects
+      seen.add(iter.id);
+      iterations.push({
+        id: iter.id,
+        title: iter.title,
+        startDate: iter.startDate,
+        duration: iter.duration,
+      });
+    }
+  }
+
+  return iterations;
 }
