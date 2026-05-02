@@ -79,7 +79,10 @@ beforeEach(() => {
   mockFetchPRs.mockResolvedValue([]);
   mockFetchIssues.mockResolvedValue([]);
   mockFetchProjectTasks.mockResolvedValue([]);
-  mockFetchIterations.mockResolvedValue([]);
+  mockFetchIterations.mockResolvedValue({
+    iterations: [],
+    iterationFieldConfigured: false,
+  });
 });
 
 // Helper: creates a group with repoOwner/repoName set up for syncing
@@ -318,20 +321,23 @@ describe("Upsert logic", () => {
     // Two iterations: one in the past, one in the future relative to "today".
     // The current date in this test environment is around mid-2026, so we
     // pick fixed dates well outside the active window.
-    mockFetchIterations.mockResolvedValue([
-      {
-        id: "iter_past",
-        title: "Sprint 1",
-        startDate: "2026-01-01",
-        duration: 14,
-      },
-      {
-        id: "iter_future",
-        title: "Sprint 99",
-        startDate: "2030-01-01",
-        duration: 14,
-      },
-    ]);
+    mockFetchIterations.mockResolvedValue({
+      iterations: [
+        {
+          id: "iter_past",
+          title: "Sprint 1",
+          startDate: "2026-01-01",
+          duration: 14,
+        },
+        {
+          id: "iter_future",
+          title: "Sprint 99",
+          startDate: "2030-01-01",
+          duration: 14,
+        },
+      ],
+      iterationFieldConfigured: true,
+    });
 
     mockFetchProjectTasks.mockResolvedValue([
       {
@@ -393,14 +399,17 @@ describe("Upsert logic", () => {
     const mm = String(yesterday.getUTCMonth() + 1).padStart(2, "0");
     const dd = String(yesterday.getUTCDate()).padStart(2, "0");
 
-    mockFetchIterations.mockResolvedValue([
-      {
-        id: "iter_active",
-        title: "Sprint Active",
-        startDate: `${yyyy}-${mm}-${dd}`,
-        duration: 14,
-      },
-    ]);
+    mockFetchIterations.mockResolvedValue({
+      iterations: [
+        {
+          id: "iter_active",
+          title: "Sprint Active",
+          startDate: `${yyyy}-${mm}-${dd}`,
+          duration: 14,
+        },
+      ],
+      iterationFieldConfigured: true,
+    });
 
     await syncGroup(group._id.toString(), "fake-token");
 
@@ -426,7 +435,10 @@ describe("Upsert logic", () => {
       isCurrent: false,
     });
 
-    mockFetchIterations.mockResolvedValue([]);
+    mockFetchIterations.mockResolvedValue({
+      iterations: [],
+      iterationFieldConfigured: false,
+    });
 
     await syncGroup(group._id.toString(), "fake-token");
 
