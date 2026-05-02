@@ -74,54 +74,30 @@ export default async function DashboardPage() {
     ? await Group.findById(user.currentGroupId).lean()
     : null;
 
-  const currentGroupId = currentGroup?._id?.toString();
-  let selectedGroup = null;
-  if (normalizedUserId) {
+  let selectedGroup = currentGroup;
+
+  // Only run the fallback when the user hasn't picked a group yet.
+  // Don't override an explicit selection.
+  if (!selectedGroup && normalizedUserId) {
     const candidateGroups = await Group.find({
       $or: [{ createdBy: normalizedUserId }, { members: normalizedUserId }],
     })
       .sort({ lastSyncAt: -1, updatedAt: -1 })
       .lean();
 
-    if (candidateGroups.length > 0) {
-      const successfulCandidates = candidateGroups.filter(
-        (candidate) => candidate.syncStatus === "success",
-      );
+    selectedGroup =
+      candidateGroups.find((candidate) => candidate.syncStatus === "success") ??
+      candidateGroups[0] ??
+      null;
 
-      const candidateGroupsWithoutCurrent = candidateGroups.filter(
-        (candidate) => candidate._id.toString() !== currentGroupId,
-      );
-
-      const successfulWithoutCurrent = successfulCandidates.filter(
-        (candidate) => candidate._id.toString() !== currentGroupId,
-      );
-
-      const groupSearchOrder = [
-        ...(currentGroup ? [currentGroup] : []),
-        ...successfulWithoutCurrent,
-        ...candidateGroupsWithoutCurrent,
-      ];
-
-      for (const candidate of groupSearchOrder) {
-        const hasCommitData = await Commit.exists({ group: candidate._id });
-        if (hasCommitData) {
-          selectedGroup = candidate;
-          break;
-        }
-      }
-
-      selectedGroup ??=
-        currentGroup ?? successfulCandidates[0] ?? candidateGroups[0];
+    if (selectedGroup) {
+      await User.findByIdAndUpdate(normalizedUserId, {
+        currentGroupId: selectedGroup._id,
+      });
     }
   }
 
   const group = selectedGroup;
-
-  if (group && normalizedUserId && group._id.toString() !== currentGroupId) {
-    await User.findByIdAndUpdate(normalizedUserId, {
-      currentGroupId: group._id,
-    });
-  }
 
   // If user is not part of any group, show error message
   if (!group) {
@@ -167,6 +143,19 @@ export default async function DashboardPage() {
   // none have been synced yet. The Dashboard component handles the empty state.
   const sprints = await loadSprintsForDashboard(group._id);
 
+  // Find the next future sprint so we can show "next iteration starts on X"
+  // when no iteration covers today.
+  const nextSprintDoc =
+    sprints.length > 0 && !sprints.some((s) => s.isCurrent)
+      ? await Sprint.findOne({
+          group: group._id,
+          startDate: { $gt: new Date() },
+        })
+          .sort({ startDate: 1 })
+          .select("startDate")
+          .lean<{ startDate: Date }>()
+      : null;
+
   // Display the dashboard with the fetched metrics
   return (
     <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 overflow-hidden border-2 border-brand-border border-spacing-2 rounded-lg shadow-lg">
@@ -186,6 +175,10 @@ export default async function DashboardPage() {
         }}
         metrics={githubMetrics}
         sprints={sprints}
+        iterationFieldConfigured={group.iterationFieldConfigured ?? null}
+        nextSprintStart={
+          nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
+        }
       />
     </div>
   );
