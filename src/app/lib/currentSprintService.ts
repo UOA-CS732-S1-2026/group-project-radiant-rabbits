@@ -138,6 +138,57 @@ function computeProgress(now: Date, startDate: Date, endDate: Date) {
 // Tasks and breakdown come from a separate query (SprintTask via iteration link).
 type PeriodActivity = Omit<CurrentSprintMetrics, "tasks" | "taskBreakdown">;
 
+function mergeAssignedIssueCounts(
+  contributors: ContributorActivity[],
+  tasks: SprintTaskRow[],
+): ContributorActivity[] {
+  const contributorMap = new Map<string, ContributorActivity>();
+
+  // Start with commit/PR contributors, then rebuild issue counts from ticket assignees so the list reflects who is working on the issue.
+  for (const contributor of contributors) {
+    contributorMap.set(contributor.name.trim().toLowerCase(), {
+      ...contributor,
+      issueCount: 0,
+    });
+  }
+
+  // Count each assigned sprint task against every assignee on that task.
+  // Keeps the contribution list aligned with who is actually working on
+  // the ticket, not who originally opened the issue.
+  for (const task of tasks) {
+    for (const assignee of task.assignees) {
+      const trimmed = assignee.trim();
+      if (!trimmed) continue;
+      const key = trimmed.toLowerCase();
+      const entry = contributorMap.get(key) ?? {
+        name: trimmed,
+        commitCount: 0,
+        prCount: 0,
+        issueCount: 0,
+        avatarUrl: avatarUrlForLogin(trimmed),
+      };
+      entry.issueCount += 1;
+      if (!entry.avatarUrl) {
+        entry.avatarUrl = avatarUrlForLogin(trimmed);
+      }
+      contributorMap.set(key, entry);
+    }
+  }
+
+  // Preserve the existing sort/slice behavior so the current sprint panel keeps
+  // showing the top contributors in the same shape as before.
+  return Array.from(contributorMap.values())
+    .filter((entry) => entry.commitCount + entry.prCount + entry.issueCount > 0)
+    .sort(
+      (a, b) =>
+        b.commitCount +
+        b.prCount +
+        b.issueCount -
+        (a.commitCount + a.prCount + a.issueCount),
+    )
+    .slice(0, 10);
+}
+
 // Resolve the current sprint by reading synced Sprint docs.
 // Prefers the one flagged isCurrent (set during sync if today falls in its window).
 // Falls back to the most recently started sprint so the page still has something
@@ -714,6 +765,10 @@ export async function getCurrentSprintData(): Promise<{
     ]);
 
     const now = new Date();
+    const contributors = mergeAssignedIssueCounts(
+      periodActivity.contributors,
+      taskData.tasks,
+    );
 
     return {
       status: 200,
@@ -732,6 +787,7 @@ export async function getCurrentSprintData(): Promise<{
         ),
         metrics: {
           ...periodActivity,
+          contributors,
           tasks: taskData.tasks,
           taskBreakdown: taskData.breakdown,
         },
