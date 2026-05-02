@@ -493,7 +493,7 @@ export async function getCurrentSprintData(): Promise<{
     }
 
     const group = await Group.findById(user.currentGroupId).select(
-      "name syncStatus lastSyncAt repoOwner repoName",
+      "name syncStatus lastSyncAt repoOwner repoName iterationFieldConfigured",
     );
 
     if (!group) {
@@ -504,9 +504,14 @@ export async function getCurrentSprintData(): Promise<{
     }
 
     // Resolve the current sprint from synced GitHub iterations.
-    // Empty state when no iterations have been synced yet.
+    // No sprints synced — branch the message on whether the iteration field
+    // exists so the user gets an actionable hint.
     const resolved = await loadCurrentSprintAndPosition(group._id);
     if (!resolved) {
+      const message =
+        group.iterationFieldConfigured === false
+          ? "This repo's GitHub Project doesn't have an iteration field yet. Add one (https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iterations) and assign tickets to it, then refresh."
+          : "No iterations created yet. Create one in your GitHub Project, assign tickets to it, and refresh.";
       return {
         status: 200,
         body: {

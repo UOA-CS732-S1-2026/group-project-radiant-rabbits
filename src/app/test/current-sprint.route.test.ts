@@ -114,7 +114,9 @@ describe("GET /api/groups/current/current-sprint", () => {
 
     expect(res.status).toBe(200);
     expect(body.sprint).toBeNull();
-    expect(body.message).toMatch(/No sprints found/i);
+    // iterationFieldConfigured is null here, so we get the "no iterations
+    // created yet" message instead of the "set up" one.
+    expect(body.message).toMatch(/No iterations created yet/i);
   });
 
   // Test 3: resolves the active sprint from the synced Sprint doc and aggregates activity in its window

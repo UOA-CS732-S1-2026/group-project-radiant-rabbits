@@ -30,6 +30,11 @@ type DashboardProps = {
     activeContributors: number;
   };
   sprints?: SprintForDashboard[];
+  // null before first sync, false if no iteration field, true if set up.
+  iterationFieldConfigured?: boolean | null;
+  // ISO date of the next iteration's start. Only set when iterations exist
+  // but none cover today.
+  nextSprintStart?: string | null;
 };
 
 // Reusable status/error block so every failure surfaces in the dashboard UI
@@ -42,6 +47,16 @@ function StatusBlock({ message }: { message: string }) {
   );
 }
 
+function formatDateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-NZ", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 // Page component that shows when the dashboard is loading or if it has an error
 export default function Dashboard({
   status,
@@ -49,6 +64,8 @@ export default function Dashboard({
   repository: _repository,
   metrics,
   sprints,
+  iterationFieldConfigured,
+  nextSprintStart,
 }: DashboardProps) {
   if (status !== "ready") {
     return (
@@ -120,18 +137,49 @@ export default function Dashboard({
 
       <hr className="border-t border-brand-dark/10" />
 
-      {/* Sprint Velocity — only render when iterations exist */}
+      {/* Sprint Velocity — branches on whether the iteration field is set up */}
       {sprints && sprints.length > 0 ? (
-        <ProjectTimeline sprints={sprints} />
+        <>
+          <ProjectTimeline sprints={sprints} />
+          {/* Iterations exist but none cover today — show the next start date */}
+          {!sprints.some((s) => s.isCurrent) && nextSprintStart ? (
+            <div className="rounded-2xl bg-brand-surface p-md shadow-md">
+              <p className="text-body-sm text-brand-dark/70">
+                No iteration is active right now. The next iteration starts on{" "}
+                <span className="font-semibold text-brand-dark">
+                  {formatDateLabel(nextSprintStart)}
+                </span>
+                .
+              </p>
+            </div>
+          ) : null}
+        </>
       ) : (
         <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
           <h3 className="text-body-lg font-semibold text-brand-dark">
             Sprint Velocity
           </h3>
-          <p className="mt-sm text-body-sm text-brand-dark/70">
-            No sprints have been synced yet. Set up an iteration field on your
-            GitHub Project and assign tickets to it, then refresh.
-          </p>
+          {iterationFieldConfigured === false ? (
+            <p className="mt-sm text-body-sm text-brand-dark/70">
+              This repo&apos;s GitHub Project doesn&apos;t have an iteration
+              field yet. Once you{" "}
+              <a
+                href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iterations"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-brand-accent underline"
+              >
+                add an iteration field
+              </a>{" "}
+              to your Project (or create a Project for this repo) and assign
+              tickets to it, sprint metrics will appear here on the next sync.
+            </p>
+          ) : (
+            <p className="mt-sm text-body-sm text-brand-dark/70">
+              Your iteration field is set up but has no iterations yet. Create
+              one in your GitHub Project, assign tickets to it, then refresh.
+            </p>
+          )}
         </div>
       )}
     </div>
