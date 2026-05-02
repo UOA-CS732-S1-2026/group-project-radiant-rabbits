@@ -14,6 +14,8 @@ const commitSchema = new Schema(
     author: {
       name: { type: String, trim: true },
       email: { type: String, trim: true },
+      // GitHub login of the commit author, used to render avatars.
+      login: { type: String, default: null, trim: true },
     },
     date: {
       type: Date,

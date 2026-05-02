@@ -24,6 +24,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 type ContributorActivity = {
   name: string;
   commitCount: number;
+  prCount: number;
+  issueCount: number;
+  // GitHub avatar URL when we know the login. Null when we only have a git
+  // author name — the frontend falls back to initials.
+  avatarUrl: string | null;
 };
 
 type SprintTaskRow = {
@@ -38,7 +43,18 @@ type SprintActivity = {
   date: Date;
   text: string;
   initials: string;
+  // Same as ContributorActivity.avatarUrl — null when unknown.
+  avatarUrl: string | null;
 };
+
+// Build a GitHub avatar URL from a login.
+// github.com/<login>.png redirects to the user's current avatar.
+function avatarUrlForLogin(login: string | null | undefined): string | null {
+  if (!login) return null;
+  const trimmed = login.trim();
+  if (!trimmed) return null;
+  return `https://github.com/${trimmed}.png?size=64`;
+}
 
 type ResolvedSprint = {
   id: string;
@@ -242,24 +258,77 @@ async function getLivePeriodActivity(
     isInWindow(commit.date, sprintStartDate, sprintEndDate),
   );
 
-  const contributorMap = new Map<string, number>();
+  // Merge commits, PRs, and issues per author into one row.
+  // Commits use author.name
+  // PRs/issues use login
+  type ContributorEntry = {
+    displayName: string;
+    login: string | null;
+    commitCount: number;
+    prCount: number;
+    issueCount: number;
+  };
+  const contributorMap = new Map<string, ContributorEntry>();
+  const bumpContributor = (
+    rawName: string,
+    field: "commitCount" | "prCount" | "issueCount",
+    login: string | null,
+  ) => {
+    const trimmed = rawName.trim();
+    if (!trimmed) return;
+    const key = trimmed.toLowerCase();
+    const entry = contributorMap.get(key) ?? {
+      displayName: trimmed,
+      login: null,
+      commitCount: 0,
+      prCount: 0,
+      issueCount: 0,
+    };
+    entry[field] += 1;
+    // First non-empty login wins so the avatar persists across rows.
+    if (!entry.login && login) entry.login = login;
+    contributorMap.set(key, entry);
+  };
+
   for (const commit of commitsInPeriod) {
-    const key =
+    const name =
       commit.author.login ||
       commit.author.name ||
       commit.author.email ||
       "Unknown";
-    contributorMap.set(key, (contributorMap.get(key) || 0) + 1);
+    bumpContributor(name, "commitCount", commit.author.login ?? null);
   }
 
-  const contributors = Array.from(contributorMap.entries())
-    .map(([name, commitCount]) => ({ name, commitCount }))
-    .sort((a, b) => b.commitCount - a.commitCount)
+  const prsInPeriod = pullRequests.filter((pr) =>
+    isInWindow(pr.createdAt, sprintStartDate, sprintEndDate),
+  );
+  for (const pr of prsInPeriod) {
+    const author = pr.author || "Unknown";
+    bumpContributor(author, "prCount", pr.author || null);
+  }
+  for (const issue of issuesInPeriodRaw) {
+    const author = issue.author || "Unknown";
+    bumpContributor(author, "issueCount", issue.author || null);
+  }
+
+  const contributors = Array.from(contributorMap.values())
+    .map((entry) => ({
+      name: entry.displayName,
+      commitCount: entry.commitCount,
+      prCount: entry.prCount,
+      issueCount: entry.issueCount,
+      avatarUrl: avatarUrlForLogin(entry.login),
+    }))
+    .sort(
+      (a, b) =>
+        b.commitCount +
+        b.prCount +
+        b.issueCount -
+        (a.commitCount + a.prCount + a.issueCount),
+    )
     .slice(0, 10);
 
-  const pullRequestsOpened = pullRequests.filter((pr) =>
-    isInWindow(pr.createdAt, sprintStartDate, sprintEndDate),
-  ).length;
+  const pullRequestsOpened = prsInPeriod.length;
 
   const pullRequestsMerged = pullRequests.filter(
     (pr) =>
@@ -279,6 +348,7 @@ async function getLivePeriodActivity(
         date: new Date(commit.date),
         text: `${authorName} pushed a commit`,
         initials: authorName.slice(0, 1).toUpperCase(),
+        avatarUrl: avatarUrlForLogin(commit.author.login),
       };
     });
 
@@ -291,6 +361,7 @@ async function getLivePeriodActivity(
           ? `Closed Issue #${issue.number}`
           : `Created Issue #${issue.number}`,
       initials: "I",
+      avatarUrl: avatarUrlForLogin(issue.author),
     }));
 
   const timelineFromPRs: SprintActivity[] = pullRequests
@@ -304,6 +375,7 @@ async function getLivePeriodActivity(
       date: new Date(pr.mergedAt || pr.createdAt),
       text: `Merged PR #${pr.number}`,
       initials: (pr.author || "P").slice(0, 1).toUpperCase(),
+      avatarUrl: avatarUrlForLogin(pr.author),
     }));
 
   const timeline = [
@@ -339,7 +411,9 @@ async function getPeriodActivityFromDb(
     commitsCount,
     prOpened,
     prMerged,
-    topContributorsRaw,
+    commitAuthorBuckets,
+    prAuthorBuckets,
+    issueAuthorBuckets,
     recentCommits,
     recentIssues,
     recentMergedPRs,
@@ -361,7 +435,9 @@ async function getPeriodActivityFromDb(
       state: "MERGED",
       mergedAt: { $gte: sprintStartDate, $lte: sprintEndDate },
     }),
-    Commit.aggregate<ContributorActivity>([
+    // Per-author counts. Commits group by author.name; PRs/issues by author
+    // (login). Merged below — mismatches between name and login still split.
+    Commit.aggregate<{ name: string; login: string | null; count: number }>([
       {
         $match: {
           group: groupId,
@@ -372,18 +448,35 @@ async function getPeriodActivityFromDb(
       {
         $group: {
           _id: "$author.name",
-          commitCount: { $sum: 1 },
+          // Pick any login we've stored for this name.
+          // Older docs without login show no avatar.
+          login: { $first: "$author.login" },
+          count: { $sum: 1 },
         },
       },
-      { $sort: { commitCount: -1 } },
-      { $limit: 10 },
+      { $project: { _id: 0, name: "$_id", login: 1, count: 1 } },
+    ]),
+    PullRequest.aggregate<{ name: string; count: number }>([
       {
-        $project: {
-          _id: 0,
-          name: "$_id",
-          commitCount: 1,
+        $match: {
+          group: groupId,
+          createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+          author: { $nin: [null, ""] },
         },
       },
+      { $group: { _id: "$author", count: { $sum: 1 } } },
+      { $project: { _id: 0, name: "$_id", count: 1 } },
+    ]),
+    Issue.aggregate<{ name: string; count: number }>([
+      {
+        $match: {
+          group: groupId,
+          createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+          author: { $nin: [null, ""] },
+        },
+      },
+      { $group: { _id: "$author", count: { $sum: 1 } } },
+      { $project: { _id: 0, name: "$_id", count: 1 } },
     ]),
     Commit.find({
       group: groupId,
@@ -397,7 +490,7 @@ async function getPeriodActivityFromDb(
       group: groupId,
       createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
     })
-      .select("number state title createdAt")
+      .select("number state title createdAt author")
       .sort({ createdAt: -1 })
       .limit(6)
       .lean(),
@@ -418,6 +511,7 @@ async function getPeriodActivityFromDb(
       date: commit.date,
       text: `${authorName} pushed a commit`,
       initials: authorName.slice(0, 1).toUpperCase(),
+      avatarUrl: avatarUrlForLogin(commit.author?.login),
     };
   });
 
@@ -428,12 +522,14 @@ async function getPeriodActivityFromDb(
         ? `Closed Issue #${issue.number}`
         : `Created Issue #${issue.number}`,
     initials: "I",
+    avatarUrl: avatarUrlForLogin(issue.author),
   }));
 
   const timelineFromPRs: SprintActivity[] = recentMergedPRs.map((pr) => ({
     date: pr.mergedAt,
     text: `Merged PR #${pr.number}`,
     initials: (pr.author || "P").slice(0, 1).toUpperCase(),
+    avatarUrl: avatarUrlForLogin(pr.author),
   }));
 
   const timeline = [
@@ -447,13 +543,70 @@ async function getPeriodActivityFromDb(
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, 8);
 
+  // Merge the three per-author buckets into one row using a case-insensitive
+  // key, so "Anna" (commit name) and "anna" (login) merge.
+  type DbContributorEntry = {
+    name: string;
+    login: string | null;
+    commitCount: number;
+    prCount: number;
+    issueCount: number;
+  };
+  const contributorMap = new Map<string, DbContributorEntry>();
+  const upsert = (
+    rawName: string,
+    field: "commitCount" | "prCount" | "issueCount",
+    count: number,
+    login: string | null,
+  ) => {
+    const trimmed = rawName.trim();
+    if (!trimmed) return;
+    const key = trimmed.toLowerCase();
+    const entry = contributorMap.get(key) ?? {
+      name: trimmed,
+      login: null,
+      commitCount: 0,
+      prCount: 0,
+      issueCount: 0,
+    };
+    entry[field] = count;
+    if (!entry.login && login) entry.login = login;
+    contributorMap.set(key, entry);
+  };
+  // Commits carry author.login from sync; for PR/issue rows the bucket key
+  // is itself the login.
+  for (const b of commitAuthorBuckets)
+    upsert(b.name, "commitCount", b.count, b.login ?? null);
+  for (const b of prAuthorBuckets) upsert(b.name, "prCount", b.count, b.name);
+  for (const b of issueAuthorBuckets)
+    upsert(b.name, "issueCount", b.count, b.name);
+
+  const contributors: ContributorActivity[] = Array.from(
+    contributorMap.values(),
+  )
+    .map((entry) => ({
+      name: entry.name,
+      commitCount: entry.commitCount,
+      prCount: entry.prCount,
+      issueCount: entry.issueCount,
+      avatarUrl: avatarUrlForLogin(entry.login),
+    }))
+    .sort(
+      (a, b) =>
+        b.commitCount +
+        b.prCount +
+        b.issueCount -
+        (a.commitCount + a.prCount + a.issueCount),
+    )
+    .slice(0, 10);
+
   return {
     issuesCreated,
     commitsCount,
     pullRequestsOpened: prOpened,
     pullRequestsMerged: prMerged,
-    activeContributors: topContributorsRaw.length,
-    contributors: topContributorsRaw,
+    activeContributors: contributors.length,
+    contributors,
     timeline,
   };
 }
@@ -522,8 +675,7 @@ export async function getCurrentSprintData(): Promise<{
             lastSyncAt: group.lastSyncAt,
           },
           sprint: null,
-          message:
-            "No sprints found. Set up an iteration field on your GitHub Project, assign tickets to it, and refresh.",
+          message,
         },
       };
     }

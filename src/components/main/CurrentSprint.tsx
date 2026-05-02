@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import BorderedPanel from "@/components/shared/BorderedPanel";
@@ -15,8 +16,20 @@ type SprintTaskRow = {
   title: string;
   status: TaskStatus;
 };
-type ContributorRow = { name: string; commits: string; issue: string };
-type TimelineRow = { date: string; text: string; initials: string };
+type ContributorRow = {
+  name: string;
+  initials: string;
+  avatarUrl: string | null;
+  commits: number;
+  prs: number;
+  issues: number;
+};
+type TimelineRow = {
+  date: string;
+  text: string;
+  initials: string;
+  avatarUrl: string | null;
+};
 
 type SprintInfo = {
   id: string;
@@ -39,7 +52,13 @@ type SprintMetrics = {
   pullRequestsOpened: number;
   pullRequestsMerged: number;
   activeContributors: number;
-  contributors: Array<{ name: string; commitCount: number }>;
+  contributors: Array<{
+    name: string;
+    commitCount: number;
+    prCount: number;
+    issueCount: number;
+    avatarUrl: string | null;
+  }>;
   // Tasks from the GitHub Project, linked to this sprint via the iteration field
   tasks: Array<{
     id: string;
@@ -52,6 +71,7 @@ type SprintMetrics = {
     date: string | Date;
     text: string;
     initials: string;
+    avatarUrl: string | null;
   }>;
 };
 
@@ -81,6 +101,73 @@ function formatShortDate(value: string | Date) {
     day: "numeric",
     month: "short",
   });
+}
+
+// Get a 1-2 letter avatar label from a name.
+function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
+// Stable per-name colour for the initials fallback.
+const AVATAR_PALETTE = [
+  "bg-brand-accent",
+  "bg-brand-completed",
+  "bg-brand-in-progress",
+  "bg-brand-todo",
+];
+
+function avatarColorFor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+// Circular avatar — GitHub photo if we have one, else coloured initials.
+function Avatar({
+  name,
+  initials,
+  avatarUrl,
+  size,
+  className = "",
+}: {
+  name: string;
+  initials: string;
+  avatarUrl: string | null;
+  size: number;
+  className?: string;
+}) {
+  if (avatarUrl) {
+    return (
+      <Image
+        src={avatarUrl}
+        alt={name}
+        title={name}
+        width={size}
+        height={size}
+        className={`shrink-0 rounded-full object-cover ${className}`}
+        unoptimized
+      />
+    );
+  }
+  return (
+    <span
+      style={{ width: size, height: size }}
+      title={name}
+      className={`flex shrink-0 items-center justify-center rounded-full text-body-xs font-bold text-brand-surface ${avatarColorFor(
+        name,
+      )} ${className}`}
+    >
+      {initials}
+    </span>
+  );
 }
 
 // Helper function to create the task badge — colour and label match the breakdown tiles
@@ -223,10 +310,13 @@ export default function CurrentSprint({
     () =>
       (metrics?.contributors || []).map((contributor) => ({
         name: contributor.name,
-        commits: `${contributor.commitCount} Commits`,
-        issue: `${metrics?.issuesCreated ?? 0} issues in this sprint`,
+        initials: getInitials(contributor.name),
+        avatarUrl: contributor.avatarUrl,
+        commits: contributor.commitCount,
+        prs: contributor.prCount,
+        issues: contributor.issueCount,
       })),
-    [metrics?.contributors, metrics?.issuesCreated],
+    [metrics?.contributors],
   );
 
   const timeline: TimelineRow[] = useMemo(
@@ -235,6 +325,7 @@ export default function CurrentSprint({
         date: formatShortDate(item.date),
         text: item.text,
         initials: item.initials,
+        avatarUrl: item.avatarUrl,
       })),
     [metrics?.timeline],
   );
@@ -456,9 +547,12 @@ export default function CurrentSprint({
                               <span>{item.text}</span>
                             </div>
 
-                            <div className="flex h-lg w-lg items-center justify-center rounded-xl bg-brand-accent/50 text-body-xs font-medium text-brand-dark">
-                              {item.initials}
-                            </div>
+                            <Avatar
+                              name={item.text}
+                              initials={item.initials}
+                              avatarUrl={item.avatarUrl}
+                              size={24}
+                            />
                           </div>
                         ))
                       )}
@@ -469,32 +563,54 @@ export default function CurrentSprint({
                 {/* Contribution Breakdown */}
                 <div className="lg:relative">
                   <BorderedPanel className="p-md lg:absolute lg:inset-0 lg:flex lg:flex-col">
-                    <h4 className="text-body-lg font-semibold text-brand-dark">
-                      Contribution Breakdown
-                    </h4>
+                    <div>
+                      <h4 className="text-body-lg font-semibold text-brand-dark">
+                        Contribution · this sprint
+                      </h4>
+                      <p className="text-body-xs text-brand-dark/50">
+                        By person
+                      </p>
+                    </div>
 
-                    <div className="mt-md space-y-lg overflow-y-auto pr-sm lg:min-h-0 lg:flex-1">
+                    <div className="mt-md overflow-y-auto pr-xs lg:min-h-0 lg:flex-1">
                       {contributors.length === 0 ? (
                         <p className="text-body-md text-brand-dark/60">
                           No contributor activity in this sprint period.
                         </p>
                       ) : (
-                        contributors.map((person) => (
-                          <div
-                            key={person.name}
-                            className="border-b border-brand-dark/10 pb-md"
-                          >
-                            <p className="text-body-lg font-semibold text-brand-dark">
-                              {person.name}
-                            </p>
-                            <p className="mt-xs text-body-md text-brand-dark/50">
-                              {person.commits}
-                            </p>
-                            <p className="text-body-md text-brand-dark/50">
-                              {person.issue}
-                            </p>
-                          </div>
-                        ))
+                        contributors.map((person, index) => {
+                          const total =
+                            person.commits + person.prs + person.issues;
+                          return (
+                            <div
+                              key={person.name}
+                              className={`grid grid-cols-[2rem_1fr_auto] items-center gap-md py-sm ${
+                                index === 0
+                                  ? ""
+                                  : "border-t border-brand-dark/10"
+                              }`}
+                            >
+                              <Avatar
+                                name={person.name}
+                                initials={person.initials}
+                                avatarUrl={person.avatarUrl}
+                                size={32}
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate text-body-md font-medium text-brand-dark">
+                                  {person.name}
+                                </p>
+                                <p className="text-body-xs text-brand-dark/60">
+                                  {person.commits} commits · {person.prs} PRs ·{" "}
+                                  {person.issues} issues
+                                </p>
+                              </div>
+                              <span className="text-body-sm text-brand-dark/50">
+                                {total}
+                              </span>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </BorderedPanel>
