@@ -82,7 +82,7 @@ export async function syncGroup(groupId: string, accessToken: string) {
         : undefined;
 
     // Fetch all data from GitHub in parallel - can run them at the same time
-    const [commits, pullRequests, issues, projectTasks, iterations] =
+    const [commits, pullRequests, issues, projectTasks, iterationsResult] =
       await Promise.all([
         fetchCommits(accessToken, repoOwner, repoName, since),
         fetchPullRequests(accessToken, repoOwner, repoName, since),
@@ -92,7 +92,10 @@ export async function syncGroup(groupId: string, accessToken: string) {
       ]);
 
     // Upsert sprints first (sequential) so we can link tasks to them by iterationId
-    const iterationMap = await upsertSprints(groupId, iterations);
+    const iterationMap = await upsertSprints(
+      groupId,
+      iterationsResult.iterations,
+    );
 
     // Upsert everything else in parallel
     await Promise.all([
@@ -103,11 +106,13 @@ export async function syncGroup(groupId: string, accessToken: string) {
       upsertSprintTasks(groupId, projectTasks, iterationMap),
     ]);
 
-    // Sync succeeded - update the group's status and timestamp
+    // Sync succeeded - update the group's status and timestamp.
+    // Persist iterationFieldConfigured so the UI knows whether to show a setup hint vs a "no current iteration" hint.
     await Group.findByIdAndUpdate(groupId, {
       lastSyncAt: new Date(),
       syncStatus: "success",
       syncError: null,
+      iterationFieldConfigured: iterationsResult.iterationFieldConfigured,
     });
 
     // Invalidate dashboard cache for this group so fresh data is served

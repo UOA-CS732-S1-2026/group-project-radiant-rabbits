@@ -72,6 +72,11 @@ const groupSchema = new Schema(
       type: String,
       default: null,
     },
+    // Whether the linked GitHub Project has an iteration field.
+    iterationFieldConfigured: {
+      type: Boolean,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -14,7 +14,15 @@ async function main() {
   }
 
   console.log(`\nFetching iterations from ${owner}/${repo}...\n`);
-  const iterations = await fetchIterations(token, owner, repo);
+  const { iterations, iterationFieldConfigured } = await fetchIterations(
+    token,
+    owner,
+    repo,
+  );
+
+  console.log(
+    `Iteration field configured: ${iterationFieldConfigured ? "yes" : "no"}`,
+  );
 
   if (iterations.length === 0) {
     console.log("No iterations found. Check that:");

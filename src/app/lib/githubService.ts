@@ -552,16 +552,23 @@ const ITERATIONS_QUERY = `
   }
 `;
 
+export interface IterationsResult {
+  iterations: IterationData[];
+  // True if the repo's GitHub Project has an iteration field set up.
+  iterationFieldConfigured: boolean;
+}
+
 export async function fetchIterations(
   token: string,
   owner: string,
   repo: string,
-): Promise<IterationData[]> {
+): Promise<IterationsResult> {
   const data = await graphqlRequest(token, ITERATIONS_QUERY, { owner, repo });
   const projects = data.repository.projectsV2?.nodes ?? [];
 
   const seen = new Set<string>();
   const iterations: IterationData[] = [];
+  let iterationFieldConfigured = false;
 
   for (const project of projects) {
     // Find the first iteration-typed field on this project.
@@ -571,6 +578,7 @@ export async function fetchIterations(
         f && f.configuration && Array.isArray(f.configuration.iterations),
     );
     if (!iterationField) continue;
+    iterationFieldConfigured = true;
 
     const cfg = iterationField.configuration;
     for (const iter of [...cfg.iterations, ...cfg.completedIterations]) {
@@ -585,5 +593,5 @@ export async function fetchIterations(
     }
   }
 
-  return iterations;
+  return { iterations, iterationFieldConfigured };
 }
