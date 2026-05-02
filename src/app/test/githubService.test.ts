@@ -389,7 +389,8 @@ describe("fetchProjectTasks", () => {
                   pageInfo: { hasNextPage: false, endCursor: null },
                   nodes: [
                     {
-                      fieldValueByName: { name: "Todo" },
+                      status: { name: "Todo" },
+                      iteration: null,
                       content: {
                         number: 1,
                         title: "Setup project",
@@ -397,7 +398,8 @@ describe("fetchProjectTasks", () => {
                       },
                     },
                     {
-                      fieldValueByName: { name: "In Progress" },
+                      status: { name: "In Progress" },
+                      iteration: null,
                       content: {
                         number: 2,
                         title: "Build API",
@@ -407,7 +409,8 @@ describe("fetchProjectTasks", () => {
                       },
                     },
                     {
-                      fieldValueByName: { name: "Done" },
+                      status: { name: "Done" },
+                      iteration: { iterationId: "iter_3" },
                       content: {
                         number: 3,
                         title: "Write docs",
@@ -431,10 +434,13 @@ describe("fetchProjectTasks", () => {
       status: "TODO",
       assignees: ["alice"],
       issueNumber: 1,
+      iterationId: null,
     });
     expect(tasks[1].status).toBe("IN_PROGRESS");
     expect(tasks[1].assignees).toEqual(["bob", "carol"]);
+    expect(tasks[1].iterationId).toBeNull();
     expect(tasks[2].status).toBe("DONE");
+    expect(tasks[2].iterationId).toBe("iter_3");
   });
 
   it("should handle draft issues (no issue number)", async () => {
@@ -450,7 +456,8 @@ describe("fetchProjectTasks", () => {
                   pageInfo: { hasNextPage: false, endCursor: null },
                   nodes: [
                     {
-                      fieldValueByName: { name: "Backlog" },
+                      status: { name: "Backlog" },
+                      iteration: null,
                       content: {
                         title: "Just a note",
                         // DraftIssues have no number or assignees
@@ -486,7 +493,8 @@ describe("fetchProjectTasks", () => {
                   pageInfo: { hasNextPage: false, endCursor: null },
                   nodes: [
                     {
-                      fieldValueByName: { name: "Done" },
+                      status: { name: "Done" },
+                      iteration: null,
                       content: null, // Archived/removed item
                     },
                   ],

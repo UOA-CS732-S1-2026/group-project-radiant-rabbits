@@ -54,7 +54,8 @@ const issueSchema = new Schema(
   },
 );
 
-issueSchema.index({ number: 1 }, { unique: true });
+// Use a compound unique index so the same issue number can exist in different groups/repos without duplication
+issueSchema.index({ number: 1, group: 1 }, { unique: true });
 issueSchema.index({ group: 1, sprint: 1 });
 issueSchema.index({ group: 1, state: 1, closedAt: 1 });
 issueSchema.index({ group: 1, createdAt: 1 });

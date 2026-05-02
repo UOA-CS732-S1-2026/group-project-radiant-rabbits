@@ -36,6 +36,11 @@ const sprintSchema = new Schema(
       ref: "Group",
       required: true,
     },
+    iterationId: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -45,6 +50,13 @@ const sprintSchema = new Schema(
 sprintSchema.index({ group: 1, startDate: 1 });
 sprintSchema.index({ group: 1, endDate: 1 });
 sprintSchema.index({ group: 1, isCurrent: 1 });
+sprintSchema.index(
+  { group: 1, iterationId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { iterationId: { $type: "string" } },
+  },
+);
 
 export const Sprint =
   mongoose.models.Sprint || mongoose.model("Sprint", sprintSchema);

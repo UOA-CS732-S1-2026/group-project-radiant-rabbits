@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import BorderedPanel from "@/components/shared/BorderedPanel";
@@ -8,9 +9,27 @@ import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 
 // Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
-type SprintTask = { id: string; title: string; status: "Open" | "Closed" };
-type ContributorRow = { name: string; commits: string; issue: string };
-type TimelineRow = { date: string; text: string; initials: string };
+type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+type SprintTaskRow = {
+  id: string;
+  ref: string; // "#42" for linked issues, otherwise the task id
+  title: string;
+  status: TaskStatus;
+};
+type ContributorRow = {
+  name: string;
+  initials: string;
+  avatarUrl: string | null;
+  commits: number;
+  prs: number;
+  issues: number;
+};
+type TimelineRow = {
+  date: string;
+  text: string;
+  initials: string;
+  avatarUrl: string | null;
+};
 
 type SprintInfo = {
   id: string;
@@ -33,18 +52,26 @@ type SprintMetrics = {
   pullRequestsOpened: number;
   pullRequestsMerged: number;
   activeContributors: number;
-  contributors: Array<{ name: string; commitCount: number }>;
-  issues: Array<{
-    id: string;
-    number: number;
-    title: string;
-    status: "Open" | "Closed";
-    createdAt: string | Date;
+  contributors: Array<{
+    name: string;
+    commitCount: number;
+    prCount: number;
+    issueCount: number;
+    avatarUrl: string | null;
   }>;
+  // Tasks from the GitHub Project, linked to this sprint via the iteration field
+  tasks: Array<{
+    id: string;
+    title: string;
+    status: TaskStatus;
+    issueNumber: number | null;
+  }>;
+  taskBreakdown: { todo: number; inProgress: number; done: number };
   timeline: Array<{
     date: string | Date;
     text: string;
     initials: string;
+    avatarUrl: string | null;
   }>;
 };
 
@@ -76,18 +103,90 @@ function formatShortDate(value: string | Date) {
   });
 }
 
-// Helper function to create the issue badge with different colors based on open vs closed status
-function StatusBadge({ status }: { status: string }) {
-  const styles =
-    status === "Closed"
-      ? "bg-brand-completed text-brand-surface"
-      : "bg-brand-open text-brand-surface";
+// Get a 1-2 letter avatar label from a name.
+function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
 
+// Stable per-name colour for the initials fallback.
+const AVATAR_PALETTE = [
+  "bg-brand-accent",
+  "bg-brand-completed",
+  "bg-brand-in-progress",
+  "bg-brand-todo",
+];
+
+function avatarColorFor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+// Circular avatar — GitHub photo if we have one, else coloured initials.
+function Avatar({
+  name,
+  initials,
+  avatarUrl,
+  size,
+  className = "",
+}: {
+  name: string;
+  initials: string;
+  avatarUrl: string | null;
+  size: number;
+  className?: string;
+}) {
+  if (avatarUrl) {
+    return (
+      <Image
+        src={avatarUrl}
+        alt={name}
+        title={name}
+        width={size}
+        height={size}
+        className={`shrink-0 rounded-full object-cover ${className}`}
+        unoptimized
+      />
+    );
+  }
   return (
     <span
-      className={`inline-flex min-w-16 justify-center rounded-lg px-sm py-xs text-body-xs font-medium ${styles}`}
+      style={{ width: size, height: size }}
+      title={name}
+      className={`flex shrink-0 items-center justify-center rounded-full text-body-xs font-bold text-brand-surface ${avatarColorFor(
+        name,
+      )} ${className}`}
     >
-      {status}
+      {initials}
+    </span>
+  );
+}
+
+// Helper function to create the task badge — colour and label match the breakdown tiles
+function StatusBadge({ status }: { status: TaskStatus }) {
+  const styles: Record<TaskStatus, string> = {
+    TODO: "bg-brand-todo text-brand-surface",
+    IN_PROGRESS: "bg-brand-in-progress text-brand-surface",
+    DONE: "bg-brand-completed text-brand-surface",
+  };
+  const labels: Record<TaskStatus, string> = {
+    TODO: "To Do",
+    IN_PROGRESS: "In Progress",
+    DONE: "Done",
+  };
+  return (
+    <span
+      className={`inline-flex min-w-16 justify-center rounded-lg px-sm py-xs text-body-xs font-medium ${styles[status]}`}
+    >
+      {labels[status]}
     </span>
   );
 }
@@ -196,24 +295,28 @@ export default function CurrentSprint({
     });
   }, [groupId, router]);
 
-  const sprintTasks: SprintTask[] = useMemo(
+  const sprintTasks: SprintTaskRow[] = useMemo(
     () =>
-      (metrics?.issues || []).map((issue) => ({
-        id: `#${issue.number}`,
-        title: issue.title,
-        status: issue.status,
+      (metrics?.tasks || []).map((task) => ({
+        id: task.id,
+        ref: task.issueNumber ? `#${task.issueNumber}` : "",
+        title: task.title,
+        status: task.status,
       })),
-    [metrics?.issues],
+    [metrics?.tasks],
   );
 
   const contributors: ContributorRow[] = useMemo(
     () =>
       (metrics?.contributors || []).map((contributor) => ({
         name: contributor.name,
-        commits: `${contributor.commitCount} Commits`,
-        issue: `${metrics?.issuesCreated ?? 0} issues in this sprint`,
+        initials: getInitials(contributor.name),
+        avatarUrl: contributor.avatarUrl,
+        commits: contributor.commitCount,
+        prs: contributor.prCount,
+        issues: contributor.issueCount,
       })),
-    [metrics?.contributors, metrics?.issuesCreated],
+    [metrics?.contributors],
   );
 
   const timeline: TimelineRow[] = useMemo(
@@ -222,16 +325,20 @@ export default function CurrentSprint({
         date: formatShortDate(item.date),
         text: item.text,
         initials: item.initials,
+        avatarUrl: item.avatarUrl,
       })),
     [metrics?.timeline],
   );
 
   const filteredSprintTasks = useMemo(() => {
-    if (issueFilter === "open") {
-      return sprintTasks.filter((t) => t.status === "Open");
+    if (issueFilter === "todo") {
+      return sprintTasks.filter((t) => t.status === "TODO");
     }
-    if (issueFilter === "closed") {
-      return sprintTasks.filter((t) => t.status === "Closed");
+    if (issueFilter === "in_progress") {
+      return sprintTasks.filter((t) => t.status === "IN_PROGRESS");
+    }
+    if (issueFilter === "done") {
+      return sprintTasks.filter((t) => t.status === "DONE");
     }
     return sprintTasks;
   }, [issueFilter, sprintTasks]);
@@ -250,11 +357,9 @@ export default function CurrentSprint({
     );
   }
 
-  const todoCount = sprintTasks.filter((task) => task.status === "Open").length;
-  const doneCount = sprintTasks.filter(
-    (task) => task.status === "Closed",
-  ).length;
-  const inProgressCount = 0;
+  const todoCount = metrics?.taskBreakdown.todo ?? 0;
+  const inProgressCount = metrics?.taskBreakdown.inProgress ?? 0;
+  const doneCount = metrics?.taskBreakdown.done ?? 0;
 
   // Display the current sprint page with the fetched metrics
   return (
@@ -365,19 +470,24 @@ export default function CurrentSprint({
 
                     <div className="inline-flex gap-0.5 rounded-md bg-brand-border p-1">
                       <FilterChip
-                        label="All Issues"
+                        label="All"
                         active={issueFilter === "all"}
                         onClick={() => setIssueFilter("all")}
                       />
                       <FilterChip
-                        label="Open"
-                        active={issueFilter === "open"}
-                        onClick={() => setIssueFilter("open")}
+                        label="To Do"
+                        active={issueFilter === "todo"}
+                        onClick={() => setIssueFilter("todo")}
                       />
                       <FilterChip
-                        label="Closed"
-                        active={issueFilter === "closed"}
-                        onClick={() => setIssueFilter("closed")}
+                        label="In Progress"
+                        active={issueFilter === "in_progress"}
+                        onClick={() => setIssueFilter("in_progress")}
+                      />
+                      <FilterChip
+                        label="Done"
+                        active={issueFilter === "done"}
+                        onClick={() => setIssueFilter("done")}
                       />
                     </div>
 
@@ -385,16 +495,18 @@ export default function CurrentSprint({
                       <div className="space-y-md">
                         {filteredSprintTasks.length === 0 ? (
                           <p className="text-body-md text-brand-dark/60">
-                            No issues found for this sprint period.
+                            No tasks linked to this sprint. Assign tickets to
+                            this iteration in your GitHub Project to see them
+                            here.
                           </p>
                         ) : (
                           filteredSprintTasks.map((task) => (
                             <div
                               key={task.id}
-                              className="grid grid-cols-[5rem_1fr_5rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
+                              className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
                             >
                               <span className="text-brand-dark/60">
-                                {task.id}
+                                {task.ref}
                               </span>
                               <span className="text-brand-dark/70">
                                 {task.title}
@@ -435,9 +547,12 @@ export default function CurrentSprint({
                               <span>{item.text}</span>
                             </div>
 
-                            <div className="flex h-lg w-lg items-center justify-center rounded-xl bg-brand-accent/50 text-body-xs font-medium text-brand-dark">
-                              {item.initials}
-                            </div>
+                            <Avatar
+                              name={item.text}
+                              initials={item.initials}
+                              avatarUrl={item.avatarUrl}
+                              size={24}
+                            />
                           </div>
                         ))
                       )}
@@ -448,32 +563,54 @@ export default function CurrentSprint({
                 {/* Contribution Breakdown */}
                 <div className="lg:relative">
                   <BorderedPanel className="p-md lg:absolute lg:inset-0 lg:flex lg:flex-col">
-                    <h4 className="text-body-lg font-semibold text-brand-dark">
-                      Contribution Breakdown
-                    </h4>
+                    <div>
+                      <h4 className="text-body-lg font-semibold text-brand-dark">
+                        Contribution · this sprint
+                      </h4>
+                      <p className="text-body-xs text-brand-dark/50">
+                        By person
+                      </p>
+                    </div>
 
-                    <div className="mt-md space-y-lg overflow-y-auto pr-sm lg:min-h-0 lg:flex-1">
+                    <div className="mt-md overflow-y-auto pr-xs lg:min-h-0 lg:flex-1">
                       {contributors.length === 0 ? (
                         <p className="text-body-md text-brand-dark/60">
                           No contributor activity in this sprint period.
                         </p>
                       ) : (
-                        contributors.map((person) => (
-                          <div
-                            key={person.name}
-                            className="border-b border-brand-dark/10 pb-md"
-                          >
-                            <p className="text-body-lg font-semibold text-brand-dark">
-                              {person.name}
-                            </p>
-                            <p className="mt-xs text-body-md text-brand-dark/50">
-                              {person.commits}
-                            </p>
-                            <p className="text-body-md text-brand-dark/50">
-                              {person.issue}
-                            </p>
-                          </div>
-                        ))
+                        contributors.map((person, index) => {
+                          const total =
+                            person.commits + person.prs + person.issues;
+                          return (
+                            <div
+                              key={person.name}
+                              className={`grid grid-cols-[2rem_1fr_auto] items-center gap-md py-sm ${
+                                index === 0
+                                  ? ""
+                                  : "border-t border-brand-dark/10"
+                              }`}
+                            >
+                              <Avatar
+                                name={person.name}
+                                initials={person.initials}
+                                avatarUrl={person.avatarUrl}
+                                size={32}
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate text-body-md font-medium text-brand-dark">
+                                  {person.name}
+                                </p>
+                                <p className="text-body-xs text-brand-dark/60">
+                                  {person.commits} commits · {person.prs} PRs ·{" "}
+                                  {person.issues} issues
+                                </p>
+                              </div>
+                              <span className="text-body-sm text-brand-dark/50">
+                                {total}
+                              </span>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </BorderedPanel>

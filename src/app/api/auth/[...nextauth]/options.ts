@@ -19,8 +19,8 @@ export const options: NextAuthOptions = {
       clientSecret: githubSecret,
       authorization: {
         params: {
-          // 1. Request 'repo' scope to see private and public repos
-          scope: "read:user user:email repo",
+          // 1. Request 'repo' and 'read:project' scopes so we can read GitHub Projects
+          scope: "read:user user:email repo read:project",
         },
       },
     }),
