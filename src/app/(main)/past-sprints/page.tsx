@@ -138,7 +138,9 @@ export default async function PastSprintsPage() {
     );
   }
 
-  const group = await Group.findById(user.currentGroupId).select("_id");
+  const group = await Group.findById(user.currentGroupId).select(
+    "_id iterationFieldConfigured",
+  );
   if (!group) {
     return (
       <PageContainer>
@@ -153,12 +155,44 @@ export default async function PastSprintsPage() {
 
   const pastSprints = await loadPastSprints(group._id);
 
+  // Look up the next upcoming sprint so we can show a banner when nothing is active today.
+  const now = new Date();
+  const upcomingSprint = await Sprint.findOne({
+    group: group._id,
+    endDate: { $gte: now },
+  })
+    .sort({ startDate: 1 })
+    .select("name startDate endDate")
+    .lean<{ name: string; startDate: Date; endDate: Date }>();
+
+  const nextSprintBanner =
+    upcomingSprint && upcomingSprint.startDate > now
+      ? `Next iteration "${upcomingSprint.name}" starts on ${formatDate(upcomingSprint.startDate)}.`
+      : null;
+
+  const setupHint =
+    group.iterationFieldConfigured === false
+      ? "This repo's GitHub Project doesn't have an iteration field yet — past sprints will appear here once you add one and assign tickets to it."
+      : null;
+
   return (
     <PageContainer>
       <SectionHeading
         title="Past Sprints"
         subtitle="Browse completed sprints and review key delivery details."
       />
+
+      {nextSprintBanner ? (
+        <div className="mb-md rounded-xl border border-brand-accent/40 bg-brand-accent/10 px-md py-sm text-body-sm text-brand-dark">
+          {nextSprintBanner}
+        </div>
+      ) : null}
+
+      {setupHint ? (
+        <div className="mb-md rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-sm text-body-sm text-brand-dark/70">
+          {setupHint}
+        </div>
+      ) : null}
 
       <Card className="border border-brand-dark/10 border-l-0 shadow-none">
         <BorderedPanel className="p-lg">
