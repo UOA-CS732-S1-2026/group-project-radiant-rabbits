@@ -66,17 +66,17 @@ export async function PUT(request: Request) {
     // Remove the user from the group's members array
     const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
-      { $pull: { members: { githubId: user.githubId } } },
+      { $pull: { members: user._id } },
       { new: true },
     );
 
     if (updatedGroup && updatedGroup.members.length === 0) {
-      await Group.findByIdAndDelete(groupId);
+      await Group.findByIdAndDelete(group._id);
     }
 
     // Update the user's currentGroupId to null
     await User.findOneAndUpdate(
-      { githubId: userId },
+      { githubId: user.githubId },
       { $set: { currentGroupId: null } },
     );
 

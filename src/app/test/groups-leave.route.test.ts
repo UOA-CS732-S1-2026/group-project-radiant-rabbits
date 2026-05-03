@@ -1,3 +1,4 @@
+import { group } from "console";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { PUT } from "@/app/api/groups/leave/route";
@@ -164,6 +165,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockConnectMongoDB.mockResolvedValue(undefined);
     mockUserFindOne.mockResolvedValue({
+      _id: "mongo-user-id-123",
       githubId: "123",
     });
 
@@ -189,6 +191,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockConnectMongoDB.mockResolvedValue(undefined);
     mockUserFindOne.mockResolvedValue({
+      _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
     });
@@ -248,6 +251,7 @@ describe("PUT /api/groups/leave", () => {
     mockConnectMongoDB.mockResolvedValue(undefined);
 
     mockUserFindOne.mockResolvedValue({
+      _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
     });
@@ -262,6 +266,7 @@ describe("PUT /api/groups/leave", () => {
     mockIsUserInGroup.mockReturnValue(true);
 
     mockUserFindOneAndUpdate.mockResolvedValue({
+      _id: "mongo-user-id-123",
       githubId: "123",
     });
 
@@ -274,8 +279,16 @@ describe("PUT /api/groups/leave", () => {
     const response = await PUT(request);
     const body = await response.json();
 
+    expect(Group.findByIdAndUpdate).toHaveBeenCalledWith(
+      "group-1",
+      { $pull: { members: "mongo-user-id-123" } },
+      { new: true },
+    );
+
     expect(response.status).toBe(200);
     expect(body).toEqual({ message: "Successfully left the group" });
+
+    expect(Group.findByIdAndDelete).not.toHaveBeenCalled();
   });
 
   // Test case 8: Database connection error
@@ -308,7 +321,7 @@ describe("PUT /api/groups/leave", () => {
   });
 
   // Test case 9: Group has no members left after user leaves, group should be deleted
-  it("should delete the group if there are no members left after user leaves", async () => {
+  it("should return 200 and delete the group if there are no members left after user leaves", async () => {
     mockGetServerSession.mockResolvedValue({
       user: { id: "123", name: "Test" },
       accessToken: "token123",
@@ -317,6 +330,7 @@ describe("PUT /api/groups/leave", () => {
     mockConnectMongoDB.mockResolvedValue(undefined);
 
     mockUserFindOne.mockResolvedValue({
+      _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
     });
@@ -344,6 +358,11 @@ describe("PUT /api/groups/leave", () => {
     const response = await PUT(request);
     const body = await response.json();
 
+    expect(Group.findByIdAndUpdate).toHaveBeenCalledWith(
+      "group-1",
+      { $pull: { members: "mongo-user-id-123" } },
+      { new: true },
+    );
     expect(response.status).toBe(200);
     expect(body).toEqual({ message: "Successfully left the group" });
     expect(Group.findByIdAndDelete).toHaveBeenCalledWith("group-1");
