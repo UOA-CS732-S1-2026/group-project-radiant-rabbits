@@ -14,6 +14,7 @@ import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import PageContainer from "@/components/shared/PageContainer";
+import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
 
 // Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
@@ -308,10 +309,14 @@ export default function CurrentSprint({
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
 
   useEffect(() => {
-    if (status !== "ready") setFinishConfirmOpen(false);
+    if (status !== "ready") {
+      setFinishConfirmOpen(false);
+      setSprintReviewPromptOpen(false);
+    }
   }, [status]);
 
   const openFinishSprintConfirm = useCallback(() => {
@@ -325,11 +330,16 @@ export default function CurrentSprint({
     try {
       // TODO: POST/PATCH to complete current sprint for this group.
       setFinishConfirmOpen(false);
-      router.refresh();
+      setSprintReviewPromptOpen(true);
     } finally {
       setIsFinishingSprint(false);
     }
-  }, [groupId, sprint, router]);
+  }, [groupId, sprint]);
+
+  const dismissSprintReviewPrompt = useCallback(() => {
+    setSprintReviewPromptOpen(false);
+    router.refresh();
+  }, [router]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -732,6 +742,10 @@ export default function CurrentSprint({
         confirmLabel="Yes"
         cancelLabel="Cancel"
         isConfirming={isFinishingSprint}
+      />
+      <SprintReviewPromptOverlay
+        open={sprintReviewPromptOpen}
+        onClose={dismissSprintReviewPrompt}
       />
     </>
   );
