@@ -2,10 +2,17 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import BorderedPanel from "@/components/shared/BorderedPanel";
 import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
+import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import PageContainer from "@/components/shared/PageContainer";
 
 // Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
@@ -300,11 +307,29 @@ export default function CurrentSprint({
   const [issueFilter, setIssueFilter] = useState<string>("all");
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [isFinishingSprint, setIsFinishingSprint] = useState(false);
 
-  const handleFinishSprint = useCallback(() => {
+  useEffect(() => {
+    if (status !== "ready") setFinishConfirmOpen(false);
+  }, [status]);
+
+  const openFinishSprintConfirm = useCallback(() => {
     if (!groupId || !sprint) return;
-    // TODO: POST/PATCH to complete current sprint, then router.refresh().
+    setFinishConfirmOpen(true);
   }, [groupId, sprint]);
+
+  const confirmFinishSprint = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsFinishingSprint(true);
+    try {
+      // TODO: POST/PATCH to complete current sprint for this group.
+      setFinishConfirmOpen(false);
+      router.refresh();
+    } finally {
+      setIsFinishingSprint(false);
+    }
+  }, [groupId, sprint, router]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -392,7 +417,7 @@ export default function CurrentSprint({
             <SprintPageHeader
               title="Current Sprint"
               onRefresh={handleRefresh}
-              onFinishSprint={handleFinishSprint}
+              onFinishSprint={openFinishSprintConfirm}
               isRefreshing={isRefreshing}
               canRefresh={Boolean(groupId)}
               canFinishSprint={false}
@@ -417,7 +442,7 @@ export default function CurrentSprint({
             <SprintPageHeader
               title="Current Sprint"
               onRefresh={handleRefresh}
-              onFinishSprint={handleFinishSprint}
+              onFinishSprint={openFinishSprintConfirm}
               isRefreshing={isRefreshing}
               canRefresh={Boolean(groupId)}
               canFinishSprint={false}
@@ -440,258 +465,274 @@ export default function CurrentSprint({
 
   // Display the current sprint page with the fetched metrics
   return (
-    <div className="min-h-screen bg-brand-background">
-      <PageContainer>
-        <Card className="border border-brand-dark/10 shadow-none">
-          <div className="space-y-lg">
-            {refreshError ? (
-              <p className="text-body-md">{refreshError}</p>
-            ) : null}
+    <>
+      <div className="min-h-screen bg-brand-background">
+        <PageContainer>
+          <Card className="border border-brand-dark/10 shadow-none">
+            <div className="space-y-lg">
+              {refreshError ? (
+                <p className="text-body-md">{refreshError}</p>
+              ) : null}
 
-            {/* Current Sprint */}
-            <SprintPageHeader
-              title={sprint.name}
-              onRefresh={handleRefresh}
-              onFinishSprint={handleFinishSprint}
-              isRefreshing={isRefreshing}
-              canRefresh={Boolean(groupId)}
-              canFinishSprint={Boolean(groupId)}
-            />
+              {/* Current Sprint */}
+              <SprintPageHeader
+                title={sprint.name}
+                onRefresh={handleRefresh}
+                onFinishSprint={openFinishSprintConfirm}
+                isRefreshing={isRefreshing}
+                canRefresh={Boolean(groupId)}
+                canFinishSprint={Boolean(groupId)}
+              />
 
-            {/* Sprint Focus */}
-            <BorderedPanel as="section">
-              <div className="flex items-start justify-between gap-md">
-                <div>
-                  <h3 className="text-body-lg font-medium text-brand-dark">
-                    Sprint Focus:
-                  </h3>
-                  <p className="text-body-lg text-brand-dark/60">
-                    EMPTY: PLACEHOLDER
+              {/* Sprint Focus */}
+              <BorderedPanel as="section">
+                <div className="flex items-start justify-between gap-md">
+                  <div>
+                    <h3 className="text-body-lg font-medium text-brand-dark">
+                      Sprint Focus:
+                    </h3>
+                    <p className="text-body-lg text-brand-dark/60">
+                      EMPTY: PLACEHOLDER
+                    </p>
+                  </div>
+
+                  <span className="text-body-md text-brand-dark/70">✎</span>
+                </div>
+              </BorderedPanel>
+
+              {/* Sprint Timeline */}
+              <BorderedPanel as="section">
+                <div className="mb-md grid grid-cols-1 gap-sm text-body-md text-brand-dark/60 md:grid-cols-3">
+                  <p>
+                    <span className="font-medium text-brand-dark">
+                      Sprint Start Date:
+                    </span>{" "}
+                    {formatDate(sprint.startDate)}
+                  </p>
+                  <p>
+                    <span className="font-medium text-brand-dark">
+                      Sprint End Date:
+                    </span>{" "}
+                    {formatDate(sprint.endDate)}
+                  </p>
+                  <p>
+                    <span className="font-medium text-brand-dark">
+                      Time Remaining:
+                    </span>{" "}
+                    {sprint.progress.remainingDays} day
+                    {sprint.progress.remainingDays === 1 ? "" : "s"}
                   </p>
                 </div>
 
-                <span className="text-body-md text-brand-dark/70">✎</span>
-              </div>
-            </BorderedPanel>
+                <div className="h-sm w-full rounded-full bg-brand-accent/20">
+                  <div
+                    className="h-sm rounded-full bg-brand-accent"
+                    style={{ width: `${sprint.progress.progressPercent}%` }}
+                  />
+                </div>
+              </BorderedPanel>
 
-            {/* Sprint Timeline */}
-            <BorderedPanel as="section">
-              <div className="mb-md grid grid-cols-1 gap-sm text-body-md text-brand-dark/60 md:grid-cols-3">
-                <p>
-                  <span className="font-medium text-brand-dark">
-                    Sprint Start Date:
-                  </span>{" "}
-                  {formatDate(sprint.startDate)}
-                </p>
-                <p>
-                  <span className="font-medium text-brand-dark">
-                    Sprint End Date:
-                  </span>{" "}
-                  {formatDate(sprint.endDate)}
-                </p>
-                <p>
-                  <span className="font-medium text-brand-dark">
-                    Time Remaining:
-                  </span>{" "}
-                  {sprint.progress.remainingDays} day
-                  {sprint.progress.remainingDays === 1 ? "" : "s"}
-                </p>
-              </div>
+              {/* Sprint Breakdown */}
+              <section>
+                <h3 className="mb-md text-h3 font-semibold text-brand-dark">
+                  Sprint Breakdown
+                </h3>
 
-              <div className="h-sm w-full rounded-full bg-brand-accent/20">
-                <div
-                  className="h-sm rounded-full bg-brand-accent"
-                  style={{ width: `${sprint.progress.progressPercent}%` }}
-                />
-              </div>
-            </BorderedPanel>
+                <div className="grid gap-lg lg:grid-cols-[2.2fr_1fr]">
+                  <div className="space-y-md">
+                    <BorderedPanel>
+                      <div className="grid gap-md md:grid-cols-3">
+                        <BreakdownTile
+                          label="To Do"
+                          value={`${todoCount} Issues`}
+                          dotClass="bg-brand-todo"
+                        />
+                        <BreakdownTile
+                          label="In Progress"
+                          value={`${inProgressCount} Issues`}
+                          dotClass="bg-brand-in-progress"
+                        />
+                        <BreakdownTile
+                          label="Done"
+                          value={`${doneCount} Issues`}
+                          dotClass="bg-brand-completed"
+                        />
+                      </div>
+                    </BorderedPanel>
 
-            {/* Sprint Breakdown */}
-            <section>
-              <h3 className="mb-md text-h3 font-semibold text-brand-dark">
-                Sprint Breakdown
-              </h3>
+                    {/* Sprint Tasks */}
+                    <BorderedPanel>
+                      <h4 className="text-body-lg font-semibold text-brand-dark">
+                        Sprint Tasks
+                      </h4>
 
-              <div className="grid gap-lg lg:grid-cols-[2.2fr_1fr]">
-                <div className="space-y-md">
-                  <BorderedPanel>
-                    <div className="grid gap-md md:grid-cols-3">
-                      <BreakdownTile
-                        label="To Do"
-                        value={`${todoCount} Issues`}
-                        dotClass="bg-brand-todo"
-                      />
-                      <BreakdownTile
-                        label="In Progress"
-                        value={`${inProgressCount} Issues`}
-                        dotClass="bg-brand-in-progress"
-                      />
-                      <BreakdownTile
-                        label="Done"
-                        value={`${doneCount} Issues`}
-                        dotClass="bg-brand-completed"
-                      />
-                    </div>
-                  </BorderedPanel>
+                      <div className="inline-flex gap-0.5 rounded-md bg-brand-border p-1">
+                        <FilterChip
+                          label="All"
+                          active={issueFilter === "all"}
+                          onClick={() => setIssueFilter("all")}
+                        />
+                        <FilterChip
+                          label="To Do"
+                          active={issueFilter === "todo"}
+                          onClick={() => setIssueFilter("todo")}
+                        />
+                        <FilterChip
+                          label="In Progress"
+                          active={issueFilter === "in_progress"}
+                          onClick={() => setIssueFilter("in_progress")}
+                        />
+                        <FilterChip
+                          label="Done"
+                          active={issueFilter === "done"}
+                          onClick={() => setIssueFilter("done")}
+                        />
+                      </div>
 
-                  {/* Sprint Tasks */}
-                  <BorderedPanel>
-                    <h4 className="text-body-lg font-semibold text-brand-dark">
-                      Sprint Tasks
-                    </h4>
+                      <div className="mt-lg max-h-42 overflow-y-auto pr-sm">
+                        <div className="space-y-md">
+                          {filteredSprintTasks.length === 0 ? (
+                            <p className="text-body-md text-brand-dark/60">
+                              No tasks linked to this sprint. Assign tickets to
+                              this iteration in your GitHub Project to see them
+                              here.
+                            </p>
+                          ) : (
+                            filteredSprintTasks.map((task) => (
+                              <div
+                                key={task.id}
+                                className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
+                              >
+                                <span className="text-brand-dark/60">
+                                  {task.ref}
+                                </span>
+                                <span className="text-brand-dark/70">
+                                  {task.title}
+                                </span>
+                                <div className="flex justify-end">
+                                  <StatusBadge status={task.status} />
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </BorderedPanel>
 
-                    <div className="inline-flex gap-0.5 rounded-md bg-brand-border p-1">
-                      <FilterChip
-                        label="All"
-                        active={issueFilter === "all"}
-                        onClick={() => setIssueFilter("all")}
-                      />
-                      <FilterChip
-                        label="To Do"
-                        active={issueFilter === "todo"}
-                        onClick={() => setIssueFilter("todo")}
-                      />
-                      <FilterChip
-                        label="In Progress"
-                        active={issueFilter === "in_progress"}
-                        onClick={() => setIssueFilter("in_progress")}
-                      />
-                      <FilterChip
-                        label="Done"
-                        active={issueFilter === "done"}
-                        onClick={() => setIssueFilter("done")}
-                      />
-                    </div>
+                    {/* Activity Timeline */}
+                    <BorderedPanel>
+                      <h4 className="text-body-lg font-semibold text-brand-dark">
+                        Activity Timeline
+                      </h4>
 
-                    <div className="mt-lg max-h-42 overflow-y-auto pr-sm">
-                      <div className="space-y-md">
-                        {filteredSprintTasks.length === 0 ? (
+                      <div className="mt-md max-h-36 space-y-md overflow-y-auto pr-sm">
+                        {timeline.length === 0 ? (
                           <p className="text-body-md text-brand-dark/60">
-                            No tasks linked to this sprint. Assign tickets to
-                            this iteration in your GitHub Project to see them
-                            here.
+                            No activity captured for this sprint period.
                           </p>
                         ) : (
-                          filteredSprintTasks.map((task) => (
+                          timeline.map((item, index) => (
                             <div
-                              key={task.id}
-                              className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
+                              key={`${item.date}-${index}`}
+                              className="grid grid-cols-[5rem_1fr_2.5rem] items-center gap-md border-b border-brand-dark/10 pb-sm"
                             >
-                              <span className="text-brand-dark/60">
-                                {task.ref}
-                              </span>
-                              <span className="text-brand-dark/70">
-                                {task.title}
-                              </span>
-                              <div className="flex justify-end">
-                                <StatusBadge status={task.status} />
+                              <div className="text-body-md text-brand-dark/60">
+                                {item.date}
                               </div>
+
+                              <div className="flex items-center gap-sm text-body-md text-brand-dark/70">
+                                <span className="text-brand-dark/40">↑</span>
+                                <span>{item.text}</span>
+                              </div>
+
+                              <Avatar
+                                name={item.text}
+                                initials={item.initials}
+                                avatarUrl={item.avatarUrl}
+                                size={24}
+                              />
                             </div>
                           ))
                         )}
                       </div>
-                    </div>
-                  </BorderedPanel>
+                    </BorderedPanel>
+                  </div>
 
-                  {/* Activity Timeline */}
-                  <BorderedPanel>
-                    <h4 className="text-body-lg font-semibold text-brand-dark">
-                      Activity Timeline
-                    </h4>
-
-                    <div className="mt-md max-h-36 space-y-md overflow-y-auto pr-sm">
-                      {timeline.length === 0 ? (
-                        <p className="text-body-md text-brand-dark/60">
-                          No activity captured for this sprint period.
+                  {/* Contribution Breakdown */}
+                  <div className="lg:relative">
+                    <BorderedPanel className="p-md lg:absolute lg:inset-0 lg:flex lg:flex-col">
+                      <div>
+                        <h4 className="text-body-lg font-semibold text-brand-dark">
+                          Contribution · this sprint
+                        </h4>
+                        <p className="text-body-xs text-brand-dark/50">
+                          By person
                         </p>
-                      ) : (
-                        timeline.map((item, index) => (
-                          <div
-                            key={`${item.date}-${index}`}
-                            className="grid grid-cols-[5rem_1fr_2.5rem] items-center gap-md border-b border-brand-dark/10 pb-sm"
-                          >
-                            <div className="text-body-md text-brand-dark/60">
-                              {item.date}
-                            </div>
+                      </div>
 
-                            <div className="flex items-center gap-sm text-body-md text-brand-dark/70">
-                              <span className="text-brand-dark/40">↑</span>
-                              <span>{item.text}</span>
-                            </div>
-
-                            <Avatar
-                              name={item.text}
-                              initials={item.initials}
-                              avatarUrl={item.avatarUrl}
-                              size={24}
-                            />
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </BorderedPanel>
-                </div>
-
-                {/* Contribution Breakdown */}
-                <div className="lg:relative">
-                  <BorderedPanel className="p-md lg:absolute lg:inset-0 lg:flex lg:flex-col">
-                    <div>
-                      <h4 className="text-body-lg font-semibold text-brand-dark">
-                        Contribution · this sprint
-                      </h4>
-                      <p className="text-body-xs text-brand-dark/50">
-                        By person
-                      </p>
-                    </div>
-
-                    <div className="mt-md overflow-y-auto pr-xs lg:min-h-0 lg:flex-1">
-                      {contributors.length === 0 ? (
-                        <p className="text-body-md text-brand-dark/60">
-                          No contributor activity in this sprint period.
-                        </p>
-                      ) : (
-                        contributors.map((person, index) => {
-                          const total =
-                            person.commits + person.prs + person.issues;
-                          return (
-                            <div
-                              key={person.name}
-                              className={`grid grid-cols-[2rem_1fr_auto] items-center gap-md py-sm ${
-                                index === 0
-                                  ? ""
-                                  : "border-t border-brand-dark/10"
-                              }`}
-                            >
-                              <Avatar
-                                name={person.name}
-                                initials={person.initials}
-                                avatarUrl={person.avatarUrl}
-                                size={32}
-                              />
-                              <div className="min-w-0">
-                                <p className="truncate text-body-md font-medium text-brand-dark">
-                                  {person.name}
-                                </p>
-                                <p className="text-body-xs text-brand-dark/60">
-                                  {person.commits} commits · {person.prs} PRs ·{" "}
-                                  {person.issues} issues
-                                </p>
+                      <div className="mt-md overflow-y-auto pr-xs lg:min-h-0 lg:flex-1">
+                        {contributors.length === 0 ? (
+                          <p className="text-body-md text-brand-dark/60">
+                            No contributor activity in this sprint period.
+                          </p>
+                        ) : (
+                          contributors.map((person, index) => {
+                            const total =
+                              person.commits + person.prs + person.issues;
+                            return (
+                              <div
+                                key={person.name}
+                                className={`grid grid-cols-[2rem_1fr_auto] items-center gap-md py-sm ${
+                                  index === 0
+                                    ? ""
+                                    : "border-t border-brand-dark/10"
+                                }`}
+                              >
+                                <Avatar
+                                  name={person.name}
+                                  initials={person.initials}
+                                  avatarUrl={person.avatarUrl}
+                                  size={32}
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate text-body-md font-medium text-brand-dark">
+                                    {person.name}
+                                  </p>
+                                  <p className="text-body-xs text-brand-dark/60">
+                                    {person.commits} commits · {person.prs} PRs
+                                    · {person.issues} issues
+                                  </p>
+                                </div>
+                                <span className="text-body-sm text-brand-dark/50">
+                                  {total}
+                                </span>
                               </div>
-                              <span className="text-body-sm text-brand-dark/50">
-                                {total}
-                              </span>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </BorderedPanel>
+                            );
+                          })
+                        )}
+                      </div>
+                    </BorderedPanel>
+                  </div>
                 </div>
-              </div>
-            </section>
-          </div>
-        </Card>
-      </PageContainer>
-    </div>
+              </section>
+            </div>
+          </Card>
+        </PageContainer>
+      </div>
+      <ConfirmOverlay
+        open={finishConfirmOpen}
+        onClose={() => {
+          if (!isFinishingSprint) setFinishConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          void confirmFinishSprint();
+        }}
+        title="Are you sure you want to finish this sprint?"
+        description="You can cancel to keep working in this sprint, or confirm to finish it."
+        confirmLabel="Yes"
+        cancelLabel="Cancel"
+        isConfirming={isFinishingSprint}
+      />
+    </>
   );
 }
