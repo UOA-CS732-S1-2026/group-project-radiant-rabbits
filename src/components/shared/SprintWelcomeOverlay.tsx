@@ -5,40 +5,40 @@ import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import Button from "@/components/shared/Button";
 
-export type SprintReviewPromptOverlayProps = {
+export type SprintWelcomeOverlayProps = {
   open: boolean;
-  /** X, backdrop tap, and Escape — leave without generating (parent decides, e.g. refresh). */
   onClose: () => void;
-  /** Skip — next step in finish flow (e.g. final confirmation). */
-  onSkip: () => void;
-  /** Primary CTA — e.g. open preview / start review flow. */
-  onGenerateSprintReview: () => void;
-  title?: string;
+  onContinue: () => void;
+  /** Shown in the title as “Welcome to sprint #…”. */
+  sprintNumber: number;
+  /** Static body until the summary prompt ships in a follow-up. */
   description?: string;
+  isContinuing?: boolean;
 };
 
 /**
- * Same shell as {@link ConfirmOverlay}: portal, dimmed backdrop, centered card.
- * Shown after finishing a sprint; Skip and Generate are explicit; X/backdrop/Escape call `onClose`.
+ * Same shell as {@link ConfirmOverlay} (centered card, Cancel + primary).
+ * Shown after Skip / preview Continue — welcomes the next sprint; summary UI comes later.
  */
-export default function SprintReviewPromptOverlay({
+export default function SprintWelcomeOverlay({
   open,
   onClose,
-  onSkip,
-  onGenerateSprintReview,
-  title = "Sprint complete",
-  description = "Generate a sprint review to summarize what shipped this sprint and what’s next for your team.",
-}: SprintReviewPromptOverlayProps) {
+  onContinue,
+  sprintNumber,
+  description = "You’ll be prompted for a one–two sentence summary of what this sprint will cover in a follow-up change. Continue finishes the hand-off for now.",
+  isContinuing = false,
+}: SprintWelcomeOverlayProps) {
   const headingId = useId();
+  const title = `Welcome to sprint #${sprintNumber}`;
 
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !isContinuing) onClose();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, isContinuing]);
 
   useEffect(() => {
     if (!open) return;
@@ -56,8 +56,11 @@ export default function SprintReviewPromptOverlay({
             <button
               type="button"
               aria-label="Close dialog"
-              className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity"
-              onClick={onClose}
+              className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity disabled:cursor-not-allowed"
+              onClick={() => {
+                if (!isContinuing) onClose();
+              }}
+              disabled={isContinuing}
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">
               <div className="pointer-events-auto w-full max-w-[28rem] shrink-0">
@@ -71,7 +74,8 @@ export default function SprintReviewPromptOverlay({
                     type="button"
                     onClick={onClose}
                     aria-label="Close"
-                    className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary md:right-4 md:top-4"
+                    disabled={isContinuing}
+                    className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-40 md:right-4 md:top-4"
                   >
                     <X className="h-5 w-5" aria-hidden />
                   </button>
@@ -84,21 +88,26 @@ export default function SprintReviewPromptOverlay({
                   <p className="mx-auto mt-3 max-w-[22rem] text-body-md leading-relaxed text-brand-dark/90 md:max-w-none">
                     {description}
                   </p>
-                  <div className="mt-6 flex flex-col items-center justify-center gap-3">
-                    <Button
-                      type="button"
-                      size="lg"
-                      onClick={onGenerateSprintReview}
-                    >
-                      Generate Sprint Review
-                    </Button>
+                  <div className="mt-6 flex flex-col-reverse items-center justify-center gap-3 sm:flex-row sm:gap-md">
                     <Button
                       type="button"
                       variant="grey"
                       size="sm"
-                      onClick={onSkip}
+                      className="w-full min-w-[8rem] max-w-[14rem] sm:w-auto"
+                      onClick={onClose}
+                      disabled={isContinuing}
                     >
-                      Skip
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="purple"
+                      size="sm"
+                      className="w-full min-w-[8rem] max-w-[14rem] sm:w-auto"
+                      onClick={onContinue}
+                      disabled={isContinuing}
+                    >
+                      {isContinuing ? "Working…" : "Continue"}
                     </Button>
                   </div>
                 </div>

@@ -16,6 +16,7 @@ import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import PageContainer from "@/components/shared/PageContainer";
 import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewOverlay";
 import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
+import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
 
 // Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
@@ -309,13 +310,17 @@ export default function CurrentSprint({
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
   const [sprintReviewPreviewOpen, setSprintReviewPreviewOpen] = useState(false);
+  const [nextSprintWelcomeOpen, setNextSprintWelcomeOpen] = useState(false);
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
+  const [isNextSprintWelcomeContinuing, setIsNextSprintWelcomeContinuing] =
+    useState(false);
 
   useEffect(() => {
     if (status !== "ready") {
       setFinishConfirmOpen(false);
       setSprintReviewPromptOpen(false);
       setSprintReviewPreviewOpen(false);
+      setNextSprintWelcomeOpen(false);
     }
   }, [status]);
 
@@ -328,7 +333,7 @@ export default function CurrentSprint({
     if (!groupId || !sprint) return;
     setIsFinishingSprint(true);
     try {
-      // TODO: POST/PATCH to complete current sprint for this group.
+      // API runs when user continues from the next-sprint welcome step.
       setFinishConfirmOpen(false);
       setSprintReviewPromptOpen(true);
     } finally {
@@ -336,7 +341,14 @@ export default function CurrentSprint({
     }
   }, [groupId, sprint]);
 
-  const dismissSprintReviewPrompt = useCallback(() => {
+  /** Skip on the post-finish prompt → next-sprint welcome (same as preview Continue). */
+  const skipSprintReviewToNextSprintWelcome = useCallback(() => {
+    setSprintReviewPromptOpen(false);
+    setNextSprintWelcomeOpen(true);
+  }, []);
+
+  /** X / backdrop / Escape on post-finish prompt — abort without final confirm. */
+  const abortSprintReviewPrompt = useCallback(() => {
     setSprintReviewPromptOpen(false);
     router.refresh();
   }, [router]);
@@ -346,10 +358,34 @@ export default function CurrentSprint({
     setSprintReviewPreviewOpen(true);
   }, []);
 
+  /** Close preview only (X / backdrop / Escape); does not open final confirm. */
   const dismissSprintReviewPreview = useCallback(() => {
     setSprintReviewPreviewOpen(false);
     router.refresh();
   }, [router]);
+
+  /** Preview Continue → next-sprint welcome (no refresh yet). */
+  const continueFromPreviewToNextSprintWelcome = useCallback(() => {
+    setSprintReviewPreviewOpen(false);
+    setNextSprintWelcomeOpen(true);
+  }, []);
+
+  const dismissNextSprintWelcome = useCallback(() => {
+    setNextSprintWelcomeOpen(false);
+    router.refresh();
+  }, [router]);
+
+  const continueNextSprintWelcome = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsNextSprintWelcomeContinuing(true);
+    try {
+      // TODO: POST/PATCH finish current sprint / start next (and later persist summary).
+      setNextSprintWelcomeOpen(false);
+      router.refresh();
+    } finally {
+      setIsNextSprintWelcomeContinuing(false);
+    }
+  }, [groupId, sprint, router]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -755,13 +791,26 @@ export default function CurrentSprint({
       />
       <SprintReviewPromptOverlay
         open={sprintReviewPromptOpen}
-        onClose={dismissSprintReviewPrompt}
+        onClose={abortSprintReviewPrompt}
+        onSkip={skipSprintReviewToNextSprintWelcome}
         onGenerateSprintReview={handleGenerateSprintReviewFromOverlay}
       />
       <SprintReviewPreviewOverlay
         open={sprintReviewPreviewOpen}
+        onContinue={continueFromPreviewToNextSprintWelcome}
         onDismiss={dismissSprintReviewPreview}
       />
+      {sprint ? (
+        <SprintWelcomeOverlay
+          open={nextSprintWelcomeOpen}
+          onClose={dismissNextSprintWelcome}
+          onContinue={() => {
+            void continueNextSprintWelcome();
+          }}
+          sprintNumber={sprint.number + 1}
+          isContinuing={isNextSprintWelcomeContinuing}
+        />
+      ) : null}
     </>
   );
 }

@@ -7,7 +7,9 @@ import Button from "@/components/shared/Button";
 
 export type SprintReviewPreviewOverlayProps = {
   open: boolean;
-  /** Continue, X, backdrop, and Escape all use this (same exit as Skip on the prior step). */
+  /** Continue — moves to the next step in the finish flow (e.g. final confirmation). */
+  onContinue: () => void;
+  /** X, backdrop tap, and Escape — close preview only (parent typically refreshes). */
   onDismiss: () => void;
 };
 
@@ -17,6 +19,7 @@ export type SprintReviewPreviewOverlayProps = {
  */
 export default function SprintReviewPreviewOverlay({
   open,
+  onContinue,
   onDismiss,
 }: SprintReviewPreviewOverlayProps) {
   const headingId = useId();
@@ -112,7 +115,7 @@ export default function SprintReviewPreviewOverlay({
                       type="button"
                       variant="purple"
                       size="sm"
-                      onClick={onDismiss}
+                      onClick={onContinue}
                     >
                       Continue
                     </Button>
