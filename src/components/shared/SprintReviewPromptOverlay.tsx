@@ -6,20 +6,14 @@ import Button from "@/components/shared/Button";
 
 export type SprintReviewPromptOverlayProps = {
   open: boolean;
-  /** Backdrop tap and Escape — leave without generating (parent decides, e.g. refresh). */
   onClose: () => void;
-  /** Skip — next step in finish flow (e.g. final confirmation). */
   onSkip: () => void;
-  /** Primary CTA — e.g. open preview / start review flow. */
   onGenerateSprintReview: () => void;
   title?: string;
   description?: string;
 };
 
-/**
- * Same shell as {@link ConfirmOverlay}: portal, dimmed backdrop, centered card.
- * Shown after finishing a sprint; Skip and Generate are explicit; backdrop/Escape call `onClose`.
- */
+/** Shown after “finish sprint” confirm; Generate opens the preview overlay. */
 export default function SprintReviewPromptOverlay({
   open,
   onClose,

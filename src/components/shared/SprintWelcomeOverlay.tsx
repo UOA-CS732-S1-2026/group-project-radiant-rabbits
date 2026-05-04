@@ -7,19 +7,13 @@ import Button from "@/components/shared/Button";
 export type SprintWelcomeOverlayProps = {
   open: boolean;
   onClose: () => void;
-  /** Receives trimmed sprint focus text when the user continues. */
   onContinue: (sprintFocus: string) => void;
-  /** Shown in the title as “Welcome to sprint #…”. */
   sprintNumber: number;
-  /** Short intro above the sprint focus field. */
   description?: string;
   isContinuing?: boolean;
 };
 
-/**
- * Same shell as {@link ConfirmOverlay} (centered card; backdrop/Escape dismiss).
- * Shown after Skip / preview Continue — welcomes the next sprint; collects sprint focus for a later API.
- */
+/** After skip or review preview; collects sprint focus then hands off to tickets overlay. */
 export default function SprintWelcomeOverlay({
   open,
   onClose,

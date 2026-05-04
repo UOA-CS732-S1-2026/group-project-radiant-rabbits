@@ -14,17 +14,11 @@ export type ConfirmOverlayProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   isConfirming?: boolean;
-  /**
-   * When false, no header close (X) — use for flows that should dismiss only via buttons/backdrop (e.g. finish sprint).
-   * @default true
-   */
+  /** Hide header X (e.g. finish-sprint confirm uses only buttons + backdrop). Default true. */
   showCloseButton?: boolean;
 };
 
-/**
- * Dimmed backdrop + centered dialog (same shell pattern as help “?” overlay).
- * Controlled via `open`; Cancel and confirm actions are explicit buttons.
- */
+/** Modal confirm; optional corner close matches help-style overlays when enabled. */
 export default function ConfirmOverlay({
   open,
   onClose,

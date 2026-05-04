@@ -8,16 +8,11 @@ import Button from "@/components/shared/Button";
 
 export type SprintReviewPreviewOverlayProps = {
   open: boolean;
-  /** Continue — moves to the next step in the finish flow (e.g. final confirmation). */
   onContinue: () => void;
-  /** Backdrop tap and Escape — close preview only (parent typically refreshes). */
   onDismiss: () => void;
 };
 
-/**
- * Hardcoded sprint-review preview in the same overlay shell as other sprint dialogs.
- * Replace body with real preview data when generation exists.
- */
+/** Placeholder sprint review body until generation/API exists. */
 export default function SprintReviewPreviewOverlay({
   open,
   onContinue,
@@ -121,7 +116,7 @@ export default function SprintReviewPreviewOverlay({
 
                   <div className="shrink-0 border-t border-brand-dark/10 bg-[#F1F5F9] px-4 py-4 sm:px-6">
                     <p className="mx-auto max-w-[36rem] text-center text-body-sm leading-relaxed text-brand-dark/75">
-                      This sprint review is saved, you can open it anytime from{" "}
+                      This sprint review is saved—you can open it anytime from{" "}
                       <Link
                         href="/past-sprints"
                         className="font-medium text-brand-primary underline decoration-brand-primary/40 underline-offset-2 transition hover:opacity-90"

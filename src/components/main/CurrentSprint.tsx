@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -19,7 +20,6 @@ import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewO
 import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
 import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
 
-// Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 type SprintTaskRow = {
   id: string;
@@ -250,7 +250,6 @@ function FilterChip({
   );
 }
 
-/** Title row: Finish Sprint and Refresh (sprint review CTA lives in {@link SprintReviewPromptOverlay}). */
 function SprintPageHeader({
   title,
   onRefresh,
@@ -314,7 +313,8 @@ export default function CurrentSprint({
   const [nextSprintWelcomeOpen, setNextSprintWelcomeOpen] = useState(false);
   const [githubTicketsOverlayOpen, setGithubTicketsOverlayOpen] =
     useState(false);
-  const [pendingSprintFocus, setPendingSprintFocus] = useState("");
+  /** Sprint focus from welcome overlay; read when the finish-sprint API exists. */
+  const pendingSprintFocusRef = useRef("");
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
   const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
@@ -326,7 +326,7 @@ export default function CurrentSprint({
       setSprintReviewPreviewOpen(false);
       setNextSprintWelcomeOpen(false);
       setGithubTicketsOverlayOpen(false);
-      setPendingSprintFocus("");
+      pendingSprintFocusRef.current = "";
     }
   }, [status]);
 
@@ -339,7 +339,6 @@ export default function CurrentSprint({
     if (!groupId || !sprint) return;
     setIsFinishingSprint(true);
     try {
-      // API runs when user continues from the next-sprint welcome step.
       setFinishConfirmOpen(false);
       setSprintReviewPromptOpen(true);
     } finally {
@@ -347,13 +346,11 @@ export default function CurrentSprint({
     }
   }, [groupId, sprint]);
 
-  /** Skip on the post-finish prompt → next-sprint welcome (same as preview Continue). */
   const skipSprintReviewToNextSprintWelcome = useCallback(() => {
     setSprintReviewPromptOpen(false);
     setNextSprintWelcomeOpen(true);
   }, []);
 
-  /** Backdrop / Escape on post-finish prompt — abort without final confirm. */
   const abortSprintReviewPrompt = useCallback(() => {
     setSprintReviewPromptOpen(false);
     router.refresh();
@@ -364,13 +361,11 @@ export default function CurrentSprint({
     setSprintReviewPreviewOpen(true);
   }, []);
 
-  /** Close preview only (backdrop / Escape); does not open final confirm. */
   const dismissSprintReviewPreview = useCallback(() => {
     setSprintReviewPreviewOpen(false);
     router.refresh();
   }, [router]);
 
-  /** Preview Continue → next-sprint welcome (no refresh yet). */
   const continueFromPreviewToNextSprintWelcome = useCallback(() => {
     setSprintReviewPreviewOpen(false);
     setNextSprintWelcomeOpen(true);
@@ -381,11 +376,10 @@ export default function CurrentSprint({
     router.refresh();
   }, [router]);
 
-  /** Welcome Continue → GitHub tickets step (hand-off finishes on that overlay). */
   const proceedFromWelcomeToGithubTickets = useCallback(
     (sprintFocus: string) => {
       if (!groupId || !sprint) return;
-      setPendingSprintFocus(sprintFocus);
+      pendingSprintFocusRef.current = sprintFocus;
       setNextSprintWelcomeOpen(false);
       setGithubTicketsOverlayOpen(true);
     },
@@ -394,7 +388,7 @@ export default function CurrentSprint({
 
   const dismissGithubTicketsOverlay = useCallback(() => {
     setGithubTicketsOverlayOpen(false);
-    setPendingSprintFocus("");
+    pendingSprintFocusRef.current = "";
     router.refresh();
   }, [router]);
 
@@ -402,15 +396,14 @@ export default function CurrentSprint({
     if (!groupId || !sprint) return;
     setIsSprintHandoffSubmitting(true);
     try {
-      // TODO: POST/PATCH finish current sprint / start next; persist `pendingSprintFocus`.
-      void pendingSprintFocus;
+      // TODO: POST/PATCH finish sprint & start next; body includes pendingSprintFocusRef.current
       setGithubTicketsOverlayOpen(false);
-      setPendingSprintFocus("");
+      pendingSprintFocusRef.current = "";
       router.refresh();
     } finally {
       setIsSprintHandoffSubmitting(false);
     }
-  }, [groupId, sprint, router, pendingSprintFocus]);
+  }, [groupId, sprint, router]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;

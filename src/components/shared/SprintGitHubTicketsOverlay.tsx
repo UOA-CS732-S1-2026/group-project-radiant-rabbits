@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Second step after next-sprint welcome: shows `metrics.tasks` in the same row layout
+ * as Current Sprint → Sprint Tasks, or empty-state copy pointing users to GitHub.
+ */
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import Button from "@/components/shared/Button";
@@ -15,14 +19,13 @@ export type SprintGitHubTicketRow = {
 
 export type SprintGitHubTicketsOverlayProps = {
   open: boolean;
-  /** Issues synced from GitHub for the current sprint board. */
   tasks: SprintGitHubTicketRow[];
   onContinue: () => void;
-  /** Backdrop tap and Escape — abort hand-off (parent typically refreshes). */
   onDismiss: () => void;
   isContinuing?: boolean;
 };
 
+/** Same pill styles as the Current Sprint page task list. */
 function StatusBadge({ status }: { status: TaskStatus }) {
   const styles: Record<TaskStatus, string> = {
     TODO: "bg-brand-todo text-brand-surface",
@@ -43,9 +46,6 @@ function StatusBadge({ status }: { status: TaskStatus }) {
   );
 }
 
-/**
- * Shown after next-sprint welcome: lists GitHub-linked board issues or prompts to add some on GitHub.
- */
 export default function SprintGitHubTicketsOverlay({
   open,
   tasks,
@@ -54,7 +54,6 @@ export default function SprintGitHubTicketsOverlay({
   isContinuing = false,
 }: SprintGitHubTicketsOverlayProps) {
   const headingId = useId();
-  const listId = useId();
   const hasTickets = tasks.length > 0;
 
   useEffect(() => {
@@ -78,6 +77,7 @@ export default function SprintGitHubTicketsOverlay({
   const overlay =
     open && typeof document !== "undefined"
       ? createPortal(
+          // z above welcome (100) and sprint review preview (101)
           <div className="fixed inset-0 z-[102]">
             <button
               type="button"
@@ -113,7 +113,6 @@ export default function SprintGitHubTicketsOverlay({
                   <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
                     {hasTickets ? (
                       <ul
-                        id={listId}
                         aria-label="Sprint issues from GitHub"
                         className="list-none space-y-md p-0"
                       >
