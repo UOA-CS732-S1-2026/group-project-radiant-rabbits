@@ -247,7 +247,7 @@ function FilterChip({
   );
 }
 
-/** Title row: Generate Sprint Review, Finish Sprint, Refresh (same row as Refresh styling for the two sm buttons). */
+/** Title row: Finish Sprint and Refresh (sprint review CTA lives in {@link SprintReviewPromptOverlay}). */
 function SprintPageHeader({
   title,
   onRefresh,
@@ -269,9 +269,6 @@ function SprintPageHeader({
         {title}
       </h2>
       <div className="flex w-full max-w-full shrink-0 flex-col gap-sm sm:w-auto sm:max-w-none sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end sm:gap-md">
-        <Button className="w-full sm:w-auto" size="lg">
-          Generate Sprint Review
-        </Button>
         <Button
           className="w-full sm:w-auto"
           variant="purple"
