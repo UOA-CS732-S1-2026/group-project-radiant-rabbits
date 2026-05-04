@@ -69,34 +69,32 @@ export default function ConfirmOverlay({
                   role="alertdialog"
                   aria-modal="true"
                   aria-labelledby={headingId}
-                  className="w-full min-w-0 rounded-2xl bg-[#F1F5F9] px-4 py-4 shadow-xl md:px-5 md:py-5"
+                  className="relative w-full min-w-0 rounded-2xl bg-[#F1F5F9] px-4 pb-5 pt-4 text-center shadow-xl md:px-6 md:pb-6 md:pt-5"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <h2
-                      id={headingId}
-                      className="text-h3 font-bold leading-snug text-brand-dark"
-                    >
-                      {title}
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      aria-label="Close"
-                      disabled={isConfirming}
-                      className="shrink-0 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-40"
-                    >
-                      <X className="h-5 w-5" aria-hidden />
-                    </button>
-                  </div>
-                  <p className="mt-3 text-body-md leading-relaxed text-brand-dark/90">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close"
+                    disabled={isConfirming}
+                    className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-40 md:right-4 md:top-4"
+                  >
+                    <X className="h-5 w-5" aria-hidden />
+                  </button>
+                  <h2
+                    id={headingId}
+                    className="mx-auto max-w-[22rem] px-8 text-h3 font-bold leading-snug text-brand-dark md:max-w-none md:px-10"
+                  >
+                    {title}
+                  </h2>
+                  <p className="mx-auto mt-3 max-w-[22rem] text-body-md leading-relaxed text-brand-dark/90 md:max-w-none">
                     {description}
                   </p>
-                  <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-md">
+                  <div className="mt-6 flex flex-col-reverse items-center justify-center gap-3 sm:flex-row sm:gap-md">
                     <Button
                       type="button"
                       variant="grey"
                       size="sm"
-                      className="w-full sm:w-auto"
+                      className="w-full min-w-[8rem] max-w-[14rem] sm:w-auto"
                       onClick={onClose}
                       disabled={isConfirming}
                     >
@@ -106,7 +104,7 @@ export default function ConfirmOverlay({
                       type="button"
                       variant="purple"
                       size="sm"
-                      className="w-full sm:w-auto"
+                      className="w-full min-w-[8rem] max-w-[14rem] sm:w-auto"
                       onClick={onConfirm}
                       disabled={isConfirming}
                     >
