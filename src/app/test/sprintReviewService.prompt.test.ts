@@ -32,7 +32,20 @@ describe("buildSprintReviewPrompt", () => {
         issuesClosed: 5,
         pullRequestsOpened: 4,
         pullRequestsMerged: 3,
+        tasksTotal: 3,
+        tasksTodo: 1,
+        tasksInProgress: 1,
+        tasksDone: 1,
       },
+      tasks: [
+        {
+          id: "task-1",
+          title: "Implement sprint review endpoint",
+          status: "DONE",
+          issueNumber: 101,
+          assignees: ["Alice"],
+        },
+      ],
       topContributors: [
         {
           name: "Alice",
@@ -41,6 +54,8 @@ describe("buildSprintReviewPrompt", () => {
           issuesClosed: 2,
           pullRequestsOpened: 2,
           pullRequestsMerged: 2,
+          tasksAssigned: 1,
+          tasksDone: 1,
           total: 17,
         },
       ],
@@ -107,6 +122,8 @@ describe("buildSprintReviewPrompt", () => {
 
     expect(prompt).toContain('"name": "Sprint 8"');
     expect(prompt).toContain('"commitCount": 12');
+    expect(prompt).toContain('"tasksTotal": 3');
+    expect(prompt).toContain('"Implement sprint review endpoint"');
     expect(prompt).toContain('"topContributors"');
     expect(prompt).toContain('"recentPullRequestsMerged"');
   });

@@ -5,6 +5,7 @@ import {
   Issue,
   PullRequest,
   Sprint,
+  SprintTask,
   User,
 } from "@/app/lib/models";
 import { normalizeUserRefString } from "@/app/lib/userRef";
@@ -19,6 +20,8 @@ type SprintReviewContributor = {
   issuesClosed: number;
   pullRequestsOpened: number;
   pullRequestsMerged: number;
+  tasksAssigned: number;
+  tasksDone: number;
   total: number;
 };
 
@@ -26,6 +29,14 @@ type SprintReviewMember = {
   id: string;
   name: string;
   email: string | null;
+};
+
+type SprintReviewTask = {
+  id: string;
+  title: string;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  issueNumber: number | null;
+  assignees: string[];
 };
 
 export type SprintReviewAggregate = {
@@ -52,7 +63,12 @@ export type SprintReviewAggregate = {
     issuesClosed: number;
     pullRequestsOpened: number;
     pullRequestsMerged: number;
+    tasksTotal: number;
+    tasksTodo: number;
+    tasksInProgress: number;
+    tasksDone: number;
   };
+  tasks: SprintReviewTask[];
   topContributors: SprintReviewContributor[];
   highlights: {
     recentCommits: Array<{
@@ -149,6 +165,8 @@ function upsertContributor(
       issuesClosed: 0,
       pullRequestsOpened: 0,
       pullRequestsMerged: 0,
+      tasksAssigned: 0,
+      tasksDone: 0,
       total: 0,
     });
   }
@@ -225,6 +243,7 @@ export async function aggregateSprintReviewData(
     issuesClosed,
     pullRequestsOpened,
     pullRequestsMerged,
+    sprintTasks,
   ] = await Promise.all([
     Commit.find({
       group: gid,
@@ -257,6 +276,12 @@ export async function aggregateSprintReviewData(
       mergedAt: { $gte: start, $lte: end },
     })
       .sort({ mergedAt: -1 })
+      .lean(),
+    SprintTask.find({
+      group: gid,
+      sprint: sid,
+    })
+      .sort({ issueNumber: 1, title: 1 })
       .lean(),
   ]);
 
@@ -342,6 +367,20 @@ export async function aggregateSprintReviewData(
     contributor.total += 1;
   }
 
+  for (const task of sprintTasks) {
+    for (const assignee of task.assignees ?? []) {
+      const name = normalizeAuthorName(assignee);
+      const contributor = upsertContributor(contributorMap, name);
+
+      contributor.tasksAssigned += 1;
+      contributor.total += 1;
+
+      if (task.status === "DONE") {
+        contributor.tasksDone += 1;
+      }
+    }
+  }
+
   const topContributors = Array.from(contributorMap.values())
     .sort((a, b) => {
       if (b.total !== a.total) {
@@ -375,7 +414,23 @@ export async function aggregateSprintReviewData(
       issuesClosed: issuesClosed.length,
       pullRequestsOpened: pullRequestsOpened.length,
       pullRequestsMerged: pullRequestsMerged.length,
+      tasksTotal: sprintTasks.length,
+      tasksTodo: sprintTasks.filter((task) => task.status === "TODO").length,
+      tasksInProgress: sprintTasks.filter(
+        (task) => task.status === "IN_PROGRESS",
+      ).length,
+      tasksDone: sprintTasks.filter((task) => task.status === "DONE").length,
     },
+    tasks: sprintTasks.map((task) => ({
+      id: String(task._id),
+      title: truncateText(task.title, 120),
+      status: task.status,
+      issueNumber:
+        typeof task.issueNumber === "number" ? task.issueNumber : null,
+      assignees: (task.assignees ?? [])
+        .map((assignee: string) => assignee.trim())
+        .filter(Boolean),
+    })),
     topContributors,
     highlights: {
       recentCommits: commits.slice(0, MAX_RECENT_ITEMS).map((commit) => ({
@@ -501,18 +556,19 @@ async function generateWithGemini(
   prompt: string,
 ): Promise<GeneratedSprintReview> {
   const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+  const model = process.env.GEMINI_MODEL ?? "gemini-flash-latest";
 
   if (!apiKey) {
     throw new SprintReviewAiError("GEMINI_API_KEY is not configured");
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-goog-api-key": apiKey,
     },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],

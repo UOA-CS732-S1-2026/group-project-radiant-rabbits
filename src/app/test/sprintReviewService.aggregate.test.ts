@@ -6,6 +6,7 @@ import {
   Issue,
   PullRequest,
   Sprint,
+  SprintTask,
   User,
 } from "@/app/lib/models";
 import {
@@ -34,6 +35,7 @@ afterEach(async () => {
     Issue.deleteMany({}),
     PullRequest.deleteMany({}),
     Sprint.deleteMany({}),
+    SprintTask.deleteMany({}),
     Group.deleteMany({}),
     User.deleteMany({}),
   ]);
@@ -179,6 +181,32 @@ describe("aggregateSprintReviewData", () => {
       },
     ]);
 
+    await SprintTask.insertMany([
+      {
+        group: group._id,
+        sprint: sprint._id,
+        title: "Wire review summary to sprint data",
+        status: "DONE",
+        issueNumber: 201,
+        assignees: ["Alice"],
+      },
+      {
+        group: group._id,
+        sprint: sprint._id,
+        title: "Polish review UI",
+        status: "IN_PROGRESS",
+        issueNumber: 202,
+        assignees: ["Bob"],
+      },
+      {
+        group: group._id,
+        title: "Backlog task outside sprint",
+        status: "TODO",
+        issueNumber: 203,
+        assignees: ["Alice"],
+      },
+    ]);
+
     const result = await aggregateSprintReviewData(
       group._id.toString(),
       sprint._id.toString(),
@@ -197,6 +225,10 @@ describe("aggregateSprintReviewData", () => {
       issuesClosed: 1,
       pullRequestsOpened: 2,
       pullRequestsMerged: 1,
+      tasksTotal: 2,
+      tasksTodo: 0,
+      tasksInProgress: 1,
+      tasksDone: 1,
     });
 
     expect(result.topContributors[0].name).toBe("Alice");
@@ -208,6 +240,22 @@ describe("aggregateSprintReviewData", () => {
     expect(result.highlights.recentIssuesClosed).toHaveLength(1);
     expect(result.highlights.recentPullRequestsOpened).toHaveLength(2);
     expect(result.highlights.recentPullRequestsMerged).toHaveLength(1);
+    expect(result.tasks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "Wire review summary to sprint data",
+          status: "DONE",
+          issueNumber: 201,
+          assignees: ["Alice"],
+        }),
+        expect.objectContaining({
+          title: "Polish review UI",
+          status: "IN_PROGRESS",
+          issueNumber: 202,
+          assignees: ["Bob"],
+        }),
+      ]),
+    );
   });
 
   it("returns empty metrics gracefully when there is no sprint activity", async () => {
@@ -224,7 +272,12 @@ describe("aggregateSprintReviewData", () => {
       issuesClosed: 0,
       pullRequestsOpened: 0,
       pullRequestsMerged: 0,
+      tasksTotal: 0,
+      tasksTodo: 0,
+      tasksInProgress: 0,
+      tasksDone: 0,
     });
+    expect(result.tasks).toEqual([]);
     expect(result.topContributors).toEqual([]);
     expect(result.highlights.recentCommits).toEqual([]);
   });

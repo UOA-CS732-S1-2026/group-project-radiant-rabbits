@@ -30,7 +30,9 @@ export default function PageTopBar({
         {/* Right: Button + Avatar */}
         <div className="flex items-center gap-md">
           {/* Use design system button (no hardcoded color) */}
-          <Button size="lg">Generate Sprint Review</Button>
+          <Button size="lg" href="/summary">
+            Generate Sprint Review
+          </Button>
 
           {/* Avatar */}
           {profileImageUrl ? (
