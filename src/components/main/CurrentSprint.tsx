@@ -239,15 +239,37 @@ function FilterChip({
   );
 }
 
-// Helper function to compute the status message for the sprint
-function StatusBlock({ message }: { message: string }) {
+/** Title row with Generate Sprint Review (left) and Refresh (right) — shown on every current-sprint state. */
+function SprintPageHeader({
+  title,
+  onRefresh,
+  isRefreshing,
+  canRefresh,
+}: {
+  title: string;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  canRefresh: boolean;
+}) {
   return (
-    <div className="min-h-screen bg-brand-background">
-      <PageContainer>
-        <Card className="border border-brand-dark/10 p-xl shadow-none">
-          <p className="text-body-md text-brand-dark/70">{message}</p>
-        </Card>
-      </PageContainer>
+    <div className="flex flex-col gap-md sm:flex-row sm:items-start sm:justify-between sm:gap-md">
+      <h2 className="min-w-0 flex-1 text-h3 font-bold text-brand-dark lg:text-3xl">
+        {title}
+      </h2>
+      <div className="flex w-full shrink-0 flex-col gap-sm sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end sm:gap-md">
+        <Button className="w-full sm:w-auto" size="lg">
+          Generate Sprint Review
+        </Button>
+        <Button
+          className="w-full sm:w-auto"
+          variant="purple"
+          size="sm"
+          onClick={onRefresh}
+          disabled={isRefreshing || !canRefresh}
+        >
+          {isRefreshing ? "Refreshing..." : "Refresh"}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -345,15 +367,47 @@ export default function CurrentSprint({
 
   if (status === "error") {
     return (
-      <StatusBlock
-        message={statusMessage ?? "Failed to load current sprint."}
-      />
+      <div className="min-h-screen bg-brand-background">
+        <PageContainer>
+          <Card className="space-y-md border border-brand-dark/10 p-xl shadow-none">
+            <SprintPageHeader
+              title="Current Sprint"
+              onRefresh={handleRefresh}
+              isRefreshing={isRefreshing}
+              canRefresh={Boolean(groupId)}
+            />
+            {refreshError ? (
+              <p className="text-body-md text-red-700">{refreshError}</p>
+            ) : null}
+            <p className="text-body-md text-brand-dark/70">
+              {statusMessage ?? "Failed to load current sprint."}
+            </p>
+          </Card>
+        </PageContainer>
+      </div>
     );
   }
 
   if (status === "empty" || !sprint) {
     return (
-      <StatusBlock message={statusMessage ?? "No current sprint available."} />
+      <div className="min-h-screen bg-brand-background">
+        <PageContainer>
+          <Card className="space-y-md border border-brand-dark/10 p-xl shadow-none">
+            <SprintPageHeader
+              title="Current Sprint"
+              onRefresh={handleRefresh}
+              isRefreshing={isRefreshing}
+              canRefresh={Boolean(groupId)}
+            />
+            {refreshError ? (
+              <p className="text-body-md text-red-700">{refreshError}</p>
+            ) : null}
+            <p className="text-body-md text-brand-dark/70">
+              {statusMessage ?? "No current sprint available."}
+            </p>
+          </Card>
+        </PageContainer>
+      </div>
     );
   }
 
@@ -372,19 +426,12 @@ export default function CurrentSprint({
             ) : null}
 
             {/* Current Sprint */}
-            <div className="flex items-start justify-between gap-md">
-              <h2 className="lg:text-3xl text-h3 font-bold text-brand-dark">
-                {sprint.name}
-              </h2>
-              <Button
-                variant="purple"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? "Refreshing..." : "Refresh"}
-              </Button>
-            </div>
+            <SprintPageHeader
+              title={sprint.name}
+              onRefresh={handleRefresh}
+              isRefreshing={isRefreshing}
+              canRefresh={Boolean(groupId)}
+            />
 
             {/* Sprint Focus */}
             <BorderedPanel as="section">
