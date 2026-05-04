@@ -14,6 +14,7 @@ import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import PageContainer from "@/components/shared/PageContainer";
+import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewOverlay";
 import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
 
 // Fetch all data required to display the current sprint metrics and pass it to the CurrentSprint component for rendering
@@ -307,12 +308,14 @@ export default function CurrentSprint({
   const [refreshError, setRefreshError] = useState("");
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
+  const [sprintReviewPreviewOpen, setSprintReviewPreviewOpen] = useState(false);
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
 
   useEffect(() => {
     if (status !== "ready") {
       setFinishConfirmOpen(false);
       setSprintReviewPromptOpen(false);
+      setSprintReviewPreviewOpen(false);
     }
   }, [status]);
 
@@ -340,7 +343,11 @@ export default function CurrentSprint({
 
   const handleGenerateSprintReviewFromOverlay = useCallback(() => {
     setSprintReviewPromptOpen(false);
-    // TODO: Navigate to or trigger sprint review flow.
+    setSprintReviewPreviewOpen(true);
+  }, []);
+
+  const dismissSprintReviewPreview = useCallback(() => {
+    setSprintReviewPreviewOpen(false);
     router.refresh();
   }, [router]);
 
@@ -750,6 +757,10 @@ export default function CurrentSprint({
         open={sprintReviewPromptOpen}
         onClose={dismissSprintReviewPrompt}
         onGenerateSprintReview={handleGenerateSprintReviewFromOverlay}
+      />
+      <SprintReviewPreviewOverlay
+        open={sprintReviewPreviewOpen}
+        onDismiss={dismissSprintReviewPreview}
       />
     </>
   );
