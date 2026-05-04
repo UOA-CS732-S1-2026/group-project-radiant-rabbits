@@ -50,6 +50,18 @@ function formatGeneratedAt(value: string | null): string {
   return date.toLocaleString();
 }
 
+async function parseJsonResponse<T>(
+  response: Response,
+  fallbackMessage: string,
+): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(fallbackMessage);
+  }
+
+  return (await response.json()) as T;
+}
+
 export default function SummaryPage() {
   const [groups, setGroups] = useState<GroupSummaryOption[]>([]);
   const [sprints, setSprints] = useState<SprintSummaryOption[]>([]);
@@ -176,6 +188,19 @@ export default function SummaryPage() {
       return;
     }
 
+    const activeSprint = sprints.find(
+      (sprint) => sprint._id === selectedSprintId,
+    );
+
+    if (!activeSprint) {
+      setReview("");
+      setReviewMeta({ generatedAt: null, model: null, provider: null });
+      if (sprints.length > 0) {
+        setErrorMessage("Selected sprint no longer exists.");
+      }
+      return;
+    }
+
     let cancelled = false;
 
     async function fetchPersistedReview() {
@@ -186,7 +211,15 @@ export default function SummaryPage() {
         const response = await fetch(
           `/api/groups/${selectedGroupId}/sprints/${selectedSprintId}`,
         );
-        const payload = await response.json();
+        const payload = await parseJsonResponse<{
+          aiReview?: {
+            text?: unknown;
+            generatedAt?: unknown;
+            model?: unknown;
+            provider?: unknown;
+          };
+          error?: string;
+        }>(response, "Failed to load sprint details");
 
         if (!response.ok) {
           throw new Error(payload.error || "Failed to load sprint details");
@@ -237,10 +270,19 @@ export default function SummaryPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedGroupId, selectedSprintId]);
+  }, [selectedGroupId, selectedSprintId, sprints]);
 
   async function requestReview(regenerate: boolean) {
     if (!selectedGroupId || !selectedSprintId) {
+      return;
+    }
+
+    const activeSprint = sprints.find(
+      (sprint) => sprint._id === selectedSprintId,
+    );
+
+    if (!activeSprint) {
+      setErrorMessage("Selected sprint no longer exists.");
       return;
     }
 
@@ -259,7 +301,13 @@ export default function SummaryPage() {
         },
       );
 
-      const payload = await response.json();
+      const payload = await parseJsonResponse<{
+        review?: unknown;
+        generatedAt?: unknown;
+        model?: unknown;
+        provider?: unknown;
+        error?: string;
+      }>(response, "Failed to generate sprint review");
 
       if (!response.ok) {
         throw new Error(payload.error || "Failed to generate sprint review");
