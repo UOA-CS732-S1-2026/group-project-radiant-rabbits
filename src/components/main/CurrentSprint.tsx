@@ -239,26 +239,40 @@ function FilterChip({
   );
 }
 
-/** Title row with Generate Sprint Review (left) and Refresh (right) — shown on every current-sprint state. */
+/** Title row: Generate Sprint Review, Finish Sprint, Refresh (same row as Refresh styling for the two sm buttons). */
 function SprintPageHeader({
   title,
   onRefresh,
+  onFinishSprint,
   isRefreshing,
   canRefresh,
+  canFinishSprint,
 }: {
   title: string;
   onRefresh: () => void;
+  onFinishSprint: () => void;
   isRefreshing: boolean;
   canRefresh: boolean;
+  canFinishSprint: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-md sm:flex-row sm:items-start sm:justify-between sm:gap-md">
-      <h2 className="min-w-0 flex-1 text-h3 font-bold text-brand-dark lg:text-3xl">
+    <div className="flex flex-wrap items-start justify-between gap-md">
+      <h2 className="min-w-0 max-w-full flex-1 text-h3 font-bold text-brand-dark lg:text-3xl">
         {title}
       </h2>
-      <div className="flex w-full shrink-0 flex-col gap-sm sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end sm:gap-md">
+      <div className="flex w-full max-w-full shrink-0 flex-col gap-sm sm:w-auto sm:max-w-none sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end sm:gap-md">
         <Button className="w-full sm:w-auto" size="lg">
           Generate Sprint Review
+        </Button>
+        <Button
+          className="w-full sm:w-auto"
+          variant="purple"
+          size="sm"
+          type="button"
+          onClick={onFinishSprint}
+          disabled={!canFinishSprint}
+        >
+          Finish Sprint
         </Button>
         <Button
           className="w-full sm:w-auto"
@@ -286,6 +300,11 @@ export default function CurrentSprint({
   const [issueFilter, setIssueFilter] = useState<string>("all");
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
+
+  const handleFinishSprint = useCallback(() => {
+    if (!groupId || !sprint) return;
+    // TODO: POST/PATCH to complete current sprint, then router.refresh().
+  }, [groupId, sprint]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -373,8 +392,10 @@ export default function CurrentSprint({
             <SprintPageHeader
               title="Current Sprint"
               onRefresh={handleRefresh}
+              onFinishSprint={handleFinishSprint}
               isRefreshing={isRefreshing}
               canRefresh={Boolean(groupId)}
+              canFinishSprint={false}
             />
             {refreshError ? (
               <p className="text-body-md text-red-700">{refreshError}</p>
@@ -396,8 +417,10 @@ export default function CurrentSprint({
             <SprintPageHeader
               title="Current Sprint"
               onRefresh={handleRefresh}
+              onFinishSprint={handleFinishSprint}
               isRefreshing={isRefreshing}
               canRefresh={Boolean(groupId)}
+              canFinishSprint={false}
             />
             {refreshError ? (
               <p className="text-body-md text-red-700">{refreshError}</p>
@@ -429,8 +452,10 @@ export default function CurrentSprint({
             <SprintPageHeader
               title={sprint.name}
               onRefresh={handleRefresh}
+              onFinishSprint={handleFinishSprint}
               isRefreshing={isRefreshing}
               canRefresh={Boolean(groupId)}
+              canFinishSprint={Boolean(groupId)}
             />
 
             {/* Sprint Focus */}
