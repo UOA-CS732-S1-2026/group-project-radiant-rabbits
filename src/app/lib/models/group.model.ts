@@ -53,7 +53,7 @@ const groupSchema = new Schema(
       type: Date,
       default: null,
     },
-    sprintLengthDays: {
+    sprintLengthWeeks: {
       type: Number,
       min: 1,
       default: null,
@@ -70,6 +70,11 @@ const groupSchema = new Schema(
     },
     syncError: {
       type: String,
+      default: null,
+    },
+    // Whether the linked GitHub Project has an iteration field.
+    iterationFieldConfigured: {
+      type: Boolean,
       default: null,
     },
   },

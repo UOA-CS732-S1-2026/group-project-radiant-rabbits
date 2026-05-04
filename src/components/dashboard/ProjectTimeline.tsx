@@ -5,34 +5,9 @@ export type Sprint = {
 
 type ProjectTimelineProps = {
   sprints: Sprint[];
-  currentSprint: number;
-  totalSprints: number;
 };
 
-export default function ProjectTimeline({
-  sprints,
-  currentSprint,
-  totalSprints,
-}: ProjectTimelineProps) {
-  const sprintLabels = Array.from(
-    { length: totalSprints },
-    (_, i) => `Sprint ${i + 1}`,
-  );
-
-  // Font size shrinks as sprint count grows
-  const labelSize =
-    totalSprints <= 6
-      ? "text-body-xs"
-      : totalSprints <= 10
-        ? "text-[0.65rem]"
-        : "text-[0.55rem]";
-
-  // Progress bar fills to the centre of the current sprint's column
-  const progressPercent = Math.min(
-    ((currentSprint - 0.5) / totalSprints) * 100,
-    100,
-  );
-
+export default function ProjectTimeline({ sprints }: ProjectTimelineProps) {
   // Create the velocity chart
   const maxVelocity = Math.max(...sprints.map((s) => s.velocity));
   const yTicks = getYTicks(maxVelocity);
@@ -41,7 +16,7 @@ export default function ProjectTimeline({
   // Scale SVG width with sprint count so labels don't overlap
   const baseWidth = 400;
   const chartWidth = Math.max(baseWidth, sprints.length * 60);
-  const chartHeight = 160;
+  const chartHeight = 120;
   const paddingX = 30;
   const paddingY = 20;
   const usableWidth = chartWidth - paddingX * 2;
@@ -66,40 +41,10 @@ export default function ProjectTimeline({
     sprints.length <= 6 ? 9 : sprints.length <= 10 ? 7.5 : 6;
 
   return (
-    <div className="flex flex-col gap-md">
-      {/* Project Timeline */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
-          Project Timeline
-        </h3>
-        <div>
-          {/* Sprint labels — each sits in a column equal to 1/totalSprints */}
-          <div className="mb-xs flex">
-            {sprintLabels.map((label, i) => (
-              <span
-                key={label}
-                className={`flex-1 text-center ${labelSize} ${
-                  i < currentSprint
-                    ? "font-medium text-brand-dark"
-                    : "text-brand-dark/40"
-                }`}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-brand-accent/20">
-            <div
-              className="h-full rounded-full bg-brand-accent transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
+    <div className="flex flex-col gap-md mb-lg">
       {/* Sprint Velocity */}
-      <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
-        <h3 className="mb-md text-body-lg font-semibold text-brand-dark">
+      <div className="rounded-2xl bg-brand-surface p-md shadow-md">
+        <h3 className="text-body-lg font-semibold text-brand-dark">
           Sprint Velocity
         </h3>
         <div className="overflow-x-auto">
@@ -190,11 +135,14 @@ export default function ProjectTimeline({
 }
 
 function getYTicks(max: number): number[] {
-  const step = Math.ceil(max / 4 / 5) * 5;
+  // Guard against an empty velocity series (max = 0 or -Infinity) — without this
+  // step rounds to 0, yMax becomes 0, and every chart coordinate divides by zero.
+  const safeMax = Math.max(max, 5);
+  const step = Math.ceil(safeMax / 4 / 5) * 5;
   const ticks: number[] = [];
-  for (let v = 0; v <= max + step; v += step) {
+  for (let v = 0; v <= safeMax + step; v += step) {
     ticks.push(v);
-    if (v >= max) break;
+    if (v >= safeMax) break;
   }
   return ticks;
 }

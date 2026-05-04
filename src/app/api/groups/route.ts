@@ -6,7 +6,7 @@ import { checkRepoAccess } from "@/app/lib/githubService";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
-import { Group } from "../../lib/models";
+import { Group, User } from "../../lib/models";
 
 // Helper function to generate a random 8-character invite code
 function generateInviteCode() {
@@ -23,7 +23,6 @@ function generateInviteCode() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(options);
-
     const sessionWithToken = session as { accessToken?: string };
 
     // Check if user has logged in with a valid Github account
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
 
     const { description, repoOwner, repoName } = await request.json();
 
-    // If the user does not input a name or description, return an error
+    // If the user does not input a description, return an error
     if (!description) {
       return NextResponse.json(
         { error: "Description is required" },
@@ -60,11 +59,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Connect to MongoDB and create a new group with the provided name, description
-    // Generate a unique invite code
     await connectMongoDB();
 
-    // Check if the group already exists for the associated repository
+    // Check if group already exists for the associated repository
     const existingGroup = await Group.findOne({ repoOwner, repoName });
 
     // If the group already exists for the repository, return an error
@@ -94,42 +91,41 @@ export async function POST(request: Request) {
 
     const group = await Group.create({
       name: repoName,
-      description: description,
-      inviteCode: inviteCode,
+      description,
+      inviteCode,
       members: [normalizeUserRef(session.user.id)],
-      repoOwner: repoOwner,
-      repoName: repoName,
+      repoOwner,
+      repoName,
       createdBy: normalizeUserRef(session.user.id),
-      createdAt: new Date(),
-      updatedAt: new Date(),
       lastSyncAt: new Date(),
       syncStatus: "pending",
       syncError: null,
     });
 
-    // Fire-and-forget: start syncing GitHub data in the background.
-    // This doesn't block response — the user sees "Group Created" while the sync runs behind the scenes.
-    if (sessionWithToken.accessToken) {
-      triggerSync(group._id.toString(), sessionWithToken.accessToken);
-    }
+    // Update user using githubId
+    await User.findOneAndUpdate(
+      { githubId: session.user.id },
+      { currentGroupId: group._id },
+    );
+
+    // Trigger background sync
+    triggerSync(group._id.toString(), sessionWithToken.accessToken);
 
     // Return the created group info with a success message
     return NextResponse.json(
       {
         group: {
+          id: group._id,
           name: group.name,
           description: group.description,
           inviteCode: group.inviteCode,
-          members: group.members,
-          createdBy: group.createdBy,
-          createdAt: group.createdAt,
-          updatedAt: group.updatedAt,
+          repoOwner: group.repoOwner,
+          repoName: group.repoName,
         },
         message: "Group Successfully Created",
       },
       { status: 201 },
     );
-
     // If there is an internal error, print the error to the console
   } catch (error) {
     log("Error creating group:", error);

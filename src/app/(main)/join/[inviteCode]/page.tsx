@@ -6,10 +6,10 @@ import { checkRepoAccess } from "@/app/lib/githubService";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import PageContainer from "@/components/ui/PageContainer";
-import SectionHeading from "@/components/ui/SectionHeading";
+import Button from "@/components/shared/Button";
+import Card from "@/components/shared/Card";
+import PageContainer from "@/components/shared/PageContainer";
+import SectionHeading from "@/components/shared/SectionHeading";
 
 // Function to retrieve conditional logic for join page via invite code
 export async function joinInviteLogic(
