@@ -1,6 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Download } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import Button from "@/components/shared/Button";
@@ -9,7 +10,7 @@ export type SprintReviewPreviewOverlayProps = {
   open: boolean;
   /** Continue — moves to the next step in the finish flow (e.g. final confirmation). */
   onContinue: () => void;
-  /** X, backdrop tap, and Escape — close preview only (parent typically refreshes). */
+  /** Backdrop tap and Escape — close preview only (parent typically refreshes). */
   onDismiss: () => void;
 };
 
@@ -67,14 +68,22 @@ export default function SprintReviewPreviewOverlay({
                     >
                       Sprint review (preview)
                     </h2>
-                    <button
-                      type="button"
-                      onClick={onDismiss}
-                      aria-label="Close"
-                      className="shrink-0 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
-                    >
-                      <X className="h-5 w-5" aria-hidden />
-                    </button>
+                    <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                      <Button
+                        type="button"
+                        variant="white"
+                        size="sm"
+                        className="gap-1.5 !border-brand-dark/15 shadow-none transition-colors hover:!bg-slate-100 active:!bg-slate-200"
+                        aria-label="Export sprint review"
+                        onClick={() => {}}
+                      >
+                        <Download
+                          className="h-4 w-4 shrink-0 opacity-90"
+                          aria-hidden
+                        />
+                        <span className="hidden sm:inline">Export</span>
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#E2E8F0] px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">
@@ -110,15 +119,27 @@ export default function SprintReviewPreviewOverlay({
                     </div>
                   </div>
 
-                  <div className="shrink-0 border-t border-brand-dark/10 bg-[#F1F5F9] px-4 py-4 text-center sm:px-6">
-                    <Button
-                      type="button"
-                      variant="purple"
-                      size="sm"
-                      onClick={onContinue}
-                    >
-                      Continue
-                    </Button>
+                  <div className="shrink-0 border-t border-brand-dark/10 bg-[#F1F5F9] px-4 py-4 sm:px-6">
+                    <p className="mx-auto max-w-[36rem] text-center text-body-sm leading-relaxed text-brand-dark/75">
+                      This sprint review is saved, you can open it anytime from{" "}
+                      <Link
+                        href="/past-sprints"
+                        className="font-medium text-brand-primary underline decoration-brand-primary/40 underline-offset-2 transition hover:opacity-90"
+                      >
+                        Past Sprints
+                      </Link>
+                      .
+                    </p>
+                    <div className="mt-4 flex justify-center">
+                      <Button
+                        type="button"
+                        variant="purple"
+                        size="sm"
+                        onClick={onContinue}
+                      >
+                        Continue
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
