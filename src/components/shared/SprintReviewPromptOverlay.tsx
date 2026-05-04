@@ -1,13 +1,12 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import Button from "@/components/shared/Button";
 
 export type SprintReviewPromptOverlayProps = {
   open: boolean;
-  /** X, backdrop tap, and Escape — leave without generating (parent decides, e.g. refresh). */
+  /** Backdrop tap and Escape — leave without generating (parent decides, e.g. refresh). */
   onClose: () => void;
   /** Skip — next step in finish flow (e.g. final confirmation). */
   onSkip: () => void;
@@ -19,7 +18,7 @@ export type SprintReviewPromptOverlayProps = {
 
 /**
  * Same shell as {@link ConfirmOverlay}: portal, dimmed backdrop, centered card.
- * Shown after finishing a sprint; Skip and Generate are explicit; X/backdrop/Escape call `onClose`.
+ * Shown after finishing a sprint; Skip and Generate are explicit; backdrop/Escape call `onClose`.
  */
 export default function SprintReviewPromptOverlay({
   open,
@@ -67,17 +66,9 @@ export default function SprintReviewPromptOverlay({
                   aria-labelledby={headingId}
                   className="relative w-full min-w-0 rounded-2xl bg-[#F1F5F9] px-4 pb-5 pt-4 text-center shadow-xl md:px-6 md:pb-6 md:pt-5"
                 >
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    aria-label="Close"
-                    className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary md:right-4 md:top-4"
-                  >
-                    <X className="h-5 w-5" aria-hidden />
-                  </button>
                   <h2
                     id={headingId}
-                    className="mx-auto max-w-[22rem] px-8 text-h3 font-bold leading-snug text-brand-dark md:max-w-none md:px-10"
+                    className="mx-auto max-w-[22rem] text-h3 font-bold leading-snug text-brand-dark md:max-w-none"
                   >
                     {title}
                   </h2>

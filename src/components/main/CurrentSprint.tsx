@@ -14,6 +14,7 @@ import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import PageContainer from "@/components/shared/PageContainer";
+import SprintGitHubTicketsOverlay from "@/components/shared/SprintGitHubTicketsOverlay";
 import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewOverlay";
 import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
 import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
@@ -311,8 +312,11 @@ export default function CurrentSprint({
   const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
   const [sprintReviewPreviewOpen, setSprintReviewPreviewOpen] = useState(false);
   const [nextSprintWelcomeOpen, setNextSprintWelcomeOpen] = useState(false);
+  const [githubTicketsOverlayOpen, setGithubTicketsOverlayOpen] =
+    useState(false);
+  const [pendingSprintFocus, setPendingSprintFocus] = useState("");
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
-  const [isNextSprintWelcomeContinuing, setIsNextSprintWelcomeContinuing] =
+  const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
 
   useEffect(() => {
@@ -321,6 +325,8 @@ export default function CurrentSprint({
       setSprintReviewPromptOpen(false);
       setSprintReviewPreviewOpen(false);
       setNextSprintWelcomeOpen(false);
+      setGithubTicketsOverlayOpen(false);
+      setPendingSprintFocus("");
     }
   }, [status]);
 
@@ -347,7 +353,7 @@ export default function CurrentSprint({
     setNextSprintWelcomeOpen(true);
   }, []);
 
-  /** X / backdrop / Escape on post-finish prompt — abort without final confirm. */
+  /** Backdrop / Escape on post-finish prompt — abort without final confirm. */
   const abortSprintReviewPrompt = useCallback(() => {
     setSprintReviewPromptOpen(false);
     router.refresh();
@@ -358,7 +364,7 @@ export default function CurrentSprint({
     setSprintReviewPreviewOpen(true);
   }, []);
 
-  /** Close preview only (X / backdrop / Escape); does not open final confirm. */
+  /** Close preview only (backdrop / Escape); does not open final confirm. */
   const dismissSprintReviewPreview = useCallback(() => {
     setSprintReviewPreviewOpen(false);
     router.refresh();
@@ -375,17 +381,36 @@ export default function CurrentSprint({
     router.refresh();
   }, [router]);
 
-  const continueNextSprintWelcome = useCallback(async () => {
-    if (!groupId || !sprint) return;
-    setIsNextSprintWelcomeContinuing(true);
-    try {
-      // TODO: POST/PATCH finish current sprint / start next (and later persist summary).
+  /** Welcome Continue → GitHub tickets step (hand-off finishes on that overlay). */
+  const proceedFromWelcomeToGithubTickets = useCallback(
+    (sprintFocus: string) => {
+      if (!groupId || !sprint) return;
+      setPendingSprintFocus(sprintFocus);
       setNextSprintWelcomeOpen(false);
+      setGithubTicketsOverlayOpen(true);
+    },
+    [groupId, sprint],
+  );
+
+  const dismissGithubTicketsOverlay = useCallback(() => {
+    setGithubTicketsOverlayOpen(false);
+    setPendingSprintFocus("");
+    router.refresh();
+  }, [router]);
+
+  const finalizeSprintHandoffFromTicketsOverlay = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsSprintHandoffSubmitting(true);
+    try {
+      // TODO: POST/PATCH finish current sprint / start next; persist `pendingSprintFocus`.
+      void pendingSprintFocus;
+      setGithubTicketsOverlayOpen(false);
+      setPendingSprintFocus("");
       router.refresh();
     } finally {
-      setIsNextSprintWelcomeContinuing(false);
+      setIsSprintHandoffSubmitting(false);
     }
-  }, [groupId, sprint, router]);
+  }, [groupId, sprint, router, pendingSprintFocus]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -777,6 +802,7 @@ export default function CurrentSprint({
       </div>
       <ConfirmOverlay
         open={finishConfirmOpen}
+        showCloseButton={false}
         onClose={() => {
           if (!isFinishingSprint) setFinishConfirmOpen(false);
         }}
@@ -804,11 +830,20 @@ export default function CurrentSprint({
         <SprintWelcomeOverlay
           open={nextSprintWelcomeOpen}
           onClose={dismissNextSprintWelcome}
-          onContinue={() => {
-            void continueNextSprintWelcome();
-          }}
+          onContinue={proceedFromWelcomeToGithubTickets}
           sprintNumber={sprint.number + 1}
-          isContinuing={isNextSprintWelcomeContinuing}
+          isContinuing={false}
+        />
+      ) : null}
+      {sprint ? (
+        <SprintGitHubTicketsOverlay
+          open={githubTicketsOverlayOpen}
+          tasks={sprintTasks}
+          onDismiss={dismissGithubTicketsOverlay}
+          onContinue={() => {
+            void finalizeSprintHandoffFromTicketsOverlay();
+          }}
+          isContinuing={isSprintHandoffSubmitting}
         />
       ) : null}
     </>

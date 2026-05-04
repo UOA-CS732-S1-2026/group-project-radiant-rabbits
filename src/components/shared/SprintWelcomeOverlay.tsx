@@ -1,35 +1,41 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useEffect, useId } from "react";
+import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import Button from "@/components/shared/Button";
 
 export type SprintWelcomeOverlayProps = {
   open: boolean;
   onClose: () => void;
-  onContinue: () => void;
+  /** Receives trimmed sprint focus text when the user continues. */
+  onContinue: (sprintFocus: string) => void;
   /** Shown in the title as “Welcome to sprint #…”. */
   sprintNumber: number;
-  /** Static body until the summary prompt ships in a follow-up. */
+  /** Short intro above the sprint focus field. */
   description?: string;
   isContinuing?: boolean;
 };
 
 /**
- * Same shell as {@link ConfirmOverlay} (centered card, Cancel + primary).
- * Shown after Skip / preview Continue — welcomes the next sprint; summary UI comes later.
+ * Same shell as {@link ConfirmOverlay} (centered card; backdrop/Escape dismiss).
+ * Shown after Skip / preview Continue — welcomes the next sprint; collects sprint focus for a later API.
  */
 export default function SprintWelcomeOverlay({
   open,
   onClose,
   onContinue,
   sprintNumber,
-  description = "You’ll be prompted for a one–two sentence summary of what this sprint will cover in a follow-up change. Continue finishes the hand-off for now.",
+  description = "Add a short focus for the sprint ahead. You can refine it later on the board.",
   isContinuing = false,
 }: SprintWelcomeOverlayProps) {
   const headingId = useId();
+  const focusFieldId = useId();
   const title = `Welcome to sprint #${sprintNumber}`;
+  const [sprintFocus, setSprintFocus] = useState("");
+
+  useEffect(() => {
+    if (open) setSprintFocus("");
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -70,41 +76,39 @@ export default function SprintWelcomeOverlay({
                   aria-labelledby={headingId}
                   className="relative w-full min-w-0 rounded-2xl bg-[#F1F5F9] px-4 pb-5 pt-4 text-center shadow-xl md:px-6 md:pb-6 md:pt-5"
                 >
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    aria-label="Close"
-                    disabled={isContinuing}
-                    className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-40 md:right-4 md:top-4"
-                  >
-                    <X className="h-5 w-5" aria-hidden />
-                  </button>
                   <h2
                     id={headingId}
-                    className="mx-auto max-w-[22rem] px-8 text-h3 font-bold leading-snug text-brand-dark md:max-w-none md:px-10"
+                    className="mx-auto max-w-[22rem] text-h3 font-bold leading-snug text-brand-dark md:max-w-none"
                   >
                     {title}
                   </h2>
                   <p className="mx-auto mt-3 max-w-[22rem] text-body-md leading-relaxed text-brand-dark/90 md:max-w-none">
                     {description}
                   </p>
-                  <div className="mt-6 flex flex-col-reverse items-center justify-center gap-3 sm:flex-row sm:gap-md">
-                    <Button
-                      type="button"
-                      variant="grey"
-                      size="sm"
-                      className="w-full min-w-[8rem] max-w-[14rem] sm:w-auto"
-                      onClick={onClose}
-                      disabled={isContinuing}
+                  <div className="mx-auto mt-5 w-full max-w-[22rem] text-left md:max-w-none">
+                    <label
+                      htmlFor={focusFieldId}
+                      className="text-body-sm font-semibold text-brand-dark"
                     >
-                      Cancel
-                    </Button>
+                      Sprint focus
+                    </label>
+                    <textarea
+                      id={focusFieldId}
+                      rows={3}
+                      value={sprintFocus}
+                      onChange={(e) => setSprintFocus(e.target.value)}
+                      placeholder="e.g. Ship the GitHub sync MVP and stabilize CI"
+                      disabled={isContinuing}
+                      className="mt-1 min-h-[5.5rem] w-full resize-y rounded-xl border border-brand-accent bg-brand-surface px-md py-md text-body-sm text-brand-dark outline-none placeholder:text-brand-dark/40 focus:ring-2 focus:ring-brand-primary disabled:opacity-60"
+                    />
+                  </div>
+                  <div className="mt-6 flex justify-center">
                     <Button
                       type="button"
                       variant="purple"
                       size="sm"
                       className="w-full min-w-[8rem] max-w-[14rem] sm:w-auto"
-                      onClick={onContinue}
+                      onClick={() => onContinue(sprintFocus.trim())}
                       disabled={isContinuing}
                     >
                       {isContinuing ? "Working…" : "Continue"}

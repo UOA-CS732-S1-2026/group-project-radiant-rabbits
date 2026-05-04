@@ -14,6 +14,11 @@ export type ConfirmOverlayProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   isConfirming?: boolean;
+  /**
+   * When false, no header close (X) — use for flows that should dismiss only via buttons/backdrop (e.g. finish sprint).
+   * @default true
+   */
+  showCloseButton?: boolean;
 };
 
 /**
@@ -29,6 +34,7 @@ export default function ConfirmOverlay({
   confirmLabel = "Yes",
   cancelLabel = "Cancel",
   isConfirming = false,
+  showCloseButton = true,
 }: ConfirmOverlayProps) {
   const headingId = useId();
 
@@ -71,18 +77,24 @@ export default function ConfirmOverlay({
                   aria-labelledby={headingId}
                   className="relative w-full min-w-0 rounded-2xl bg-[#F1F5F9] px-4 pb-5 pt-4 text-center shadow-xl md:px-6 md:pb-6 md:pt-5"
                 >
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    aria-label="Close"
-                    disabled={isConfirming}
-                    className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-40 md:right-4 md:top-4"
-                  >
-                    <X className="h-5 w-5" aria-hidden />
-                  </button>
+                  {showCloseButton ? (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      aria-label="Close"
+                      disabled={isConfirming}
+                      className="absolute right-3 top-3 rounded-lg p-1.5 text-brand-dark/60 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-40 md:right-4 md:top-4"
+                    >
+                      <X className="h-5 w-5" aria-hidden />
+                    </button>
+                  ) : null}
                   <h2
                     id={headingId}
-                    className="mx-auto max-w-[22rem] px-8 text-h3 font-bold leading-snug text-brand-dark md:max-w-none md:px-10"
+                    className={
+                      showCloseButton
+                        ? "mx-auto max-w-[22rem] px-8 text-h3 font-bold leading-snug text-brand-dark md:max-w-none md:px-10"
+                        : "mx-auto max-w-[22rem] text-h3 font-bold leading-snug text-brand-dark md:max-w-none"
+                    }
                   >
                     {title}
                   </h2>
