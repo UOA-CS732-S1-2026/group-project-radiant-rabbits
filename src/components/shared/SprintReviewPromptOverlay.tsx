@@ -3,21 +3,25 @@
 import { X } from "lucide-react";
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
+import Button from "@/components/shared/Button";
 
 export type SprintReviewPromptOverlayProps = {
   open: boolean;
   onClose: () => void;
+  /** Primary CTA — e.g. start review flow or navigate to review. */
+  onGenerateSprintReview: () => void;
   title?: string;
   description?: string;
 };
 
 /**
  * Same shell as {@link ConfirmOverlay}: portal, dimmed backdrop, centered card.
- * Shown after finishing a sprint (copy-only for now; dismiss via X / backdrop / Escape).
+ * Shown after finishing a sprint; dismiss via X / backdrop / Escape or Skip.
  */
 export default function SprintReviewPromptOverlay({
   open,
   onClose,
+  onGenerateSprintReview,
   title = "Sprint complete",
   description = "Generate a sprint review to summarize what shipped this sprint and what’s next for your team.",
 }: SprintReviewPromptOverlayProps) {
@@ -76,6 +80,23 @@ export default function SprintReviewPromptOverlay({
                   <p className="mx-auto mt-3 max-w-[22rem] text-body-md leading-relaxed text-brand-dark/90 md:max-w-none">
                     {description}
                   </p>
+                  <div className="mt-6 flex flex-col items-center justify-center gap-3">
+                    <Button
+                      type="button"
+                      size="lg"
+                      onClick={onGenerateSprintReview}
+                    >
+                      Generate Sprint Review
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="grey"
+                      size="sm"
+                      onClick={onClose}
+                    >
+                      Skip
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

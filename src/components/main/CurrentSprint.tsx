@@ -341,6 +341,12 @@ export default function CurrentSprint({
     router.refresh();
   }, [router]);
 
+  const handleGenerateSprintReviewFromOverlay = useCallback(() => {
+    setSprintReviewPromptOpen(false);
+    // TODO: Navigate to or trigger sprint review flow.
+    router.refresh();
+  }, [router]);
+
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
 
@@ -746,6 +752,7 @@ export default function CurrentSprint({
       <SprintReviewPromptOverlay
         open={sprintReviewPromptOpen}
         onClose={dismissSprintReviewPrompt}
+        onGenerateSprintReview={handleGenerateSprintReviewFromOverlay}
       />
     </>
   );
