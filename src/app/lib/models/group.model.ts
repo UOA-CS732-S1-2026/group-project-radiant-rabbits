@@ -82,7 +82,6 @@ groupSchema.index(
 );
 groupSchema.index({ members: 1 });
 groupSchema.index({ createdBy: 1 });
-groupSchema.index({ projectStartDate: 1, projectEndDate: 1 });
 groupSchema.index({ syncStatus: 1 });
 
 export const Group =
