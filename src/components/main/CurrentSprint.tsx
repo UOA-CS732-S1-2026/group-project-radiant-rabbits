@@ -46,6 +46,7 @@ type SprintInfo = {
   id: string;
   number: number;
   name: string;
+  goal?: string;
   startDate: string | Date;
   endDate: string | Date;
   status: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -323,10 +324,10 @@ export default function CurrentSprint({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (sprint?.name) {
-      setSprintFocus(sprint.name);
+    if (sprint?.goal !== undefined) {
+      setSprintFocus(sprint.goal);
     }
-  }, [sprint?.name]);
+  }, [sprint?.goal]);
 
   useEffect(() => {
     if (status !== "ready") {
@@ -604,37 +605,62 @@ export default function CurrentSprint({
                       Sprint Focus:
                     </h3>
                     {isEditingFocus ? (
-                      <input
-                        type="text"
-                        className="mt-xs w-full rounded border border-brand-accent/40 bg-brand-surface px-sm py-xs text-body-lg text-brand-dark outline-none focus:border-brand-accent"
-                        value={sprintFocus}
-                        onChange={(e) => setSprintFocus(e.target.value)}
-                        onBlur={() => setIsEditingFocus(false)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSaveSprintFocus();
-                          if (e.key === "Escape") setIsEditingFocus(false);
-                        }}
-                      />
+                      <div className="mt-xs space-y-sm">
+                        <input
+                          type="text"
+                          className="mt-xs w-full rounded border border-brand-accent/40 bg-brand-surface px-sm py-xs text-body-lg text-brand-dark outline-none focus:border-brand-accent"
+                          value={sprintFocus}
+                          onChange={(e) => setSprintFocus(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveSprintFocus();
+                            if (e.key === "Escape") {
+                              setIsEditingFocus(false);
+                              setSprintFocus(sprint.goal || "");
+                            }
+                          }}
+                        />
+                        <div className="flex items-center gap-sm">
+                          <Button
+                            variant="purple"
+                            size="sm"
+                            onClick={handleSaveSprintFocus}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            variant="grey"
+                            size="sm"
+                            onClick={() => {
+                              setIsEditingFocus(false);
+                              setSprintFocus(sprint.goal || "");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
                     ) : (
                       <p className="mt-xs text-body-lg text-brand-dark/60">
                         {sprintFocus || "No focus set for this sprint"}
                       </p>
                     )}
-                    {saveError && <p className="text-red-500">{saveError}</p>}
+                    {saveError && (
+                      <p className="mt-xs text-body-sm text-red-500">
+                        {saveError}
+                      </p>
+                    )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingFocus(!isEditingFocus)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-brand-dark/5"
-                    aria-label="Edit sprint focus"
-                  >
-                    <span
-                      className={`text-body-md ${isEditingFocus ? "text-brand-accent font-bold" : "text-brand-dark/70"}`}
+                  {!isEditingFocus && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingFocus(true)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-brand-dark/5"
+                      aria-label="Edit sprint focus"
                     >
-                      {isEditingFocus ? "✓" : "✎"}
-                    </span>
-                  </button>
+                      <span className="text-body-md text-brand-dark/70">✎</span>
+                    </button>
+                  )}
                 </div>
               </BorderedPanel>
 
