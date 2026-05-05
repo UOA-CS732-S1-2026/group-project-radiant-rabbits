@@ -60,6 +60,7 @@ type ResolvedSprint = {
   id: string;
   number: number;
   name: string;
+  goal?: string;
   startDate: Date;
   endDate: Date;
   status: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -205,6 +206,7 @@ async function loadCurrentSprintAndPosition(
       Array<{
         _id: mongoose.Types.ObjectId;
         name: string;
+        goal?: string;
         startDate: Date;
         endDate: Date;
         isCurrent: boolean;
@@ -223,6 +225,7 @@ async function loadCurrentSprintAndPosition(
       id: String(doc._id),
       number: idx + 1,
       name: doc.name,
+      goal: doc.goal,
       startDate: doc.startDate,
       endDate: doc.endDate,
       status: computeStatus(now, doc.startDate, doc.endDate),

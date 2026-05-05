@@ -320,7 +320,7 @@ export default function CurrentSprint({
   const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
   const [isEditingFocus, setIsEditingFocus] = useState(false);
-  const [sprintFocus, setSprintFocus] = useState(sprint?.name || "");
+  const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
