@@ -1,3 +1,7 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
@@ -59,6 +63,11 @@ async function parseJsonResponse<T>(
 }
 
 export default function SummaryPage() {
+  const searchParams = useSearchParams();
+  const queryGroupId = searchParams.get("groupId") ?? "";
+  const querySprintId = searchParams.get("sprintId") ?? "";
+  const shouldAutoGenerate = searchParams.get("autoGenerate") === "1";
+  const autoGenerateAttemptedRef = useRef("");
   const [groups, setGroups] = useState<GroupSummaryOption[]>([]);
   const [sprints, setSprints] = useState<SprintSummaryOption[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
@@ -104,6 +113,7 @@ export default function SummaryPage() {
 
         const persistedGroupId = window.localStorage.getItem("selectedGroupId");
         const preferredGroup =
+          nextGroups.find((group) => group.id === queryGroupId) ??
           nextGroups.find((group) => group.id === persistedGroupId) ??
           nextGroups[0];
 
@@ -119,7 +129,7 @@ export default function SummaryPage() {
     }
 
     fetchGroups();
-  }, []);
+  }, [queryGroupId]);
 
   useEffect(() => {
     if (!selectedGroupId) {
@@ -151,6 +161,13 @@ export default function SummaryPage() {
 
         setSelectedSprintId((previous) => {
           if (
+            querySprintId &&
+            nextSprints.some((sprint) => sprint._id === querySprintId)
+          ) {
+            return querySprintId;
+          }
+
+          if (
             previous &&
             nextSprints.some((sprint) => sprint._id === previous)
           ) {
@@ -175,7 +192,7 @@ export default function SummaryPage() {
     }
 
     fetchSprints();
-  }, [selectedGroupId]);
+  }, [querySprintId, selectedGroupId]);
 
   useEffect(() => {
     if (!selectedGroupId || !selectedSprintId) {
@@ -268,8 +285,81 @@ export default function SummaryPage() {
     };
   }, [selectedGroupId, selectedSprintId, sprints]);
 
-  async function requestReview(regenerate: boolean) {
-    if (!selectedGroupId || !selectedSprintId) {
+  const requestReview = useCallback(
+    async (regenerate: boolean) => {
+      if (!selectedGroupId || !selectedSprintId) {
+        return;
+      }
+
+      const activeSprint = sprints.find(
+        (sprint) => sprint._id === selectedSprintId,
+      );
+
+      if (!activeSprint) {
+        setErrorMessage("Selected sprint no longer exists.");
+        return;
+      }
+
+      setIsGenerating(true);
+      setErrorMessage("");
+
+      try {
+        const response = await fetch(
+          `/api/groups/${selectedGroupId}/sprints/${selectedSprintId}/review`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ regenerate }),
+          },
+        );
+
+        const payload = await parseJsonResponse<{
+          review?: unknown;
+          generatedAt?: unknown;
+          model?: unknown;
+          provider?: unknown;
+          error?: string;
+        }>(response, "Failed to generate sprint review");
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Failed to generate sprint review");
+        }
+
+        setReview(typeof payload.review === "string" ? payload.review : "");
+        setReviewMeta({
+          generatedAt:
+            typeof payload.generatedAt === "string"
+              ? payload.generatedAt
+              : null,
+          model: typeof payload.model === "string" ? payload.model : null,
+          provider:
+            typeof payload.provider === "string" ? payload.provider : null,
+        });
+      } catch (error) {
+        console.error("Error generating sprint review:", error);
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to generate sprint review",
+        );
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [selectedGroupId, selectedSprintId, sprints],
+  );
+
+  useEffect(() => {
+    if (
+      !shouldAutoGenerate ||
+      isLoadingReview ||
+      isGenerating ||
+      review ||
+      !selectedGroupId ||
+      !selectedSprintId
+    ) {
       return;
     }
 
@@ -278,141 +368,33 @@ export default function SummaryPage() {
     );
 
     if (!activeSprint) {
-      setErrorMessage("Selected sprint no longer exists.");
       return;
     }
 
-    setIsGenerating(true);
-    setErrorMessage("");
-
-    try {
-      const response = await fetch(
-        `/api/groups/${selectedGroupId}/sprints/${selectedSprintId}/review`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ regenerate }),
-        },
-      );
-
-      const payload = await parseJsonResponse<{
-        review?: unknown;
-        generatedAt?: unknown;
-        model?: unknown;
-        provider?: unknown;
-        error?: string;
-      }>(response, "Failed to generate sprint review");
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Failed to generate sprint review");
-      }
-
-      setReview(typeof payload.review === "string" ? payload.review : "");
-      setReviewMeta({
-        generatedAt:
-          typeof payload.generatedAt === "string" ? payload.generatedAt : null,
-        model: typeof payload.model === "string" ? payload.model : null,
-        provider:
-          typeof payload.provider === "string" ? payload.provider : null,
-      });
-    } catch (error) {
-      console.error("Error generating sprint review:", error);
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to generate sprint review",
-      );
-    } finally {
-      setIsGenerating(false);
+    const autoGenerateKey = `${selectedGroupId}:${selectedSprintId}`;
+    if (autoGenerateAttemptedRef.current === autoGenerateKey) {
+      return;
     }
-  }
+
+    autoGenerateAttemptedRef.current = autoGenerateKey;
+    requestReview(false);
+  }, [
+    isGenerating,
+    isLoadingReview,
+    requestReview,
+    review,
+    selectedGroupId,
+    selectedSprintId,
+    shouldAutoGenerate,
+    sprints,
+  ]);
 
   return (
     <PageContainer>
       <SectionHeading
         title="Sprint Review Summary"
-        subtitle="Review sprint highlights for the selected sprint. Generate a review from the Current Sprint page."
+        subtitle="Review the generated summary for the current sprint."
       />
-
-      <section className="grid gap-lg lg:grid-cols-2">
-        <Card>
-          <div className="grid gap-md md:grid-cols-2">
-            <label className="flex flex-col gap-xs text-body-sm text-brand-dark/80">
-              Group
-              <select
-                value={selectedGroupId}
-                onChange={(event) => setSelectedGroupId(event.target.value)}
-                disabled={isLoadingGroups || isGenerating}
-                className="rounded-xl border border-brand-dark/15 bg-white px-sm py-sm text-body-sm text-brand-dark"
-              >
-                {groups.length === 0 && (
-                  <option value="">No groups available</option>
-                )}
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name ?? "Unnamed group"}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-xs text-body-sm text-brand-dark/80">
-              Sprint
-              <select
-                value={selectedSprintId}
-                onChange={(event) => setSelectedSprintId(event.target.value)}
-                disabled={
-                  isLoadingSprints ||
-                  isLoadingGroups ||
-                  !selectedGroupId ||
-                  isGenerating
-                }
-                className="rounded-xl border border-brand-dark/15 bg-white px-sm py-sm text-body-sm text-brand-dark"
-              >
-                {sprints.length === 0 && (
-                  <option value="">No sprints available</option>
-                )}
-                {sprints.map((sprint) => (
-                  <option key={sprint._id} value={sprint._id}>
-                    {sprint.name ?? "Unnamed sprint"}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="mt-md flex flex-wrap items-center gap-sm">
-            <Button
-              onClick={() => requestReview(false)}
-              disabled={
-                isGenerating ||
-                isLoadingGroups ||
-                isLoadingSprints ||
-                !selectedGroupId ||
-                !selectedSprintId
-              }
-            >
-              {isGenerating ? "Generating..." : "Generate Sprint Review"}
-            </Button>
-
-            <Button
-              variant="white"
-              onClick={() => requestReview(true)}
-              disabled={
-                isGenerating ||
-                isLoadingGroups ||
-                isLoadingSprints ||
-                !selectedGroupId ||
-                !selectedSprintId
-              }
-            >
-              Regenerate
-            </Button>
-          </div>
-        </Card>
-      </section>
 
       <section>
         <Card>
@@ -435,10 +417,16 @@ export default function SummaryPage() {
           </div>
 
           <div className="mt-md rounded-xl border border-brand-dark/10 bg-brand-background p-md">
-            {isLoadingReview ? (
+            {isLoadingGroups || isLoadingSprints || isLoadingReview ? (
               <p className="text-body-sm text-brand-dark/70">
                 Loading review...
               </p>
+            ) : isGenerating ? (
+              <p className="text-body-sm text-brand-dark/70">
+                Generating sprint review...
+              </p>
+            ) : errorMessage ? (
+              <p className="text-body-sm text-red-700">{errorMessage}</p>
             ) : review ? (
               <pre className="whitespace-pre-wrap text-body-sm text-brand-dark/80">
                 {review}

@@ -1,4 +1,5 @@
 import type mongoose from "mongoose";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
@@ -211,10 +212,10 @@ export default async function PastSprintsPage() {
           ) : (
             <div className="mt-lg space-y-md">
               {pastSprints.map((sprint) => (
-                <button
+                <Link
                   key={sprint.id}
-                  type="button"
-                  className="w-full rounded-xl border border-brand-dark/10 bg-brand-surface px-lg py-lg text-left transition hover:border-brand-accent hover:bg-brand-background"
+                  href={`/summary?groupId=${group._id.toString()}&sprintId=${sprint.id}&autoGenerate=1`}
+                  className="block w-full rounded-xl border border-brand-dark/10 bg-brand-surface px-lg py-lg text-left transition hover:border-brand-accent hover:bg-brand-background"
                 >
                   <div className="flex flex-col gap-md lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
@@ -234,7 +235,7 @@ export default async function PastSprintsPage() {
                       ) : null}
 
                       <p className="mt-sm text-body-sm font-medium text-brand-accent">
-                        Click to view more details
+                        Click to view sprint review
                       </p>
                     </div>
 
@@ -253,7 +254,7 @@ export default async function PastSprintsPage() {
                       />
                     </div>
                   </div>
-                </button>
+                </Link>
               ))}
             </div>
           )}
