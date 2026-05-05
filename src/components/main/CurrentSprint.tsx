@@ -318,6 +318,14 @@ export default function CurrentSprint({
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
   const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
+  const [isEditingFocus, setIsEditingFocus] = useState(false);
+  const [sprintFocus, setSprintFocus] = useState(sprint?.name || "");
+
+  useEffect(() => {
+    if (sprint?.name) {
+      setSprintFocus(sprint.name);
+    }
+  }, [sprint?.name]);
 
   useEffect(() => {
     if (status !== "ready") {
@@ -565,12 +573,36 @@ export default function CurrentSprint({
                     <h3 className="text-body-lg font-medium text-brand-dark">
                       Sprint Focus:
                     </h3>
-                    <p className="text-body-lg text-brand-dark/60">
-                      EMPTY: PLACEHOLDER
-                    </p>
+                    {isEditingFocus ? (
+                      <input
+                        type="text"
+                        className="mt-xs w-full rounded border border-brand-accent/40 bg-brand-surface px-sm py-xs text-body-lg text-brand-dark outline-none focus:border-brand-accent"
+                        value={sprintFocus}
+                        onChange={(e) => setSprintFocus(e.target.value)}
+                        onBlur={() => setIsEditingFocus(false)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") setIsEditingFocus(false);
+                        }}
+                      />
+                    ) : (
+                      <p className="mt-xs text-body-lg text-brand-dark/60">
+                        {sprintFocus || "No focus set for this sprint"}
+                      </p>
+                    )}
                   </div>
 
-                  <span className="text-body-md text-brand-dark/70">✎</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingFocus(!isEditingFocus)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-brand-dark/5"
+                    aria-label="Edit sprint focus"
+                  >
+                    <span
+                      className={`text-body-md ${isEditingFocus ? "text-brand-accent font-bold" : "text-brand-dark/70"}`}
+                    >
+                      {isEditingFocus ? "✓" : "✎"}
+                    </span>
+                  </button>
                 </div>
               </BorderedPanel>
 
