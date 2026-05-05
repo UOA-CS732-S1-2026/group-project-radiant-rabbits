@@ -45,19 +45,6 @@ const groupSchema = new Schema(
       required: true,
       set: normalizeUserRef,
     },
-    projectStartDate: {
-      type: Date,
-      default: null,
-    },
-    projectEndDate: {
-      type: Date,
-      default: null,
-    },
-    sprintLengthWeeks: {
-      type: Number,
-      min: 1,
-      default: null,
-    },
     lastSyncAt: {
       type: Date,
       default: null,

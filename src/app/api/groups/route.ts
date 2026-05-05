@@ -100,6 +100,7 @@ export async function POST(request: Request) {
       lastSyncAt: new Date(),
       syncStatus: "pending",
       syncError: null,
+      iterationFieldConfigured: false,
     });
 
     // Update user using githubId
