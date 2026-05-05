@@ -320,6 +320,7 @@ export default function CurrentSprint({
     useState(false);
   const [isEditingFocus, setIsEditingFocus] = useState(false);
   const [sprintFocus, setSprintFocus] = useState(sprint?.name || "");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (sprint?.name) {
@@ -442,6 +443,35 @@ export default function CurrentSprint({
       }
     });
   }, [groupId, router]);
+
+  const handleSaveSprintFocus = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setSaveError(null);
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/sprints/${sprint.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ goal: sprintFocus }),
+        },
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update sprint focus");
+      }
+
+      setIsEditingFocus(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Save error:", error);
+      setSaveError(
+        error instanceof Error ? error.message : "An error occurred",
+      );
+    }
+  }, [groupId, sprint, sprintFocus, router]);
 
   const sprintTasks: SprintTaskRow[] = useMemo(
     () =>
@@ -581,7 +611,8 @@ export default function CurrentSprint({
                         onChange={(e) => setSprintFocus(e.target.value)}
                         onBlur={() => setIsEditingFocus(false)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") setIsEditingFocus(false);
+                          if (e.key === "Enter") handleSaveSprintFocus();
+                          if (e.key === "Escape") setIsEditingFocus(false);
                         }}
                       />
                     ) : (
@@ -589,6 +620,7 @@ export default function CurrentSprint({
                         {sprintFocus || "No focus set for this sprint"}
                       </p>
                     )}
+                    {saveError && <p className="text-red-500">{saveError}</p>}
                   </div>
 
                   <button
