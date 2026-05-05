@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
@@ -337,16 +333,10 @@ export default function SummaryPage() {
     <PageContainer>
       <SectionHeading
         title="Sprint Review Summary"
-        subtitle="Generate and review AI-powered sprint highlights for a selected sprint."
+        subtitle="Review sprint highlights for the selected sprint. Generate a review from the Current Sprint page."
       />
 
-      {errorMessage && (
-        <section className="mb-lg rounded-xl border border-red-200 bg-red-50 px-md py-sm text-body-sm text-red-700">
-          {errorMessage}
-        </section>
-      )}
-
-      <section className="mb-lg">
+      <section className="grid gap-lg lg:grid-cols-2">
         <Card>
           <div className="grid gap-md md:grid-cols-2">
             <label className="flex flex-col gap-xs text-body-sm text-brand-dark/80">

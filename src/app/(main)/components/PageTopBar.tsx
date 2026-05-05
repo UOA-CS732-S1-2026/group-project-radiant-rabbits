@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Button from "@/components/shared/Button";
 
 type PageTopBarProps = {
   repoName: string;
@@ -27,13 +26,8 @@ export default function PageTopBar({
           <p className="text-body-sm text-brand-dark/70">{pageLabel}</p>
         </div>
 
-        {/* Right: Button + Avatar */}
+        {/* Right: Avatar */}
         <div className="flex items-center gap-md">
-          {/* Use design system button (no hardcoded color) */}
-          <Button size="lg" href="/summary">
-            Generate Sprint Review
-          </Button>
-
           {/* Avatar */}
           {profileImageUrl ? (
             <Image
