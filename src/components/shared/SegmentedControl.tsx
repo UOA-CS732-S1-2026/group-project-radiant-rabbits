@@ -19,7 +19,7 @@ const tabClasses: Record<
 > = {
   lg: {
     shell:
-      "flex w-full max-w-full flex-wrap items-center justify-center gap-xs rounded-[length:var(--radius-xl)] bg-slate-100/90 p-1 sm:w-fit sm:flex-nowrap",
+      "flex w-full max-w-full flex-wrap items-center justify-center gap-xs rounded-[length:var(--radius-xl)] p-1 sm:w-fit sm:flex-nowrap",
     active:
       "min-h-9 shrink-0 rounded-[length:var(--radius-lg)] bg-brand-surface px-3 py-1.5 text-center text-body-sm font-semibold text-brand-dark shadow-sm sm:min-h-10 sm:px-3.5 sm:py-2 sm:text-body-md",
     inactive:
@@ -27,7 +27,7 @@ const tabClasses: Record<
   },
   sm: {
     shell:
-      "flex w-full max-w-full flex-wrap items-center justify-center gap-xs rounded-[length:var(--radius-lg)] bg-slate-100/90 p-1 sm:w-fit sm:flex-nowrap",
+      "flex w-full max-w-full flex-wrap items-center justify-center gap-xs rounded-[length:var(--radius-lg)] p-1 sm:w-fit sm:flex-nowrap",
     active:
       "min-h-8 shrink-0 rounded-[length:var(--radius-md)] bg-brand-surface px-2.5 py-1.5 text-center text-body-sm font-semibold text-brand-dark shadow-sm sm:min-h-9 sm:px-3 sm:py-2 sm:text-body-md",
     inactive:
