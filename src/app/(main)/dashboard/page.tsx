@@ -1,11 +1,19 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { avatarUrlForLogin } from "@/app/lib/currentSprintService";
 import {
   calculateGithubMetricsLive,
   type GithubMetrics,
 } from "@/app/lib/githubCalculator";
-import { Commit, Group, Sprint, User } from "@/app/lib/models";
+import {
+  Commit,
+  Group,
+  Issue,
+  PullRequest,
+  Sprint,
+  User,
+} from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
@@ -16,10 +24,12 @@ type SprintForDashboard = {
   name: string;
   velocity: number;
   isCurrent: boolean;
+  startDate: Date;
+  endDate: Date;
 };
 
-// Read all sprints for the group from the DB and count commits in each sprint's
-// date range to derive velocity. Sprints come from synced GitHub iterations
+// Read all sprints for the group from the DB and count issues closed in each
+// sprint's date range. Sprints come from synced GitHub iterations
 // (see syncService.upsertSprints). Returns [] when no iterations have been synced.
 async function loadSprintsForDashboard(
   groupId: import("mongoose").Types.ObjectId,
@@ -38,18 +48,203 @@ async function loadSprintsForDashboard(
   if (sprints.length === 0) return [];
 
   return Promise.all(
-    sprints.map(async (sprint) => {
-      const velocity = await Commit.countDocuments({
+    sprints.map(async (sprintData) => {
+      const velocity = await Issue.countDocuments({
         group: groupId,
-        date: { $gte: sprint.startDate, $lte: sprint.endDate },
+        state: "CLOSED",
+        closedAt: { $gte: sprintData.startDate, $lte: sprintData.endDate },
       });
       return {
-        name: sprint.name,
+        name: sprintData.name,
         velocity,
-        isCurrent: sprint.isCurrent,
+        isCurrent: sprintData.isCurrent,
+        startDate: sprintData.startDate,
+        endDate: sprintData.endDate,
       };
     }),
   );
+}
+
+// Helper to build initials from a name
+function getInitials(name: string): string {
+  const tokens = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+  if (tokens.length === 0) return "?";
+  return tokens.map((token) => token[0]?.toUpperCase() ?? "").join("");
+}
+
+// Load the contributors with their commits, PRs, and closed issue counts
+async function loadRepositoryContributors(
+  groupId: import("mongoose").Types.ObjectId,
+): Promise<
+  Array<{
+    name: string;
+    initials: string;
+    avatarUrl: string | null;
+    commits: number;
+    prs: number;
+    issues: number;
+    colour: string;
+  }>
+> {
+  // Get all commits with author info
+  const commits = await Commit.find({ group: groupId })
+    .select("author")
+    .lean<
+      Array<{ author: { name?: string; email?: string; login?: string } }>
+    >();
+
+  // Get all PRs with author info
+  const prs = await PullRequest.find({ group: groupId })
+    .select("author")
+    .lean<Array<{ author: string }>>();
+
+  // Get all closed issues with assigned person info
+  const issues = await Issue.find({
+    group: groupId,
+    state: "CLOSED",
+  })
+    .select("assignees")
+    .lean<Array<{ assignees: import("mongoose").Types.ObjectId[] }>>();
+
+  // Bulk load all users referenced by issue assignees
+  const assigneeIds = new Set<string>();
+  for (const issue of issues) {
+    if (issue.assignees) {
+      for (const assigneeId of issue.assignees) {
+        assigneeIds.add(String(assigneeId));
+      }
+    }
+  }
+
+  const userMap = new Map(
+    (
+      await User.find({ _id: { $in: Array.from(assigneeIds) } })
+        .select("_id name login avatarUrl")
+        .lean<
+          Array<{
+            _id: string;
+            name?: string;
+            login?: string;
+            avatarUrl?: string | null;
+          }>
+        >()
+    ).map((u) => [String(u._id), u]),
+  );
+
+  const contributorMap = new Map<
+    string,
+    {
+      name: string;
+      initials: string;
+      avatarUrl: string | null;
+      commits: number;
+      prs: number;
+      issues: number;
+    }
+  >();
+
+  // Count commits by author
+  for (const commit of commits) {
+    const author = commit.author?.name || commit.author?.login || "Unknown";
+    if (!author) continue;
+
+    const key = author.trim().toLowerCase();
+    const existing = contributorMap.get(key);
+
+    if (existing) {
+      existing.commits += 1;
+      if (!existing.avatarUrl) {
+        existing.avatarUrl = avatarUrlForLogin(commit.author?.login);
+      }
+    } else {
+      contributorMap.set(key, {
+        name: author,
+        initials: getInitials(author),
+        avatarUrl: avatarUrlForLogin(commit.author?.login),
+        commits: 1,
+        prs: 0,
+        issues: 0,
+      });
+    }
+  }
+
+  // Count PRs by author
+  for (const pr of prs) {
+    const author = pr.author || "Unknown";
+    if (!author) continue;
+
+    const key = author.trim().toLowerCase();
+    const existing = contributorMap.get(key);
+
+    if (existing) {
+      existing.prs += 1;
+      if (!existing.avatarUrl) {
+        existing.avatarUrl = avatarUrlForLogin(pr.author);
+      }
+    } else {
+      contributorMap.set(key, {
+        name: author,
+        initials: getInitials(author),
+        avatarUrl: avatarUrlForLogin(pr.author),
+        commits: 0,
+        prs: 1,
+        issues: 0,
+      });
+    }
+  }
+
+  // Count issues by assignee
+  for (const issue of issues) {
+    if (!issue.assignees || issue.assignees.length === 0) continue;
+
+    for (const assigneeId of issue.assignees) {
+      const user = userMap.get(String(assigneeId));
+      if (!user) continue;
+
+      const name = user.name || user.login || "Unknown";
+      const key = name.trim().toLowerCase();
+      const userAvatar = user.avatarUrl || avatarUrlForLogin(user.login);
+      const existing = contributorMap.get(key);
+
+      if (existing) {
+        existing.issues += 1;
+        if (!existing.avatarUrl) {
+          existing.avatarUrl = userAvatar;
+        }
+      } else {
+        contributorMap.set(key, {
+          name,
+          initials: getInitials(name),
+          avatarUrl: userAvatar,
+          commits: 0,
+          prs: 0,
+          issues: 1,
+        });
+      }
+    }
+  }
+
+  // Convert to array, sort by total contribution, take top 6
+  const colours = [
+    "var(--color-brand-accent)",
+    "var(--color-brand-in-progress)",
+    "var(--color-brand-completed)",
+    "var(--color-brand-todo)",
+    "var(--color-brand-dark)",
+    "var(--color-brand-accent)",
+  ];
+
+  // Convert to array, sort by total contributions and take top 5
+  return Array.from(contributorMap.values())
+    .filter((c) => c.commits + c.prs + c.issues > 0)
+    .sort(
+      (a, b) => b.commits + b.prs + b.issues - (a.commits + a.prs + a.issues),
+    )
+    .slice(0, 6)
+    .map((row, index) => ({
+      ...row,
+      colour: colours[index % colours.length],
+    }));
 }
 
 // Fetch all data required to display the dashboard metrics
@@ -102,12 +297,10 @@ export default async function DashboardPage() {
   // If user is not part of any group, show error message
   if (!group) {
     return (
-      <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 border-2 border-brand-border border-spacing-2 rounded-lg shadow-lg">
-        <Dashboard
-          status="empty"
-          statusMessage="No group selected yet. Create or join a group to see dashboard metrics."
-        />
-      </div>
+      <Dashboard
+        status="empty"
+        statusMessage="No group selected yet. Create or join a group to see dashboard metrics."
+      />
     );
   }
 
@@ -143,6 +336,9 @@ export default async function DashboardPage() {
   // none have been synced yet. The Dashboard component handles the empty state.
   const sprints = await loadSprintsForDashboard(group._id);
 
+  // Load repository contributors with aggregated contribution counts
+  const repoContributorsData = await loadRepositoryContributors(group._id);
+
   // Find the next future sprint so we can show "next iteration starts on X"
   // when no iteration covers today.
   const nextSprintDoc =
@@ -158,28 +354,27 @@ export default async function DashboardPage() {
 
   // Display the dashboard with the fetched metrics
   return (
-    <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 overflow-hidden border-2 border-brand-border border-spacing-2 rounded-lg shadow-lg">
-      <Dashboard
-        status={status}
-        statusMessage={statusMessage}
-        repository={{
-          owner: group.repoOwner,
-          name: group.repoName,
-          isConnected: Boolean(group.repoOwner && group.repoName),
-          syncStatus: group.syncStatus,
-          syncError: group.syncError,
-          validationError:
-            group.repoOwner && group.repoName
-              ? null
-              : "No repository is connected to this group.",
-        }}
-        metrics={githubMetrics}
-        sprints={sprints}
-        iterationFieldConfigured={group.iterationFieldConfigured ?? null}
-        nextSprintStart={
-          nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
-        }
-      />
-    </div>
+    <Dashboard
+      status={status}
+      statusMessage={statusMessage}
+      repository={{
+        owner: group.repoOwner,
+        name: group.repoName,
+        isConnected: Boolean(group.repoOwner && group.repoName),
+        syncStatus: group.syncStatus,
+        syncError: group.syncError,
+        validationError:
+          group.repoOwner && group.repoName
+            ? null
+            : "No repository is connected to this group.",
+      }}
+      metrics={githubMetrics}
+      sprints={sprints}
+      repoContributors={repoContributorsData}
+      iterationFieldConfigured={group.iterationFieldConfigured ?? null}
+      nextSprintStart={
+        nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
+      }
+    />
   );
 }

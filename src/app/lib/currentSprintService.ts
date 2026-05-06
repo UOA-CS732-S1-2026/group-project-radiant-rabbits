@@ -49,7 +49,9 @@ type SprintActivity = {
 
 // Build a GitHub avatar URL from a login.
 // github.com/<login>.png redirects to the user's current avatar.
-function avatarUrlForLogin(login: string | null | undefined): string | null {
+export function avatarUrlForLogin(
+  login: string | null | undefined,
+): string | null {
   if (!login) return null;
   const trimmed = login.trim();
   if (!trimmed) return null;
