@@ -214,7 +214,7 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
   // Build the contribution bars with divs and dynamic widths based on the contribution counts
   return (
     <div className="flex h-full flex-col">
-      <div className="space-y-sm">
+      <div className="space-y-lg">
         {rows.map((row) => {
           const total = row.commits + row.prs + row.issues;
           return (
@@ -402,7 +402,7 @@ export default function Dashboard({
               </div>
               {velocitySeries.length > 0 ? (
                 <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
-                  <div className="flex max-h-75 min-h-55 flex-1 items-stretch">
+                  <div className="flex max-h-68 min-h-55 flex-1 items-stretch">
                     <MiniVelocityChart data={velocitySeries} />
                   </div>
                   {sprints &&
