@@ -20,7 +20,6 @@ const bottomItems = [
     label: "Change Group",
     icon: Settings,
   },
-  { href: "/sprint-settings", label: "Sprint Settings", icon: Settings },
 ];
 
 export default function SideNav() {
