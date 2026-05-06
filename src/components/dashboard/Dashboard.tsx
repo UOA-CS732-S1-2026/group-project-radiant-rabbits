@@ -100,7 +100,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   const h = 240;
   const pad = { l: 26, r: 40, t: 12, b: 32 };
   const safeData = data.length > 0 ? data : [{ label: "S1", value: 0 }];
-  const max = Math.max(...safeData.map((point) => point.value, 10));
+  const max = Math.max(...safeData.map((point) => point.value), 10);
   const xs = (index: number) =>
     pad.l + (index * (w - pad.l - pad.r)) / Math.max(1, safeData.length - 1);
   const ys = (value: number) => pad.t + (1 - value / max) * (h - pad.t - pad.b);
