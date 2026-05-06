@@ -55,7 +55,7 @@ export default function SprintFocus({
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="rounded-lg bg-brand-accent px-md py-sm text-body-sm font-medium text-white transition hover:opacity-90"
+                  className="rounded-lg bg-brand-accent px-md py-sm text-body-xs font-medium text-white transition hover:opacity-90"
                 >
                   Save
                 </button>

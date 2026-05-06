@@ -6,7 +6,7 @@ type ActivityItem = {
   text: string;
   initials: string;
   avatarUrl: string | null;
-  kind?: "commit" | "issue" | "sprint";
+  kind?: "commit" | "PR" | "issue" | "sprint";
   flag?: boolean;
 };
 
@@ -77,7 +77,7 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
             </div>
 
             {item.flag ? (
-              <span className="justify-self-end rounded-md bg-brand-in-progress/20 px-xm py-xs font-medium text-brand-in-progress">
+              <span className="justify-self-end rounded-md bg-brand-in-progress/20 px-sm py-xs text-body-xs font-medium text-brand-in-progress">
                 Unlinked
               </span>
             ) : (

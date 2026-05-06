@@ -10,11 +10,11 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
     {
       TODO: {
         backgroundColor: "var(--color-status-todo-bg)",
-        color: "var(--color-status-todo-fg",
+        color: "var(--color-status-todo-fg)",
       },
       IN_PROGRESS: {
-        backgroundColor: "var(--color-status-inprogress-bg)",
-        color: "var(--color-status-inprogress-fg)",
+        backgroundColor: "var(--color-status-in-progress-bg)",
+        color: "var(--color-status-in-progress-fg)",
       },
       DONE: {
         backgroundColor: "var(--color-status-done-bg)",

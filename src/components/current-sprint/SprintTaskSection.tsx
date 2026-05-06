@@ -52,7 +52,7 @@ export default function SprintTaskSection({
 
   return (
     <BorderedPanel className="p-md">
-      <div className="md-mb flex flex-col items-start gap-sm">
+      <div className="mb-md flex flex-col items-start gap-sm">
         <h4 className="text-body-lg font-semibold text-brand-dark">
           Sprint Tasks
         </h4>

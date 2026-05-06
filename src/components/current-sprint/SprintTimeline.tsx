@@ -21,43 +21,45 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
   };
 
   return (
-    <BorderedPanel className="space-y-md">
-      {/* Date range display */}
-      <div className="grid gap-md text-body-sm text-brand-dark/70 md:grid-cols-3">
-        <div>
-          <div className="font-medium text-brand-dark/50">Start</div>
-          <div className="font-semibold text-brand-dark">
-            {formatDate(sprint.startDate)}
+    <BorderedPanel>
+      <div className="space-y-md">
+        {/* Date range display */}
+        <div className="grid gap-md text-body-sm text-brand-dark/70 md:grid-cols-3">
+          <div>
+            <div className="font-medium text-brand-dark/50">Start</div>
+            <div className="font-semibold text-brand-dark">
+              {formatDate(sprint.startDate)}
+            </div>
+          </div>
+          <div>
+            <div className="font-medium text-brand-dark/50">End</div>
+            <div className="font-semibold text-brand-dark">
+              {formatDate(sprint.endDate)}
+            </div>
+          </div>
+          <div>
+            <div className="font-medium text-brand-dark/50">Remaining</div>
+            <div className="font-semibold text-brand-dark">
+              {sprint.remainingDays} day{sprint.remainingDays === 1 ? "" : "s"}
+            </div>
           </div>
         </div>
-        <div>
-          <div className="font-medium text-brand-dark/50">End</div>
-          <div className="font-semibold text-brand-dark">
-            {formatDate(sprint.endDate)}
-          </div>
-        </div>
-        <div>
-          <div className="font-medium text-brand-dark/50">Remaining</div>
-          <div className="font-semibold text-brand-dark">
-            {sprint.remainingDays} day{sprint.remainingDays === 1 ? "" : "s"}
-          </div>
-        </div>
-      </div>
 
-      {/* Progress bar */}
-      <div className="space-y-sm">
-        <div className="flex items-center justify-between text-body-xs">
-          <span className="font-medium text-brand-dark/60">Progress</span>
-          <span className="font-semibold text-brand-dark">
-            {sprint.progressPercent}%
-          </span>
-        </div>
-        <div>
-          <div className="h-2 w-full rounded-full bg-brand-dark/10 overflow-hidden">
-            <div
-              className="h-full bg-brand-accent transition-all duration-300"
-              style={{ width: `${sprint.progressPercent}%` }}
-            />
+        {/* Progress bar */}
+        <div className="space-y-sm">
+          <div className="flex items-center justify-between text-body-xs">
+            <span className="font-medium text-brand-dark/60">Progress</span>
+            <span className="font-semibold text-brand-dark">
+              {sprint.progressPercent}%
+            </span>
+          </div>
+          <div>
+            <div className="h-2 w-full rounded-full bg-brand-dark/10 overflow-hidden">
+              <div
+                className="h-full bg-brand-accent transition-all duration-300"
+                style={{ width: `${sprint.progressPercent}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>

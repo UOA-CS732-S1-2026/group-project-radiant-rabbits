@@ -14,7 +14,7 @@ export default function BreakdownCard({
 }: BreakdownCardProps) {
   const total = todoCount + inProgressCount + doneCount;
   return (
-    <div className="grid grid-cols-1 gap-md md:grid-cold-3">
+    <div className="grid grid-cols-1 gap-md md:grid-cols-3">
       <BreakdownTile
         label="To Do"
         count={todoCount}
@@ -25,13 +25,13 @@ export default function BreakdownCard({
         label="In Progress"
         count={inProgressCount}
         total={total}
-        dotColour="var(--color-status-inprogress-fg)"
+        dotColour="var(--color-status-in-progress-fg)"
       />
       <BreakdownTile
         label="Done"
         count={doneCount}
         total={total}
-        dotColour="var(--color-status-done-fg)"
+        dotColour="var(--color-status-completed-fg)"
       />
     </div>
   );

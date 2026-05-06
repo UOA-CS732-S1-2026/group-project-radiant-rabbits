@@ -227,7 +227,7 @@ export default function CurrentSprint({
 
   // Display the current sprint page with the fetched metrics
   return (
-    <div className="min-h-screen bg-brand-background">
+    <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
           {refreshError ? (
