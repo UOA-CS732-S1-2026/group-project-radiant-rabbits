@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
-import { avatarUrlForLogin } from "@/app/lib/currentSprintService";
 import ActivityTimeline from "@/components/current-sprint/ActivityTimeline";
 import BreakdownCard from "@/components/current-sprint/BreakdownCard";
 import ContributionCard from "@/components/current-sprint/ContributionCard";
@@ -27,6 +26,8 @@ type SprintTaskRow = {
   ref: string; // "#42" for linked issues, otherwise the task id
   title: string;
   status: TaskStatus;
+  assignees?: Assignee[];
+  labels?: string[];
 };
 
 type ContributorRow = {
