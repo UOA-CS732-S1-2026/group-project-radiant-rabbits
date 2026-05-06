@@ -42,6 +42,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
+    if (group.active === false) {
+      return NextResponse.json(
+        { error: "Archived groups cannot be selected as current" },
+        { status: 400 },
+      );
+    }
+
     if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
