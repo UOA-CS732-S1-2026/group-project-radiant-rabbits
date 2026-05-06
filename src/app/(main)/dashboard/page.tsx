@@ -9,6 +9,7 @@ import { Commit, Group, Sprint, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
+import EndProjectButton from "@/components/dashboard/EndProjectButton";
 
 type DashboardStatus = "ready" | "loading" | "empty" | "error";
 
@@ -81,6 +82,7 @@ export default async function DashboardPage() {
   if (!selectedGroup && normalizedUserId) {
     const candidateGroups = await Group.find({
       $or: [{ createdBy: normalizedUserId }, { members: normalizedUserId }],
+      active: true,
     })
       .sort({ lastSyncAt: -1, updatedAt: -1 })
       .lean();
@@ -109,6 +111,10 @@ export default async function DashboardPage() {
         />
       </div>
     );
+  }
+
+  if (!group.active) {
+    redirect("/join-create-switch-group");
   }
 
   let status: DashboardStatus = "ready";
@@ -159,6 +165,9 @@ export default async function DashboardPage() {
   // Display the dashboard with the fetched metrics
   return (
     <div className="lg:mt-7 lg:mx-6 lg:mb-7 mt-6 mx-5 mb-6 overflow-hidden border-2 border-brand-border border-spacing-2 rounded-lg shadow-lg">
+      <div className="px-4 pt-4 md:px-6 md:pt-5">
+        <EndProjectButton groupId={group._id.toString()} />
+      </div>
       <Dashboard
         status={status}
         statusMessage={statusMessage}
