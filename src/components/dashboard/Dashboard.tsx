@@ -213,52 +213,54 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
 
   // Build the contribution bars with divs and dynamic widths based on the contribution counts
   return (
-    <div className="space-y-sm">
-      {rows.map((row) => {
-        const total = row.commits + row.prs + row.issues;
-        return (
-          <div
-            key={row.name}
-            className="grid grid-cols-[110px_1fr_48px] items-center gap-md"
-          >
-            <div className="flex items-center gap-sm min-w-0">
-              <Avatar
-                name={row.name}
-                initials={row.initials}
-                avatarUrl={row.avatarUrl}
-                size={24}
-              />
-              <span className="truncate text-body-sm font-medium text-brand-dark">
-                {row.name}
-              </span>
+    <div className="flex h-full flex-col">
+      <div className="space-y-sm">
+        {rows.map((row) => {
+          const total = row.commits + row.prs + row.issues;
+          return (
+            <div
+              key={row.name}
+              className="grid grid-cols-[110px_1fr_48px] items-center gap-md"
+            >
+              <div className="flex items-center gap-sm min-w-0">
+                <Avatar
+                  name={row.name}
+                  initials={row.initials}
+                  avatarUrl={row.avatarUrl}
+                  size={24}
+                />
+                <span className="truncate text-body-sm font-medium text-brand-dark">
+                  {row.name}
+                </span>
+              </div>
+              <div className="flex h-5 overflow-hidden rounded-full bg-brand-dark/5">
+                <div
+                  className="bg-brand-accent"
+                  style={{ width: `${(row.commits / max) * 100}%` }}
+                />
+                <div
+                  className="bg-brand-completed/60"
+                  style={{ width: `${(row.prs / max) * 100}%` }}
+                />
+                <div
+                  className="bg-brand-in-progress/70"
+                  style={{ width: `${(row.issues / max) * 100}%` }}
+                />
+              </div>
+              <div className="text-right text-body-xs font-semibold text-brand-dark/60">
+                {total}
+              </div>
             </div>
-            <div className="flex h-5 overflow-hidden rounded-full bg-brand-dark/5">
-              <div
-                className="bg-brand-accent"
-                style={{ width: `${(row.commits / max) * 100}%` }}
-              />
-              <div
-                className="bg-brand-completed/60"
-                style={{ width: `${(row.prs / max) * 100}%` }}
-              />
-              <div
-                className="bg-brand-in-progress/70"
-                style={{ width: `${(row.issues / max) * 100}%` }}
-              />
-            </div>
-            <div className="text-right text-body-xs font-semibold text-brand-dark/60">
-              {total}
-            </div>
-          </div>
-        );
-      })}
-      <div className="flex flex-wrap gap-md text-body-xs text-brand-dark/50 pt-sm">
+          );
+        })}
+      </div>
+      <div className="mt-auto flex flex-wrap gap-md pt-md text-body-xs text-brand-dark/50">
         <span className="inline-flex items-center gap-xs">
           <span className="h-2 w-2 rounded-full bg-brand-accent" />
           Commits
         </span>
         <span className="inline-flex items-center gap-xs">
-          <span className="h-2 w-2 rounded full bg-brand-completed/60" />
+          <span className="h-2 w-2 rounded-full bg-brand-completed/60" />
           PRs
         </span>
         <span className="inline-flex items-center gap-xs">
