@@ -723,7 +723,7 @@ export async function getCurrentSprintData(): Promise<{
     if (!resolved) {
       const message =
         group.iterationFieldConfigured === false
-          ? "This repo's GitHub Project doesn't have an iteration field yet. Add one (https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iterations) and assign tickets to it, then refresh."
+          ? "This repo's GitHub Project doesn't have an iteration field yet. Add one and assign tickets to it, then refresh."
           : "No iterations created yet. Create one in your GitHub Project, assign tickets to it, and refresh.";
       return {
         status: 200,

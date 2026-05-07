@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import Avatar from "@/components/shared/Avatar";
 import BorderedPanel from "@/components/shared/BorderedPanel";
@@ -102,18 +101,13 @@ export default function SprintTaskSection({
           </p>
         ) : (
           <div className="space-y-xs">
-            {filteredTasks.map((task) => {
+            {filteredTasks.map((task, index) => {
               return (
-                <button
+                <div
                   key={task.id}
-                  onClick={() => onTaskClick?.(task)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      onTaskClick?.(task);
-                    }
-                  }}
-                  className="flex w-full min-w-0 items-center gap-md rounded-lg border border-transparent px-md py-md text-left transition hover:border-brand-accent/30 hover:bg-brand-surface/50"
-                  type="button"
+                  className={`flex w-full min-w-0 items-center gap-md px-md py-md text-left-transition ${
+                    index === 0 ? "" : "border-t border-brand-dark/10 pt-md"
+                  }`}
                 >
                   <span className="shrink-0 text-body-xs font-semibold text-brand-dark/60">
                     {task.ref || `#${task.id}`}
@@ -163,12 +157,8 @@ export default function SprintTaskSection({
                         className="shrink-0"
                       />
                     )}
-                    <ChevronRight
-                      size={14}
-                      className="shrink-0 text-brand-dark/40"
-                    />
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
