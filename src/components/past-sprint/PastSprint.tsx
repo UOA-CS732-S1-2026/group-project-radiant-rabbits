@@ -7,7 +7,7 @@ import PageContainer from "@/components/shared/PageContainer";
 type PastSprintProps = {
   status: "ready" | "empty";
   statusMessage?: string;
-  sprints: PastSprintRowData[];
+  sprints?: PastSprintRowData[];
 };
 
 // Reusable status block so every failure surfaces in the past sprint UI
