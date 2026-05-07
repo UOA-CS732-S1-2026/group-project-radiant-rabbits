@@ -90,14 +90,11 @@ export default function ContributionBreakdownCard({
     <Card className="flex flex-col p-md">
       <div className="mb-md flex items-start justify-between gap-md">
         <div>
-          <p className="mb-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-dark/45">
-            Repository contribution
-          </p>
           <h3 className="text-body-lg font-semibold text-brand-dark">
-            Contribution breakdown
+            Contribution Breakdown
           </h3>
           <p className="text-body-xs text-brand-dark/50">
-            Total work across the repo, by person
+            Total work across the repository, by person
           </p>
         </div>
       </div>

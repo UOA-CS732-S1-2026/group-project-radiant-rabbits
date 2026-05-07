@@ -160,11 +160,8 @@ export default function SprintVelocityCard({
     <Card className="flex flex-col p-md">
       <div className="mb-md flex items-start justify-between gap-md">
         <div>
-          <p className="mb-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-dark/45">
-            Sprint velocity
-          </p>
           <h3 className="text-body-lg font-semibold text-brand-dark">
-            Smaller sprint view
+            Sprint velocity
           </h3>
           <p className="text-body-xs text-brand-dark/50">
             Total number of issues closed per sprint
@@ -196,7 +193,7 @@ export default function SprintVelocityCard({
               This repo&apos;s GitHub Project doesn&apos;t have an iteration
               field yet. Once you{" "}
               <a
-                href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iterations"
+                href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields"
                 target="_blank"
                 rel="noreferrer"
                 className="font-medium text-brand-accent underline"
