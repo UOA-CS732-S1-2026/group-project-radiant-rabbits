@@ -29,7 +29,7 @@ export default function PastSprintRow({ sprint, isFirst }: PastSprintRowProps) {
   return (
     <button
       type="button"
-      className={`flex w-full items-center justify-between gap-md px-lg py-md text-left transition hover-bg-brand-dark/5 ${
+      className={`flex w-full items-center justify-between gap-md px-lg py-md text-left transition hover:bg-brand-dark/5 ${
         isFirst ? "" : "border-t border-brand-dark/10"
       }`}
     >
