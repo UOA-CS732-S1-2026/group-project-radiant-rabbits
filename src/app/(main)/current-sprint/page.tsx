@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { getCurrentSprintData } from "@/app/lib/currentSprintService";
-import CurrentSprint from "@/components/main/CurrentSprint";
+import CurrentSprint from "@/components/current-sprint/CurrentSprint";
 
 type CurrentSprintStatus = "ready" | "empty" | "error";
 

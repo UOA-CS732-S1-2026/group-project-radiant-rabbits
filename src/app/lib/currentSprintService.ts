@@ -36,7 +36,11 @@ type SprintTaskRow = {
   title: string;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   issueNumber: number | null;
-  assignees: string[];
+  assignees: Array<{
+    name: string;
+    avatarUrl: string | null;
+  }>;
+  labels?: string[];
 };
 
 type SprintActivity = {
@@ -49,7 +53,9 @@ type SprintActivity = {
 
 // Build a GitHub avatar URL from a login.
 // github.com/<login>.png redirects to the user's current avatar.
-function avatarUrlForLogin(login: string | null | undefined): string | null {
+export function avatarUrlForLogin(
+  login: string | null | undefined,
+): string | null {
   if (!login) return null;
   const trimmed = login.trim();
   if (!trimmed) return null;
@@ -157,7 +163,7 @@ function mergeAssignedIssueCounts(
   // the ticket, not who originally opened the issue.
   for (const task of tasks) {
     for (const assignee of task.assignees) {
-      const trimmed = assignee.trim();
+      const trimmed = assignee.name.trim();
       if (!trimmed) continue;
       const key = trimmed.toLowerCase();
       const entry = contributorMap.get(key) ?? {
@@ -165,11 +171,11 @@ function mergeAssignedIssueCounts(
         commitCount: 0,
         prCount: 0,
         issueCount: 0,
-        avatarUrl: avatarUrlForLogin(trimmed),
+        avatarUrl: assignee.avatarUrl,
       };
       entry.issueCount += 1;
       if (!entry.avatarUrl) {
-        entry.avatarUrl = avatarUrlForLogin(trimmed);
+        entry.avatarUrl = assignee.avatarUrl;
       }
       contributorMap.set(key, entry);
     }
@@ -258,7 +264,10 @@ async function loadSprintTasks(
     title: t.title,
     status: t.status,
     issueNumber: t.issueNumber ?? null,
-    assignees: t.assignees ?? [],
+    assignees: (t.assignees ?? []).map((name) => ({
+      name,
+      avatarUrl: avatarUrlForLogin(name),
+    })),
   }));
 
   const breakdown = {
