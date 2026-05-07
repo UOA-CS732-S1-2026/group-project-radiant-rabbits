@@ -43,7 +43,7 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
         </div>
       </div>
 
-      <div className="max-h-96 space-y-sm overflow-y-auto pr-xs">
+      <div className="h-96 space-y-sm overflow-y-auto pr-xs">
         {items.map((item, index) => (
           <div
             key={`${item.date}-${index}`}

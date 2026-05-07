@@ -90,7 +90,7 @@ export default function SprintTaskSection({
       </div>
 
       {/* Task list */}
-      <div className="min-w-0 max-h-80 overflow-y-auto pr-xs">
+      <div className="h-80 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
           <p className="text-body-md text-brand-dark/60">
             No tasks in this category. Assign tickets to this iteration in your

@@ -44,7 +44,7 @@ export default function ContributionCard({
         <p className="text-body-xs text-brand-dark/50">By person</p>
       </div>
 
-      <div className="max-h-96 space-y-sm overflow-y-auto pr-xs">
+      <div className="h-96 space-y-sm overflow-y-auto pr-xs">
         {contributors.map((person, index) => (
           <div
             key={person.name}
