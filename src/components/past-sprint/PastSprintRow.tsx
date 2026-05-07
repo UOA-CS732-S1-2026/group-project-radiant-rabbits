@@ -45,7 +45,7 @@ export default function PastSprintRow({ sprint, isFirst }: PastSprintRowProps) {
           )}
         </div>
         <p className="text-body-sm text-brand-dark/60">
-          {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+          {formatDate(sprint.startDate)} — {formatDate(sprint.endDate)}
         </p>
         <p className="mt-xs text-body-sm text-brand-dark/70">
           {sprint.summary}
