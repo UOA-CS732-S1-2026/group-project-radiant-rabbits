@@ -5,7 +5,7 @@ import BorderedPanel from "@/components/shared/BorderedPanel";
 import FilterChip from "./FilterChip";
 import StatusBadge from "./StatusBadge";
 
-type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+type TaskStatus = "UNASSIGNED" | "TODO" | "IN_PROGRESS" | "DONE";
 
 type Assignee = {
   name: string;
@@ -37,8 +37,12 @@ export default function SprintTaskSection({
   >("all");
 
   const isUnassigned = (t: Task) => !t.assignees || t.assignees.length === 0;
+  const getDisplayStatus = (t: Task): TaskStatus =>
+    isUnassigned(t) ? "UNASSIGNED" : t.status;
 
-  const todoCount = tasks.filter((t) => t.status === "TODO").length;
+  const todoCount = tasks.filter(
+    (t) => t.status === "TODO" || isUnassigned(t),
+  ).length;
   const inProgressCount = tasks.filter(
     (t) => t.status === "IN_PROGRESS",
   ).length;
@@ -47,7 +51,7 @@ export default function SprintTaskSection({
 
   const filteredTasks = tasks.filter((t) => {
     if (filter === "all") return true;
-    if (filter === "todo") return t.status === "TODO";
+    if (filter === "todo") return t.status === "TODO" || isUnassigned(t);
     if (filter === "in_progress") return t.status === "IN_PROGRESS";
     if (filter === "done") return t.status === "DONE";
     if (filter === "unassigned") return isUnassigned(t);
@@ -141,7 +145,7 @@ export default function SprintTaskSection({
                   </div>
 
                   <div className="ml-auto flex items-center gap-sm">
-                    <StatusBadge status={task.status} />
+                    <StatusBadge status={getDisplayStatus(task)} />
                     {task.assignees && task.assignees.length > 0 ? (
                       <Avatar
                         name={task.assignees[0].name}

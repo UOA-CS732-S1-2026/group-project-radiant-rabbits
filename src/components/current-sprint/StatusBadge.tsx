@@ -1,4 +1,4 @@
-type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+type TaskStatus = "UNASSIGNED" | "TODO" | "IN_PROGRESS" | "DONE";
 
 type StatusBadgeProps = {
   status: TaskStatus;
@@ -8,6 +8,10 @@ type StatusBadgeProps = {
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const styles: Record<TaskStatus, { backgroundColor: string; color: string }> =
     {
+      UNASSIGNED: {
+        backgroundColor: "var(--color-status-unassigned-bg)",
+        color: "var(--color-status-unassigned-fg)",
+      },
       TODO: {
         backgroundColor: "var(--color-status-todo-bg)",
         color: "var(--color-status-todo-fg)",
@@ -22,6 +26,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
       },
     };
   const labels: Record<TaskStatus, string> = {
+    UNASSIGNED: "Unassigned",
     TODO: "To Do",
     IN_PROGRESS: "In Progress",
     DONE: "Closed",

@@ -91,6 +91,8 @@
   /* Component Colors */
   --color-segmented-bg:#f1f5f9;
   --color-button-grey: #7a7a7a;
+  --color-status-unassigned-bg: #dde7f4;
+  --color-status-unassigned-fg: #34527a;
   --color-status-todo-bg: #f6dee2;
   --color-status-todo-fg: #8a3848;
   --color-status-in-progress-bg: #fbf1d9;
