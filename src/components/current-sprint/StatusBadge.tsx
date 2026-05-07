@@ -21,15 +21,15 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
         color: "var(--color-status-in-progress-fg)",
       },
       DONE: {
-        backgroundColor: "var(--color-status-done-bg)",
-        color: "var(--color-status-done-fg)",
+        backgroundColor: "var(--color-status-completed-bg)",
+        color: "var(--color-status-completed-fg)",
       },
     };
   const labels: Record<TaskStatus, string> = {
     UNASSIGNED: "Unassigned",
     TODO: "To Do",
     IN_PROGRESS: "In Progress",
-    DONE: "Closed",
+    DONE: "Done",
   };
   return (
     <span
