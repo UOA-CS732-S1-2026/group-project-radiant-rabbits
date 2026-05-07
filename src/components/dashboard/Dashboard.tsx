@@ -116,7 +116,7 @@ export default function Dashboard({
           <StatsRow metrics={metrics} />
 
           {/* Sprint velocity + repository contribution breakdown */}
-          <div className="grid gap-lg lg:grid-cols-[7fr_3fr]">
+          <div className="grid gap-lg lg:grid-cols-[6fr_4fr]">
             <SprintVelocityCard
               sprints={sprints}
               iterationFieldConfigured={iterationFieldConfigured}
