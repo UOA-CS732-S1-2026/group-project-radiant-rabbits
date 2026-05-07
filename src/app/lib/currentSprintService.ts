@@ -743,33 +743,11 @@ export async function getCurrentSprintData(): Promise<{
     const { sprint, sprintObjectId } = resolved;
     const sessionWithToken = session as { accessToken?: string };
 
-    // Activity metrics are date-bucketed against the sprint window. Tasks come
-    // from SprintTask docs linked to this sprint via the iteration map.
+    // Period metrics scan Commit/Issue/PR by sprint window,
+    // tasks come from SprintTask docs already linked to this sprint.
+
     const [periodActivity, taskData] = await Promise.all([
-      (async () => {
-        if (sessionWithToken.accessToken && group.repoOwner && group.repoName) {
-          try {
-            return await getLivePeriodActivity(
-              sessionWithToken.accessToken,
-              group.repoOwner,
-              group.repoName,
-              sprint.startDate,
-              sprint.endDate,
-            );
-          } catch {
-            return getPeriodActivityFromDb(
-              group._id,
-              sprint.startDate,
-              sprint.endDate,
-            );
-          }
-        }
-        return getPeriodActivityFromDb(
-          group._id,
-          sprint.startDate,
-          sprint.endDate,
-        );
-      })(),
+      getPeriodActivityFromDb(group._id, sprint.startDate, sprint.endDate),
       loadSprintTasks(group._id, sprintObjectId),
     ]);
 
