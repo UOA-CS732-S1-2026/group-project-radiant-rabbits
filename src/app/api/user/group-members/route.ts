@@ -44,10 +44,26 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    // Find the most recently updated group that includes this user
-    const group = await Group.findOne({ members: userRef })
-      .sort({ updatedAt: -1 })
+    // Fetch the user to get their current group id
+    const user = await User.findOne({ githubId: session.user.id })
+      .select("currentGroupId")
       .lean();
+
+    if (!user?.currentGroupId) {
+      return NextResponse.json(
+        { group: null, members: [] },
+        {
+          status: 200,
+          headers: { "Cache-Control": "no-store" },
+        },
+      );
+    }
+
+    // Find the group using the user's current group id and verify user is still a member
+    const group = await Group.findOne({
+      _id: user.currentGroupId,
+      members: userRef,
+    }).lean();
 
     if (!group) {
       return NextResponse.json(
