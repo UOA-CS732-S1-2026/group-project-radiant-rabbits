@@ -27,10 +27,7 @@ type SprintTaskSectionProps = {
 };
 
 // Component to display a section of tasks grouped by status
-export default function SprintTaskSection({
-  tasks,
-  onTaskClick,
-}: SprintTaskSectionProps) {
+export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
   const [filter, setFilter] = useState<
     "all" | "todo" | "in_progress" | "done" | "unassigned"
   >("all");
