@@ -34,7 +34,7 @@ export default function PastSprint({
   }
 
   const sprintList = sprints ?? [];
-  const completedCount = sprintList.filter((s) => !s.isCurrent).length;
+  const completedCount = sprintList.length;
 
   // Display the past sprint page with the fetched metrics
   return (

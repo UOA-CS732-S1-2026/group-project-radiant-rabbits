@@ -9,7 +9,6 @@ export type PastSprintRowData = {
   commits: number;
   issuesClosed: number;
   pullRequestsMerged: number;
-  isCurrent: boolean;
 };
 
 type PastSprintRowProps = {
@@ -34,16 +33,9 @@ export default function PastSprintRow({ sprint, isFirst }: PastSprintRowProps) {
       }`}
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-sm">
-          <h3 className="text-body-lg font-semibold text-brand-dark">
-            {sprint.name}
-          </h3>
-          {sprint.isCurrent && (
-            <span className="rounded-sm bg-brand-accent/10 px-xs py-0.5 text-body-xs font-semibold text-brand-accent uppercase">
-              Current
-            </span>
-          )}
-        </div>
+        <h3 className="text-body-lg font-semibold text-brand-dark">
+          {sprint.name}
+        </h3>
         <p className="text-body-sm text-brand-dark/60">
           {formatDate(sprint.startDate)} — {formatDate(sprint.endDate)}
         </p>

@@ -20,7 +20,7 @@ async function loadPastSprints(
 ): Promise<PastSprintRowData[]> {
   const sprints = await Sprint.find({
     group: groupId,
-    status: { $in: ["COMPLETED", "ACTIVE"] },
+    status: "COMPLETED",
   })
     .sort({ endDate: -1 })
     .lean<
@@ -30,7 +30,6 @@ async function loadPastSprints(
         startDate: Date;
         endDate: Date;
         goal: string | null;
-        isCurrent: boolean;
       }>
     >();
 
@@ -62,7 +61,6 @@ async function loadPastSprints(
         commits,
         issuesClosed,
         pullRequestsMerged,
-        isCurrent: sprint.isCurrent,
       };
     }),
   );
