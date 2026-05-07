@@ -70,12 +70,6 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
               </div>
             </div>
 
-            <div className="justify-self-end">
-              <div className="h-5 w-5 rounded-full border-2 border-brand-accent bg-brand-surface flex items-center justify-center">
-                <div className="h-1.5 w-1.5 rounded-full bg-brand-accent" />
-              </div>
-            </div>
-
             {item.flag ? (
               <span className="justify-self-end rounded-md bg-brand-in-progress/20 px-sm py-xs text-body-xs font-medium text-brand-in-progress">
                 Unlinked
