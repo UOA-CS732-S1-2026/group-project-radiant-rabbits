@@ -131,6 +131,10 @@ export async function aggregateDashboard(
     0,
   );
 
+  // All-time commits for this group, ignoring the date filter.
+  // Used for the repo-wide "total commits" stat on the dashboard.
+  const allTimeCommits = await Commit.countDocuments({ group: gid });
+
   // Issues closed in range
   const totalIssuesClosed = await Issue.countDocuments({
     group: gid,
@@ -181,6 +185,7 @@ export async function aggregateDashboard(
   return {
     contributors: contributorAgg,
     totalCommits,
+    allTimeCommits,
     totalIssuesClosed,
     totalPullRequestsOpened,
     totalPullRequestsMerged,
