@@ -12,6 +12,7 @@ import {
   Issue,
   PullRequest,
   Sprint,
+  SprintTask,
   User,
 } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
@@ -34,10 +35,14 @@ type SprintForDashboard = {
 async function loadSprintsForDashboard(
   groupId: import("mongoose").Types.ObjectId,
 ): Promise<SprintForDashboard[]> {
-  const sprints = await Sprint.find({ group: groupId })
+  const sprints = await Sprint.find({
+    group: groupId,
+    startDate: { $lte: new Date() },
+  })
     .sort({ startDate: 1 })
     .lean<
       Array<{
+        _id: import("mongoose").Types.ObjectId;
         name: string;
         startDate: Date;
         endDate: Date;
@@ -47,22 +52,32 @@ async function loadSprintsForDashboard(
 
   if (sprints.length === 0) return [];
 
-  return Promise.all(
-    sprints.map(async (sprintData) => {
-      const velocity = await Issue.countDocuments({
+  const sprintIds = sprints.map((s) => s._id);
+  const doneCounts = await SprintTask.aggregate<{
+    _id: import("mongoose").Types.ObjectId;
+    count: number;
+  }>([
+    {
+      $match: {
         group: groupId,
-        state: "CLOSED",
-        closedAt: { $gte: sprintData.startDate, $lte: sprintData.endDate },
-      });
-      return {
-        name: sprintData.name,
-        velocity,
-        isCurrent: sprintData.isCurrent,
-        startDate: sprintData.startDate,
-        endDate: sprintData.endDate,
-      };
-    }),
+        sprint: { $in: sprintIds },
+        status: "DONE",
+      },
+    },
+    { $group: { _id: "$sprint", count: { $sum: 1 } } },
+  ]);
+
+  const countBySprintId = new Map(
+    doneCounts.map((row) => [String(row._id), row.count]),
   );
+
+  return sprints.map((sprintData) => ({
+    name: sprintData.name,
+    velocity: countBySprintId.get(String(sprintData._id)) ?? 0,
+    isCurrent: sprintData.isCurrent,
+    startDate: sprintData.startDate,
+    endDate: sprintData.endDate,
+  }));
 }
 
 // Helper to build initials from a name
@@ -234,7 +249,7 @@ async function loadRepositoryContributors(
     "var(--color-brand-accent)",
   ];
 
-  // Convert to array, sort by total contributions and take top 5
+  // Convert to array, sort by total contributions and take top 6
   return Array.from(contributorMap.values())
     .filter((c) => c.commits + c.prs + c.issues > 0)
     .sort(
