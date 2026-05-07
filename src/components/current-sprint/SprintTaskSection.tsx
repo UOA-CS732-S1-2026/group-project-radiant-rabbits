@@ -32,21 +32,25 @@ export default function SprintTaskSection({
   tasks,
   onTaskClick,
 }: SprintTaskSectionProps) {
-  const [filter, setFilter] = useState<"all" | "todo" | "in_progress" | "done">(
-    "all",
-  );
+  const [filter, setFilter] = useState<
+    "all" | "todo" | "in_progress" | "done" | "unassigned"
+  >("all");
+
+  const isUnassigned = (t: Task) => !t.assignees || t.assignees.length === 0;
 
   const todoCount = tasks.filter((t) => t.status === "TODO").length;
   const inProgressCount = tasks.filter(
     (t) => t.status === "IN_PROGRESS",
   ).length;
   const doneCount = tasks.filter((t) => t.status === "DONE").length;
+  const unassignedCount = tasks.filter(isUnassigned).length;
 
   const filteredTasks = tasks.filter((t) => {
     if (filter === "all") return true;
     if (filter === "todo") return t.status === "TODO";
     if (filter === "in_progress") return t.status === "IN_PROGRESS";
     if (filter === "done") return t.status === "DONE";
+    if (filter === "unassigned") return isUnassigned(t);
     return true;
   });
 
@@ -61,6 +65,11 @@ export default function SprintTaskSection({
             label={`All (${tasks.length})`}
             active={filter === "all"}
             onClick={() => setFilter("all")}
+          />
+          <FilterChip
+            label={`Unassigned (${unassignedCount})`}
+            active={filter === "unassigned"}
+            onClick={() => setFilter("unassigned")}
           />
           <FilterChip
             label={`To Do (${todoCount})`}
@@ -133,11 +142,19 @@ export default function SprintTaskSection({
 
                   <div className="ml-auto flex items-center gap-sm">
                     <StatusBadge status={task.status} />
-                    {task.assignees && task.assignees.length > 0 && (
+                    {task.assignees && task.assignees.length > 0 ? (
                       <Avatar
                         name={task.assignees[0].name}
                         initials={task.assignees[0].initials}
                         avatarUrl={task.assignees[0].avatarUrl}
+                        size={24}
+                        className="shrink-0"
+                      />
+                    ) : (
+                      <Avatar
+                        name="Unassigned"
+                        initials="?"
+                        avatarUrl={null}
                         size={24}
                         className="shrink-0"
                       />
