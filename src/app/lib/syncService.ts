@@ -1,10 +1,13 @@
+import type mongoose from "mongoose";
 import {
   fetchCommits,
   fetchIssues,
+  fetchIterations,
   fetchProjectTasks,
   fetchPullRequests,
   GitHubApiError,
   GitHubRateLimitError,
+  type IterationData,
 } from "./githubService";
 import {
   Commit,
@@ -12,9 +15,12 @@ import {
   Group,
   Issue,
   PullRequest,
+  Sprint,
   SprintTask,
 } from "./models";
 import connectMongoDB from "./mongodbConnection";
+
+type IterationMap = Map<string, mongoose.Types.ObjectId>;
 
 // Invalidate all dashboard cache keys using Redis for a group after new data is synced
 async function invalidateDashboardCache(groupId: string) {
@@ -76,27 +82,37 @@ export async function syncGroup(groupId: string, accessToken: string) {
         : undefined;
 
     // Fetch all data from GitHub in parallel - can run them at the same time
-    const [commits, pullRequests, issues, projectTasks] = await Promise.all([
-      fetchCommits(accessToken, repoOwner, repoName, since),
-      fetchPullRequests(accessToken, repoOwner, repoName, since),
-      fetchIssues(accessToken, repoOwner, repoName, since),
-      fetchProjectTasks(accessToken, repoOwner, repoName),
-    ]);
+    const [commits, pullRequests, issues, projectTasks, iterationsResult] =
+      await Promise.all([
+        fetchCommits(accessToken, repoOwner, repoName, since),
+        fetchPullRequests(accessToken, repoOwner, repoName, since),
+        fetchIssues(accessToken, repoOwner, repoName, since),
+        fetchProjectTasks(accessToken, repoOwner, repoName),
+        fetchIterations(accessToken, repoOwner, repoName),
+      ]);
 
-    // Upsert all fetched data into MongoDB
+    // Upsert sprints first (sequential) so we can link tasks to them by iterationId
+    const iterationMap = await upsertSprints(
+      groupId,
+      iterationsResult.iterations,
+    );
+
+    // Upsert everything else in parallel
     await Promise.all([
       upsertCommits(groupId, commits),
       upsertPullRequests(groupId, pullRequests),
       upsertIssues(groupId, issues),
       upsertContributors(groupId, commits),
-      upsertSprintTasks(groupId, projectTasks),
+      upsertSprintTasks(groupId, projectTasks, iterationMap),
     ]);
 
-    // Sync succeeded - update the group's status and timestamp
+    // Sync succeeded - update the group's status and timestamp.
+    // Persist iterationFieldConfigured so the UI knows whether to show a setup hint vs a "no current iteration" hint.
     await Group.findByIdAndUpdate(groupId, {
       lastSyncAt: new Date(),
       syncStatus: "success",
       syncError: null,
+      iterationFieldConfigured: iterationsResult.iterationFieldConfigured,
     });
 
     // Invalidate dashboard cache for this group so fresh data is served
@@ -247,6 +263,7 @@ async function upsertContributors(
 async function upsertSprintTasks(
   groupId: string,
   tasks: Awaited<ReturnType<typeof fetchProjectTasks>>,
+  iterationMap: IterationMap,
 ) {
   // Sprint tasks from GitHub Projects are upserted by issueNumber + group.
   // Tasks without an issueNumber (draft issues) are matched by title + group
@@ -254,6 +271,12 @@ async function upsertSprintTasks(
     const filter = task.issueNumber
       ? { issueNumber: task.issueNumber, group: groupId }
       : { title: task.title, group: groupId, issueNumber: null };
+
+    // Resolve the local Sprint _id for the task's iteration, if any.
+    // null means the task is not assigned to any iteration (i.e. backlog).
+    const sprintId = task.iterationId
+      ? (iterationMap.get(task.iterationId) ?? null)
+      : null;
 
     return {
       updateOne: {
@@ -264,6 +287,7 @@ async function upsertSprintTasks(
             status: task.status,
             assignees: task.assignees,
             issueNumber: task.issueNumber,
+            sprint: sprintId,
             group: groupId,
           },
         },
@@ -275,6 +299,81 @@ async function upsertSprintTasks(
   if (operations.length > 0) {
     await SprintTask.bulkWrite(operations);
   }
+}
+
+// Upsert sprints from GitHub iterations. Returns a map of iterationId -> Sprint._id
+// so callers can link related records (e.g. SprintTask.sprint).
+//
+// Sprint dates: each iteration has a startDate and a duration (in days).
+// We store endDate as the last millisecond of the final day so range queries
+// using $lte include activity from any time on the last day of the sprint.
+//
+// Sprints that exist locally but no longer appear in GitHub iterations are left
+// untouched so historical data is preserved when an iteration gets deleted.
+async function upsertSprints(
+  groupId: string,
+  iterations: IterationData[],
+): Promise<IterationMap> {
+  if (iterations.length === 0) {
+    return new Map();
+  }
+
+  const now = Date.now();
+  const operations = iterations.map((iter) => {
+    const startDate = new Date(`${iter.startDate}T00:00:00.000Z`);
+    const endDate = new Date(
+      startDate.getTime() + iter.duration * 24 * 60 * 60 * 1000 - 1,
+    );
+
+    let status: "PLANNING" | "ACTIVE" | "COMPLETED";
+    let isCurrent: boolean;
+    if (now < startDate.getTime()) {
+      status = "PLANNING";
+      isCurrent = false;
+    } else if (now <= endDate.getTime()) {
+      status = "ACTIVE";
+      isCurrent = true;
+    } else {
+      status = "COMPLETED";
+      isCurrent = false;
+    }
+
+    return {
+      updateOne: {
+        filter: { iterationId: iter.id, group: groupId },
+        update: {
+          $set: {
+            name: iter.title,
+            startDate,
+            endDate,
+            status,
+            isCurrent,
+            group: groupId,
+          },
+          $setOnInsert: { iterationId: iter.id },
+        },
+        upsert: true,
+      },
+    };
+  });
+
+  await Sprint.bulkWrite(operations);
+
+  // Look up the Sprint _ids we just upserted so we can return the iteration map
+  const upsertedSprints = await Sprint.find({
+    group: groupId,
+    iterationId: { $in: iterations.map((i) => i.id) },
+  })
+    .select("_id iterationId")
+    .lean<Array<{ _id: mongoose.Types.ObjectId; iterationId: string }>>();
+
+  const map: IterationMap = new Map();
+  for (const sprint of upsertedSprints) {
+    if (sprint.iterationId) {
+      map.set(sprint.iterationId, sprint._id);
+    }
+  }
+  return map;
 }
 
 // Error handling - different errors get different statuses so the UI can show the right message

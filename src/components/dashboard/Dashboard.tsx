@@ -1,4 +1,3 @@
-import type { Sprint } from "@/components/dashboard/ProjectTimeline";
 import ProjectTimeline from "@/components/dashboard/ProjectTimeline";
 
 // Fetch all data required to display the dashboard metrics and pass it to the Dashboard component for rendering
@@ -9,6 +8,12 @@ type RepositoryInfo = {
   syncStatus?: string | null;
   syncError?: string | null;
   validationError?: string | null;
+};
+
+type SprintForDashboard = {
+  name: string;
+  velocity: number;
+  isCurrent: boolean;
 };
 
 type DashboardProps = {
@@ -24,14 +29,13 @@ type DashboardProps = {
     issuesClosedLastSprint: number;
     activeContributors: number;
   };
-  timeline?: {
-    projectStartDate?: Date | string | null;
-    projectEndDate?: Date | string | null;
-    sprintLengthDays?: number | null;
-  };
+  sprints?: SprintForDashboard[];
+  // null before first sync, false if no iteration field, true if set up.
+  iterationFieldConfigured?: boolean | null;
+  // ISO date of the next iteration's start. Only set when iterations exist
+  // but none cover today.
+  nextSprintStart?: string | null;
 };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Reusable status/error block so every failure surfaces in the dashboard UI
 function StatusBlock({ message }: { message: string }) {
@@ -43,57 +47,14 @@ function StatusBlock({ message }: { message: string }) {
   );
 }
 
-type SprintProgress =
-  | { ok: true; currentSprint: number; totalSprints: number }
-  | { ok: false; error: string };
-
-// Helper function to compute current sprint and total sprints based on project timeline
-function computeSprintProgress(
-  timeline?: DashboardProps["timeline"],
-): SprintProgress {
-  const start = timeline?.projectStartDate
-    ? new Date(timeline.projectStartDate)
-    : null;
-  const end = timeline?.projectEndDate
-    ? new Date(timeline.projectEndDate)
-    : null;
-
-  // Check that all the required information is fetched to build the dashboard
-  // If any of the required timeline information is missing or invalid, return the error UI with the error message
-  if (
-    !start ||
-    !end ||
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime()) ||
-    end <= start
-  ) {
-    return {
-      ok: false,
-      error:
-        "Project timeline is missing or invalid: a valid project start and end date are required.",
-    };
-  }
-
-  if (!timeline?.sprintLengthDays || timeline.sprintLengthDays <= 0) {
-    return {
-      ok: false,
-      error:
-        "Sprint length is missing or invalid: a positive sprint length is required.",
-    };
-  }
-
-  const sprintLength = timeline.sprintLengthDays;
-
-  const totalSprints = Math.max(
-    1,
-    Math.ceil((end.getTime() - start.getTime()) / (sprintLength * DAY_MS)),
-  );
-
-  const elapsedDays = (Date.now() - start.getTime()) / DAY_MS;
-  const rawCurrent = Math.floor(elapsedDays / sprintLength) + 1;
-  const currentSprint = Math.min(Math.max(rawCurrent, 1), totalSprints);
-
-  return { ok: true, currentSprint, totalSprints };
+function formatDateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-NZ", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 // Page component that shows when the dashboard is loading or if it has an error
@@ -102,7 +63,9 @@ export default function Dashboard({
   statusMessage,
   repository: _repository,
   metrics,
-  timeline,
+  sprints,
+  iterationFieldConfigured,
+  nextSprintStart,
 }: DashboardProps) {
   if (status !== "ready") {
     return (
@@ -146,23 +109,6 @@ export default function Dashboard({
     },
   ];
 
-  // Placeholder data for the timeline chart until sprint velocity calculation is implemented
-  const defaultSprints: Sprint[] = [
-    { name: "Sprint 1", velocity: 5 },
-    { name: "Sprint 2", velocity: 12 },
-    { name: "Sprint 3", velocity: 18 },
-    { name: "Sprint 4", velocity: 28 },
-    { name: "Sprint 5", velocity: 38 },
-    { name: "Sprint 6", velocity: 45 },
-    { name: "Sprint 7", velocity: 50 },
-    { name: "Sprint 8", velocity: 55 },
-  ];
-  const sprintProgress = computeSprintProgress(timeline);
-  if (!sprintProgress.ok) {
-    return <StatusBlock message={sprintProgress.error} />;
-  }
-  const { currentSprint, totalSprints } = sprintProgress;
-
   // Display the dashboard with the fetched metrics and timeline chart
   return (
     <div className="ml-lg mr-lg mt-md flex flex-col lg:gap-lg gap-md">
@@ -191,12 +137,51 @@ export default function Dashboard({
 
       <hr className="border-t border-brand-dark/10" />
 
-      {/* Project Timeline & Sprint Velocity */}
-      <ProjectTimeline
-        sprints={defaultSprints}
-        currentSprint={currentSprint}
-        totalSprints={totalSprints}
-      />
+      {/* Sprint Velocity — branches on whether the iteration field is set up */}
+      {sprints && sprints.length > 0 ? (
+        <>
+          <ProjectTimeline sprints={sprints} />
+          {/* Iterations exist but none cover today — show the next start date */}
+          {!sprints.some((s) => s.isCurrent) && nextSprintStart ? (
+            <div className="rounded-2xl bg-brand-surface p-md shadow-md">
+              <p className="text-body-sm text-brand-dark/70">
+                No iteration is active right now. The next iteration starts on{" "}
+                <span className="font-semibold text-brand-dark">
+                  {formatDateLabel(nextSprintStart)}
+                </span>
+                .
+              </p>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="rounded-2xl bg-brand-surface p-lg shadow-md">
+          <h3 className="text-body-lg font-semibold text-brand-dark">
+            Sprint Velocity
+          </h3>
+          {iterationFieldConfigured === false ? (
+            <p className="mt-sm text-body-sm text-brand-dark/70">
+              This repo&apos;s GitHub Project doesn&apos;t have an iteration
+              field yet. Once you{" "}
+              <a
+                href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iterations"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-brand-accent underline"
+              >
+                add an iteration field
+              </a>{" "}
+              to your Project (or create a Project for this repo) and assign
+              tickets to it, sprint metrics will appear here on the next sync.
+            </p>
+          ) : (
+            <p className="mt-sm text-body-sm text-brand-dark/70">
+              Your iteration field is set up but has no iterations yet. Create
+              one in your GitHub Project, assign tickets to it, then refresh.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

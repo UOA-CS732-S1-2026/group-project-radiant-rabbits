@@ -45,7 +45,8 @@ const pullRequestSchema = new Schema(
   },
 );
 
-pullRequestSchema.index({ number: 1 }, { unique: true });
+// Use a compound unique index so the same issue number can exist in different groups/repos without duplication
+pullRequestSchema.index({ number: 1, group: 1 }, { unique: true });
 pullRequestSchema.index({ group: 1, createdAt: 1 });
 pullRequestSchema.index({ group: 1, state: 1, mergedAt: 1 });
 

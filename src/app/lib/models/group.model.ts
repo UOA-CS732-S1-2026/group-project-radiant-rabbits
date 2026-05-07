@@ -45,19 +45,6 @@ const groupSchema = new Schema(
       required: true,
       set: normalizeUserRef,
     },
-    projectStartDate: {
-      type: Date,
-      default: null,
-    },
-    projectEndDate: {
-      type: Date,
-      default: null,
-    },
-    sprintLengthWeeks: {
-      type: Number,
-      min: 1,
-      default: null,
-    },
     lastSyncAt: {
       type: Date,
       default: null,
@@ -70,6 +57,11 @@ const groupSchema = new Schema(
     },
     syncError: {
       type: String,
+      default: null,
+    },
+    // Whether the linked GitHub Project has an iteration field.
+    iterationFieldConfigured: {
+      type: Boolean,
       default: null,
     },
   },
@@ -90,7 +82,6 @@ groupSchema.index(
 );
 groupSchema.index({ members: 1 });
 groupSchema.index({ createdBy: 1 });
-groupSchema.index({ projectStartDate: 1, projectEndDate: 1 });
 groupSchema.index({ syncStatus: 1 });
 
 export const Group =

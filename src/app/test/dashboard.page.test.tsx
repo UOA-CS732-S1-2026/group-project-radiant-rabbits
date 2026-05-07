@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import DashboardPage from "@/app/(main)/dashboard/page";
 import { calculateGithubMetricsLive } from "@/app/lib/githubCalculator";
-import { Commit, Group, User } from "@/app/lib/models";
+import { Commit, Group, Sprint, User } from "@/app/lib/models";
 import { normalizeUserRef } from "@/app/lib/userRef";
 
 // Create a mock for all dependencies used in the dashboard page
@@ -70,6 +70,7 @@ afterEach(async () => {
     Group.deleteMany({}),
     User.deleteMany({}),
     Commit.deleteMany({}),
+    Sprint.deleteMany({}),
   ]);
   jest.clearAllMocks();
 });
@@ -89,9 +90,6 @@ async function seedUserWithGroup(
   overrides: Partial<{
     repoOwner: string | null;
     repoName: string | null;
-    sprintLengthWeeks: number | null;
-    projectStartDate: Date | null;
-    projectEndDate: Date | null;
     syncStatus:
       | "pending"
       | "in_progress"
@@ -110,18 +108,6 @@ async function seedUserWithGroup(
     repoOwner:
       overrides.repoOwner === undefined ? "radiant" : overrides.repoOwner,
     repoName: overrides.repoName === undefined ? "rabbits" : overrides.repoName,
-    projectStartDate:
-      overrides.projectStartDate === undefined
-        ? new Date("2026-01-01")
-        : overrides.projectStartDate,
-    projectEndDate:
-      overrides.projectEndDate === undefined
-        ? new Date("2026-03-01")
-        : overrides.projectEndDate,
-    sprintLengthWeeks:
-      overrides.sprintLengthWeeks === undefined
-        ? 2
-        : overrides.sprintLengthWeeks,
     syncStatus: overrides.syncStatus ?? "success",
   });
 
@@ -249,7 +235,7 @@ describe("DashboardPage — success path", () => {
     mockGetServerSession.mockResolvedValue(
       authedSession({ accessToken: "gh-token" }),
     );
-    const group = await seedUserWithGroup({ sprintLengthWeeks: 2 });
+    const group = await seedUserWithGroup();
 
     const metrics = {
       totalCommits: 42,
@@ -267,14 +253,13 @@ describe("DashboardPage — success path", () => {
     const Page = await DashboardPage();
     render(Page);
 
-    // Calculator should be called with the converted sprint length (weeks * 7)
     expect(mockCalculateGithubMetricsLive).toHaveBeenCalledTimes(1);
     expect(mockCalculateGithubMetricsLive).toHaveBeenCalledWith(
       "gh-token",
       group._id.toString(),
       "radiant",
       "rabbits",
-      14,
+      null,
     );
 
     const props = lastDashboardProps();
@@ -288,20 +273,74 @@ describe("DashboardPage — success path", () => {
       syncStatus: "success",
       validationError: null,
     });
-    expect(props.timeline).toMatchObject({
-      sprintLengthDays: 14,
-    });
+    // No sprints seeded for this group — page returns an empty array.
+    expect(props.sprints).toEqual([]);
   });
 
-  // Test 7: test case for sprintLengthWeeks converted correctly (the latest fix) for non-default values
-  it("should convert sprintLengthWeeks to days (weeks × 7) when calling the calculator", async () => {
+  // Test 7: sprints synced from iterations are passed through with velocity counts
+  it("should pass synced sprints with velocity (commit count) and isCurrent flag", async () => {
     mockGetServerSession.mockResolvedValue(
       authedSession({ accessToken: "gh-token" }),
     );
-    await seedUserWithGroup({ sprintLengthWeeks: 3 });
+    const group = await seedUserWithGroup();
+
+    // Two sprints: one in the past with 2 commits inside its window, one current with 1
+    const sprintAStart = new Date("2026-01-01T00:00:00Z");
+    const sprintAEnd = new Date("2026-01-14T23:59:59.999Z");
+    const sprintBStart = new Date("2026-01-15T00:00:00Z");
+    const sprintBEnd = new Date("2026-01-28T23:59:59.999Z");
+
+    await Sprint.create([
+      {
+        group: group._id,
+        iterationId: "iter_a",
+        name: "Sprint A",
+        startDate: sprintAStart,
+        endDate: sprintAEnd,
+        status: "COMPLETED",
+        isCurrent: false,
+      },
+      {
+        group: group._id,
+        iterationId: "iter_b",
+        name: "Sprint B",
+        startDate: sprintBStart,
+        endDate: sprintBEnd,
+        status: "ACTIVE",
+        isCurrent: true,
+      },
+    ]);
+
+    // 2 commits in Sprint A window, 1 in Sprint B window, 1 outside both
+    await Commit.create([
+      {
+        group: group._id,
+        sha: "a1",
+        author: { name: "x", email: "x@y" },
+        date: new Date("2026-01-05"),
+      },
+      {
+        group: group._id,
+        sha: "a2",
+        author: { name: "x", email: "x@y" },
+        date: new Date("2026-01-10"),
+      },
+      {
+        group: group._id,
+        sha: "b1",
+        author: { name: "x", email: "x@y" },
+        date: new Date("2026-01-20"),
+      },
+      {
+        group: group._id,
+        sha: "outside",
+        author: { name: "x", email: "x@y" },
+        date: new Date("2026-02-01"),
+      },
+    ]);
 
     mockCalculateGithubMetricsLive.mockResolvedValueOnce({
-      totalCommits: 0,
+      totalCommits: 4,
       commitsLastSprint: 0,
       totalPullRequests: 0,
       pullRequestsMergedLastSprint: 0,
@@ -315,117 +354,11 @@ describe("DashboardPage — success path", () => {
     const Page = await DashboardPage();
     render(Page);
 
-    const [, , , , sprintLengthDaysArg] =
-      mockCalculateGithubMetricsLive.mock.calls[0];
-    expect(sprintLengthDaysArg).toBe(21);
-
     const props = lastDashboardProps();
-    expect(props.timeline.sprintLengthDays).toBe(21);
-  });
-
-  // Test 8: test case for when sprintLengthWeeks is null
-  it("should pass sprintLengthDays=null when the group has no sprintLengthWeeks set", async () => {
-    mockGetServerSession.mockResolvedValue(
-      authedSession({ accessToken: "gh-token" }),
-    );
-    await seedUserWithGroup({ sprintLengthWeeks: null });
-
-    mockCalculateGithubMetricsLive.mockResolvedValueOnce({
-      totalCommits: 0,
-      commitsLastSprint: 0,
-      totalPullRequests: 0,
-      pullRequestsMergedLastSprint: 0,
-      totalIssuesClosed: 0,
-      issuesClosedLastSprint: 0,
-      activeContributors: 0,
-      lastSprintStart: new Date(),
-      lastSprintEnd: new Date(),
-    });
-
-    const Page = await DashboardPage();
-    render(Page);
-
-    const [, , , , sprintLengthDaysArg] =
-      mockCalculateGithubMetricsLive.mock.calls[0];
-    expect(sprintLengthDaysArg).toBeNull();
-
-    const props = lastDashboardProps();
-    expect(props.timeline.sprintLengthDays).toBeNull();
-  });
-});
-
-// Exercise the real Dashboard component so we can assert on the error StatusBlock
-// that renders when the timeline data (sprint length / start / end) is missing or invalid.
-describe("DashboardPage — Dashboard renders timeline validation errors", () => {
-  const emptyMetrics = {
-    totalCommits: 0,
-    commitsLastSprint: 0,
-    totalPullRequests: 0,
-    pullRequestsMergedLastSprint: 0,
-    totalIssuesClosed: 0,
-    issuesClosedLastSprint: 0,
-    activeContributors: 0,
-    lastSprintStart: new Date(),
-    lastSprintEnd: new Date(),
-  };
-
-  beforeEach(() => {
-    const RealDashboard = jest.requireActual(
-      "@/components/dashboard/Dashboard",
-    ).default;
-    MockDashboard.mockImplementation(RealDashboard);
-    mockGetServerSession.mockResolvedValue(
-      authedSession({ accessToken: "gh-token" }),
-    );
-    mockCalculateGithubMetricsLive.mockResolvedValue(emptyMetrics);
-  });
-
-  // Test 9: test case for missing sprintLengthWeeks
-  it("should render sprint-length error when the group has no sprintLengthWeeks", async () => {
-    await seedUserWithGroup({ sprintLengthWeeks: null });
-
-    const Page = await DashboardPage();
-    render(Page);
-
-    expect(
-      screen.queryByText(/Sprint length is missing or invalid/i),
-    ).not.toBeNull();
-  });
-
-  // Test 10: test case for no project timeline (start/end dates)
-  it("should render timeline error when the group has no projectStartDate", async () => {
-    await seedUserWithGroup({ projectStartDate: null });
-
-    const Page = await DashboardPage();
-    render(Page);
-
-    expect(
-      screen.queryByText(/Project timeline is missing or invalid/i),
-    ).not.toBeNull();
-  });
-  it("should render timeline error when the group has no projectEndDate", async () => {
-    await seedUserWithGroup({ projectEndDate: null });
-
-    const Page = await DashboardPage();
-    render(Page);
-
-    expect(
-      screen.queryByText(/Project timeline is missing or invalid/i),
-    ).not.toBeNull();
-  });
-
-  // Test 11: test case for projectEndDate on or before projectStartDate
-  it("should render timeline error when projectEndDate is on or before projectStartDate", async () => {
-    await seedUserWithGroup({
-      projectStartDate: new Date("2026-03-01"),
-      projectEndDate: new Date("2026-01-01"),
-    });
-
-    const Page = await DashboardPage();
-    render(Page);
-
-    expect(
-      screen.queryByText(/Project timeline is missing or invalid/i),
-    ).not.toBeNull();
+    // seedUserWithGroup also seeds a commit at 2026-01-15, which falls inside Sprint B's window
+    expect(props.sprints).toEqual([
+      { name: "Sprint A", velocity: 2, isCurrent: false },
+      { name: "Sprint B", velocity: 2, isCurrent: true },
+    ]);
   });
 });

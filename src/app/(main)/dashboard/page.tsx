@@ -5,12 +5,52 @@ import {
   calculateGithubMetricsLive,
   type GithubMetrics,
 } from "@/app/lib/githubCalculator";
-import { Commit, Group, User } from "@/app/lib/models";
+import { Commit, Group, Sprint, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
 
 type DashboardStatus = "ready" | "loading" | "empty" | "error";
+
+type SprintForDashboard = {
+  name: string;
+  velocity: number;
+  isCurrent: boolean;
+};
+
+// Read all sprints for the group from the DB and count commits in each sprint's
+// date range to derive velocity. Sprints come from synced GitHub iterations
+// (see syncService.upsertSprints). Returns [] when no iterations have been synced.
+async function loadSprintsForDashboard(
+  groupId: import("mongoose").Types.ObjectId,
+): Promise<SprintForDashboard[]> {
+  const sprints = await Sprint.find({ group: groupId })
+    .sort({ startDate: 1 })
+    .lean<
+      Array<{
+        name: string;
+        startDate: Date;
+        endDate: Date;
+        isCurrent: boolean;
+      }>
+    >();
+
+  if (sprints.length === 0) return [];
+
+  return Promise.all(
+    sprints.map(async (sprint) => {
+      const velocity = await Commit.countDocuments({
+        group: groupId,
+        date: { $gte: sprint.startDate, $lte: sprint.endDate },
+      });
+      return {
+        name: sprint.name,
+        velocity,
+        isCurrent: sprint.isCurrent,
+      };
+    }),
+  );
+}
 
 // Fetch all data required to display the dashboard metrics
 // Could take a while as it may involve multiple calls for githubCalculator
@@ -34,54 +74,30 @@ export default async function DashboardPage() {
     ? await Group.findById(user.currentGroupId).lean()
     : null;
 
-  const currentGroupId = currentGroup?._id?.toString();
-  let selectedGroup = null;
-  if (normalizedUserId) {
+  let selectedGroup = currentGroup;
+
+  // Only run the fallback when the user hasn't picked a group yet.
+  // Don't override an explicit selection.
+  if (!selectedGroup && normalizedUserId) {
     const candidateGroups = await Group.find({
       $or: [{ createdBy: normalizedUserId }, { members: normalizedUserId }],
     })
       .sort({ lastSyncAt: -1, updatedAt: -1 })
       .lean();
 
-    if (candidateGroups.length > 0) {
-      const successfulCandidates = candidateGroups.filter(
-        (candidate) => candidate.syncStatus === "success",
-      );
+    selectedGroup =
+      candidateGroups.find((candidate) => candidate.syncStatus === "success") ??
+      candidateGroups[0] ??
+      null;
 
-      const candidateGroupsWithoutCurrent = candidateGroups.filter(
-        (candidate) => candidate._id.toString() !== currentGroupId,
-      );
-
-      const successfulWithoutCurrent = successfulCandidates.filter(
-        (candidate) => candidate._id.toString() !== currentGroupId,
-      );
-
-      const groupSearchOrder = [
-        ...(currentGroup ? [currentGroup] : []),
-        ...successfulWithoutCurrent,
-        ...candidateGroupsWithoutCurrent,
-      ];
-
-      for (const candidate of groupSearchOrder) {
-        const hasCommitData = await Commit.exists({ group: candidate._id });
-        if (hasCommitData) {
-          selectedGroup = candidate;
-          break;
-        }
-      }
-
-      selectedGroup ??=
-        currentGroup ?? successfulCandidates[0] ?? candidateGroups[0];
+    if (selectedGroup) {
+      await User.findByIdAndUpdate(normalizedUserId, {
+        currentGroupId: selectedGroup._id,
+      });
     }
   }
 
   const group = selectedGroup;
-
-  if (group && normalizedUserId && group._id.toString() !== currentGroupId) {
-    await User.findByIdAndUpdate(normalizedUserId, {
-      currentGroupId: group._id,
-    });
-  }
 
   // If user is not part of any group, show error message
   if (!group) {
@@ -99,11 +115,6 @@ export default async function DashboardPage() {
   let statusMessage: string | undefined;
   let githubMetrics: GithubMetrics | undefined;
 
-  // Convert sprint length from weeks to days
-  const sprintLengthDays = group.sprintLengthWeeks
-    ? group.sprintLengthWeeks * 7
-    : null;
-
   // Validate that the group actually has a repository
   if (!group.repoOwner || !group.repoName) {
     status = "error";
@@ -119,7 +130,7 @@ export default async function DashboardPage() {
         group._id.toString(),
         group.repoOwner,
         group.repoName,
-        sprintLengthDays,
+        null,
       );
     } catch (error) {
       console.error("Failed to calculate dashboard metrics:", error);
@@ -127,6 +138,23 @@ export default async function DashboardPage() {
       statusMessage = error instanceof Error ? error.message : String(error);
     }
   }
+
+  // Sprint data is sourced from synced GitHub iterations — empty array when
+  // none have been synced yet. The Dashboard component handles the empty state.
+  const sprints = await loadSprintsForDashboard(group._id);
+
+  // Find the next future sprint so we can show "next iteration starts on X"
+  // when no iteration covers today.
+  const nextSprintDoc =
+    sprints.length > 0 && !sprints.some((s) => s.isCurrent)
+      ? await Sprint.findOne({
+          group: group._id,
+          startDate: { $gt: new Date() },
+        })
+          .sort({ startDate: 1 })
+          .select("startDate")
+          .lean<{ startDate: Date }>()
+      : null;
 
   // Display the dashboard with the fetched metrics
   return (
@@ -146,11 +174,11 @@ export default async function DashboardPage() {
               : "No repository is connected to this group.",
         }}
         metrics={githubMetrics}
-        timeline={{
-          projectStartDate: group.projectStartDate,
-          projectEndDate: group.projectEndDate,
-          sprintLengthDays,
-        }}
+        sprints={sprints}
+        iterationFieldConfigured={group.iterationFieldConfigured ?? null}
+        nextSprintStart={
+          nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
+        }
       />
     </div>
   );

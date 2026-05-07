@@ -32,6 +32,9 @@ jest.mock("@/app/lib/models", () => ({
     create: jest.fn(),
     findOne: jest.fn(),
   },
+  User: {
+    findOneAndUpdate: jest.fn(),
+  },
 }));
 
 jest.mock("@/app/lib/githubService", () => ({
