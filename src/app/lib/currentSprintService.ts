@@ -394,8 +394,8 @@ async function getPeriodActivityFromDb(
   const timelineFromIssuesCreated: SprintActivity[] = issuesCreatedInWindow.map(
     (issue) => ({
       date: issue.createdAt,
-      text: `Created Issue #${issue.number}`,
-      initials: "I",
+      text: `${issue.author || "Unknown"} created Issue #${issue.number}`,
+      initials: (issue.author || "U").slice(0, 1).toUpperCase(),
       avatarUrl: avatarUrlForLogin(issue.author),
     }),
   );
@@ -403,16 +403,16 @@ async function getPeriodActivityFromDb(
   const timelineFromIssuesClosed: SprintActivity[] = issuesClosedInWindow.map(
     (issue) => ({
       date: issue.closedAt,
-      text: `Closed Issue #${issue.number}`,
-      initials: "I",
+      text: `${issue.author || "Unknown"} closed Issue #${issue.number}`,
+      initials: (issue.author || "U").slice(0, 1).toUpperCase(),
       avatarUrl: avatarUrlForLogin(issue.author),
     }),
   );
 
   const timelineFromPRs: SprintActivity[] = recentMergedPRs.map((pr) => ({
     date: pr.mergedAt,
-    text: `Merged PR #${pr.number}`,
-    initials: (pr.author || "P").slice(0, 1).toUpperCase(),
+    text: `${pr.author || "Unknown"} merged PR #${pr.number}`,
+    initials: (pr.author || "U").slice(0, 1).toUpperCase(),
     avatarUrl: avatarUrlForLogin(pr.author),
   }));
 
