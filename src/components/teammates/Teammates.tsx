@@ -48,20 +48,22 @@ export default function Teammates({
                 </p>
               )}
             </div>
-            {/* Invite button */}
-            <button
-              type="button"
-              className="shrink-0 rounded-lg bg-brand-accent px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-brand-accent/90"
-            >
-              + Invite Member
-            </button>
-            {/* Leave button */}
-            <button
-              type="button"
-              className="shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-status-todo-fg/90"
-            >
-              Leave Group
-            </button>
+            <div className="flex shrink-0 items-center gap-sm">
+              {/* Invite button */}
+              <button
+                type="button"
+                className="rounded-lg bg-brand-accent px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-brand-accent/90"
+              >
+                + Invite Member
+              </button>
+              {/* Leave button */}
+              <button
+                type="button"
+                className="rounded-lg bg-status-todo-fg px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-status-todo-fg/90"
+              >
+                Leave Group
+              </button>
+            </div>
           </div>
           {/* Teammate rows */}
           {memberList.length === 0 ? (
