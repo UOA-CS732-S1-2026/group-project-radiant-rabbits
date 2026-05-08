@@ -1,15 +1,15 @@
 import PageContainer from "@/components/shared/PageContainer";
 
-// A current sprint loading component displayed while the current sprint information is being fetched
-export default function CurrentSprintLoading() {
+// A teammates loading component displayed while the team members information is being fetched
+export default function TeammatesLoading() {
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <h2 className="text-h3 font-bold text-brand-dark">
-          Loading current sprint...
+          Loading team members...
         </h2>
         <p className="mt-sm text-body-sm text-brand-dark/70">
-          Fetching project metrics and sprint information.
+          Fetching project members and their information.
         </p>
       </PageContainer>
     </div>

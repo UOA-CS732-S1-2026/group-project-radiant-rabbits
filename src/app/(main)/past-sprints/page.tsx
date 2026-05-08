@@ -12,34 +12,17 @@ import {
   User,
 } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import PastSprint from "@/components/past-sprint/PastSprint";
+import type { PastSprintRowData } from "@/components/past-sprint/PastSprintRow";
 import BorderedPanel from "@/components/shared/BorderedPanel";
 import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
 
-type PastSprintRow = {
-  id: string;
-  name: string;
-  startDate: Date;
-  endDate: Date;
-  summary: string;
-  commits: number;
-  issuesClosed: number;
-  pullRequestsMerged: number;
-};
-
-function formatDate(value: Date) {
-  return value.toLocaleDateString("en-NZ", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 // Load completed sprints with per-sprint commit and closed-issue counts.
 async function loadPastSprints(
   groupId: mongoose.Types.ObjectId,
-): Promise<PastSprintRow[]> {
+): Promise<PastSprintRowData[]> {
   const sprints = await Sprint.find({
     group: groupId,
     status: "COMPLETED",
@@ -88,33 +71,23 @@ async function loadPastSprints(
   );
 }
 
-function SprintSummaryStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number;
-}) {
+function formatDate(value: Date) {
+  return value.toLocaleDateString("en-NZ", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function SprintSummaryStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-brand-background px-md py-sm">
-      <p className="text-body-xs font-medium text-brand-dark/60">{label}</p>
-      <p className="mt-xs text-body-md font-semibold text-brand-dark">
-        {value}
-      </p>
+    <div className="rounded-lg border border-brand-dark/10 bg-brand-background px-md py-sm">
+      <p className="text-body-lg font-semibold text-brand-dark">{value}</p>
+      <p className="text-body-xs text-brand-dark/60">{label}</p>
     </div>
   );
 }
 
-function EmptyState({ message }: { message: string }) {
-  return (
-    <Card className="border border-brand-dark/10 border-l-0 shadow-none">
-      <BorderedPanel className="p-lg">
-        <p className="text-body-md text-brand-dark/70">{message}</p>
-      </BorderedPanel>
-    </Card>
-  );
-}
-
+// Fetch all data required to display the past sprints list
 export default async function PastSprintsPage() {
   const session = await getServerSession(options);
   if (!session?.user) {
@@ -127,33 +100,27 @@ export default async function PastSprintsPage() {
     "currentGroupId",
   );
 
+  // If the user has no current group, show error message
   if (!user?.currentGroupId) {
     return (
-      <PageContainer>
-        <SectionHeading
-          title="Past Sprints"
-          subtitle="Browse completed sprints and review key delivery details."
-        />
-        <EmptyState message="No group selected. Create or join a group to see past sprints." />
-      </PageContainer>
+      <PastSprint
+        status="empty"
+        statusMessage="No group selected. Create or join a group to see past sprints."
+      />
     );
   }
 
+  // If the user's current group doesn't exist, show error message
   const group = await Group.findById(user.currentGroupId).select(
     "_id iterationFieldConfigured",
   );
   if (!group) {
     return (
-      <PageContainer>
-        <SectionHeading
-          title="Past Sprints"
-          subtitle="Browse completed sprints and review key delivery details."
-        />
-        <EmptyState message="Current group not found." />
-      </PageContainer>
+      <PastSprint status="empty" statusMessage="Current group not found." />
     );
   }
 
+  // Load past sprints for the user's current group and display
   const pastSprints = await loadPastSprints(group._id);
 
   // Look up the next upcoming sprint so we can show a banner when nothing is active today.

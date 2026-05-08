@@ -90,9 +90,6 @@ async function seedUserWithGroup(
   overrides: Partial<{
     repoOwner: string | null;
     repoName: string | null;
-    sprintLengthWeeks: number | null;
-    projectStartDate: Date | null;
-    projectEndDate: Date | null;
     syncStatus:
       | "pending"
       | "in_progress"
@@ -111,18 +108,6 @@ async function seedUserWithGroup(
     repoOwner:
       overrides.repoOwner === undefined ? "radiant" : overrides.repoOwner,
     repoName: overrides.repoName === undefined ? "rabbits" : overrides.repoName,
-    projectStartDate:
-      overrides.projectStartDate === undefined
-        ? new Date("2026-01-01")
-        : overrides.projectStartDate,
-    projectEndDate:
-      overrides.projectEndDate === undefined
-        ? new Date("2026-03-01")
-        : overrides.projectEndDate,
-    sprintLengthWeeks:
-      overrides.sprintLengthWeeks === undefined
-        ? 2
-        : overrides.sprintLengthWeeks,
     syncStatus: overrides.syncStatus ?? "success",
   });
 
