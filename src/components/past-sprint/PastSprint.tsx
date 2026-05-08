@@ -8,6 +8,7 @@ type PastSprintProps = {
   status: "ready" | "empty";
   statusMessage?: string;
   sprints?: PastSprintRowData[];
+  groupId?: string;
 };
 
 // Reusable status block so every failure surfaces in the past sprint UI
@@ -26,6 +27,7 @@ export default function PastSprint({
   status,
   statusMessage,
   sprints,
+  groupId,
 }: PastSprintProps) {
   if (status === "empty") {
     return (
@@ -59,6 +61,7 @@ export default function PastSprint({
                   key={sprint.id}
                   sprint={sprint}
                   isFirst={index === 0}
+                  groupId={groupId}
                 />
               ))}
             </div>
