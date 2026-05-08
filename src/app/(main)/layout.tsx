@@ -44,7 +44,6 @@ export default async function MainLayout({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <PageTopBar
           repoName={repoName}
-          pageLabel="Current Sprint"
           // Use session-backed avatar
           profileImageUrl={session?.user?.image ?? undefined}
           profileName={session?.user?.name ?? undefined}

@@ -1,3 +1,4 @@
+import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
@@ -7,8 +8,12 @@ export default function SummaryPage() {
     <PageContainer>
       <SectionHeading
         title="Sprint Review Summary"
-        subtitle="Review sprint highlights for the selected sprint. Generate a review from the Current Sprint page."
+        subtitle="Generate and review sprint highlights for the selected sprint."
       />
+
+      <section className="mb-lg">
+        <Button>Generate Sprint Review</Button>
+      </section>
 
       <section className="grid gap-lg lg:grid-cols-2">
         <Card>

@@ -36,7 +36,11 @@ type SprintTaskRow = {
   title: string;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   issueNumber: number | null;
-  assignees: string[];
+  assignees: Array<{
+    name: string;
+    avatarUrl: string | null;
+  }>;
+  labels?: string[];
 };
 
 type SprintActivity = {
@@ -49,7 +53,9 @@ type SprintActivity = {
 
 // Build a GitHub avatar URL from a login.
 // github.com/<login>.png redirects to the user's current avatar.
-function avatarUrlForLogin(login: string | null | undefined): string | null {
+export function avatarUrlForLogin(
+  login: string | null | undefined,
+): string | null {
   if (!login) return null;
   const trimmed = login.trim();
   if (!trimmed) return null;
@@ -158,7 +164,7 @@ function mergeAssignedIssueCounts(
   // the ticket, not who originally opened the issue.
   for (const task of tasks) {
     for (const assignee of task.assignees) {
-      const trimmed = assignee.trim();
+      const trimmed = assignee.name.trim();
       if (!trimmed) continue;
       const key = trimmed.toLowerCase();
       const entry = contributorMap.get(key) ?? {
@@ -166,11 +172,11 @@ function mergeAssignedIssueCounts(
         commitCount: 0,
         prCount: 0,
         issueCount: 0,
-        avatarUrl: avatarUrlForLogin(trimmed),
+        avatarUrl: assignee.avatarUrl,
       };
       entry.issueCount += 1;
       if (!entry.avatarUrl) {
-        entry.avatarUrl = avatarUrlForLogin(trimmed);
+        entry.avatarUrl = assignee.avatarUrl;
       }
       contributorMap.set(key, entry);
     }
@@ -261,7 +267,10 @@ async function loadSprintTasks(
     title: t.title,
     status: t.status,
     issueNumber: t.issueNumber ?? null,
-    assignees: t.assignees ?? [],
+    assignees: (t.assignees ?? []).map((name) => ({
+      name,
+      avatarUrl: avatarUrlForLogin(name),
+    })),
   }));
 
   const breakdown = {
@@ -717,7 +726,7 @@ export async function getCurrentSprintData(): Promise<{
     if (!resolved) {
       const message =
         group.iterationFieldConfigured === false
-          ? "This repo's GitHub Project doesn't have an iteration field yet. Add one (https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iterations) and assign tickets to it, then refresh."
+          ? "This repo's GitHub Project doesn't have an iteration field yet. Add one and assign tickets to it, then refresh."
           : "No iterations created yet. Create one in your GitHub Project, assign tickets to it, and refresh.";
       return {
         status: 200,
