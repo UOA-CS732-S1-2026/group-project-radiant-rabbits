@@ -58,9 +58,13 @@ export default function Button({
       : variant === "white"
         ? "border border-brand-accent bg-white text-brand-dark hover:bg-brand-background"
         : variant === "grey"
-          ? "bg-[#7A7A7A] text-white hover:opacity-90"
+          ? "text-white hover:opacity-90"
           : "bg-brand-primary text-white shadow-sm hover:opacity-90";
 
+  const bgStyle =
+    variant === "grey"
+      ? { backgroundColor: "var(--color-button-grey)" }
+      : undefined;
   const merged = `${base} ${variantStyles} ${className}`.trim();
 
   if (href) {
@@ -68,6 +72,7 @@ export default function Button({
       <Link
         href={href}
         aria-label={ariaLabel}
+        style={bgStyle}
         className={`no-underline ${merged} ${disabled ? "pointer-events-none opacity-60" : ""}`.trim()}
         aria-disabled={disabled || undefined}
       >
@@ -82,6 +87,7 @@ export default function Button({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
+      style={bgStyle}
       className={merged}
     >
       {children}

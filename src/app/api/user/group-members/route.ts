@@ -44,7 +44,7 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    // Fetch the user to get their currentGroupId
+    // Fetch the user to get their current group id
     const user = await User.findOne({ githubId: session.user.id })
       .select("currentGroupId")
       .lean();
@@ -59,7 +59,7 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    // Find the group using the user's currentGroupId and verify user is still a member
+    // Find the group using the user's current group id and verify user is still a member
     const group = await Group.findOne({
       _id: user.currentGroupId,
       members: userRef,

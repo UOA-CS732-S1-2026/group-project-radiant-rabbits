@@ -1,207 +1,102 @@
-"use client";
+import type mongoose from "mongoose";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { options } from "@/app/api/auth/[...nextauth]/options";
+import { Group, User } from "@/app/lib/models";
+import connectMongoDB from "@/app/lib/mongodbConnection";
+import { normalizeUserRefString } from "@/app/lib/userRef";
+import type { TeammateRowData } from "@/components/teammates/TeammateRow";
+import Teammates from "@/components/teammates/Teammates";
 
-import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import BorderedPanel from "@/components/shared/BorderedPanel";
-import Card from "@/components/shared/Card";
-import PageContainer from "@/components/shared/PageContainer";
-import SectionHeading from "@/components/shared/SectionHeading";
-
-type Teammate = {
-  id: string;
-  name: string;
-  login: string | null;
-  email: string | null;
-  avatarUrl: string | null;
+type LeanMemberProfile = {
+  _id: unknown;
+  name?: string | null;
+  login?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
 };
 
-type CurrentGroup = {
-  id: string;
-  name: string;
-  description: string;
-  inviteCode: string;
-  repoOwner: string;
-  repoName: string;
-  memberCount: number;
-};
-
-type TeammatesResponse = {
-  group: CurrentGroup | null;
-  members: Teammate[];
-  error?: string;
-};
-
-const REFRESH_INTERVAL_MS = 30_000;
-
-// Build initials when no avatar image is available.
-function getInitials(name: string) {
-  const tokens = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-
-  if (tokens.length === 0) {
-    return "?";
-  }
-
-  return tokens.map((token) => token[0]?.toUpperCase() ?? "").join("");
+// Helper function to create a fallback display name for a member with no profile information
+function fallbackMemberName(memberId: string) {
+  return `Member ${memberId.slice(0, 8)}`;
 }
 
-export default function TeammatesPage() {
-  // Teammates API state.
-  const [group, setGroup] = useState<CurrentGroup | null>(null);
-  const [members, setMembers] = useState<Teammate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+// Load profiles for the members of the user's current group
+async function loadTeammates(
+  groupId: mongoose.Types.ObjectId,
+): Promise<TeammateRowData[]> {
+  const groupDoc = await Group.findById(groupId).lean<{
+    members?: unknown[];
+  }>();
 
-  // Fetch current group and member profiles.
-  const fetchTeammates = useCallback(async (options?: { silent?: boolean }) => {
-    const silent = options?.silent ?? false;
+  const memberIds = (groupDoc?.members ?? [])
+    .map((member) => normalizeUserRefString(member))
+    .filter((memberId): memberId is string => Boolean(memberId));
 
-    if (!silent) {
-      setIsLoading(true);
-    }
+  const profiles = (await User.find(
+    { _id: { $in: memberIds } },
+    { name: 1, login: 1, email: 1, avatarUrl: 1 },
+  ).lean()) as LeanMemberProfile[];
 
-    try {
-      const response = await fetch("/api/user/group-members", {
-        cache: "no-store",
-      });
-      const data = (await response.json()) as TeammatesResponse;
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch teammates");
-      }
-
-      setGroup(data.group);
-      setMembers(data.members);
-      setErrorMessage(null);
-    } catch (error) {
-      const fallbackMessage = "Unable to load teammates right now.";
-      setErrorMessage(error instanceof Error ? error.message : fallbackMessage);
-    } finally {
-      if (!silent) {
-        setIsLoading(false);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    // Initial load.
-    fetchTeammates();
-
-    // Poll for membership changes.
-    const intervalId = window.setInterval(() => {
-      fetchTeammates({ silent: true });
-    }, REFRESH_INTERVAL_MS);
-
-    // Refresh after user returns to tab.
-    const handleFocus = () => {
-      fetchTeammates({ silent: true });
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [fetchTeammates]);
-
-  // Small context line under the page title.
-  const groupSubtitle = useMemo(() => {
-    if (!group) {
-      return "Join or create a group to start collaborating with teammates.";
-    }
-
-    return `${group.repoOwner}/${group.repoName} · ${group.memberCount} member${
-      group.memberCount === 1 ? "" : "s"
-    }`;
-  }, [group]);
-
-  return (
-    <div className="min-h-screen bg-brand-background">
-      <PageContainer>
-        <Card className="border border-brand-dark/10 shadow-none">
-          <h2 className="lg:text-3xl text-h3 font-bold text-brand-dark">
-            Team Members
-          </h2>
-          <div className="mt-xs text-body-md text-brand-dark/70">
-            {group ? (
-              <p className="mt-1 text-body-md text-brand-dark/70">
-                {group.name}/{group.repoOwner}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="px-lg py-md">
-            {isLoading && (
-              <p className="text-body-md text-brand-dark/70">
-                Loading teammates...
-              </p>
-            )}
-
-            {!isLoading && errorMessage && (
-              <p className="rounded-md bg-red-100 px-md py-sm text-body-sm text-red-700">
-                {errorMessage}
-              </p>
-            )}
-
-            {!isLoading && !errorMessage && !group && (
-              <p className="text-body-md text-brand-dark/70">
-                You are not in a group yet. Join or create a group to view
-                teammates.
-              </p>
-            )}
-
-            {!isLoading && !errorMessage && group && members.length === 0 && (
-              <p className="text-body-md text-brand-dark/70">
-                No teammates found in this group yet.
-              </p>
-            )}
-
-            {!isLoading && !errorMessage && group && members.length > 0 && (
-              <div className="mt-lg space-y-md">
-                {members.map((person) => (
-                  <div
-                    key={person.id}
-                    className="flex items-center justify-between gap-md border-b border-brand-dark/10 pb-md"
-                  >
-                    <div className="flex items-center gap-md">
-                      {person.avatarUrl ? (
-                        <Image
-                          src={person.avatarUrl}
-                          alt={`${person.name} avatar`}
-                          width={56}
-                          height={56}
-                          className="h-14 w-14 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-accent/20 text-body-md font-semibold text-brand-dark">
-                          {getInitials(person.name)}
-                        </div>
-                      )}
-
-                      <div>
-                        <p className="text-body-lg font-semibold text-brand-dark">
-                          {person.name}
-                        </p>
-                        {person.login && (
-                          <p className="text-body-sm text-brand-dark/70">
-                            @{person.login}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {person.email ? (
-                      <p className="hidden text-body-sm text-brand-dark/70 md:block">
-                        {person.email}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
-      </PageContainer>
-    </div>
+  const profilesById = new Map(
+    profiles
+      .map((profile) => {
+        const id = normalizeUserRefString(profile._id);
+        return id ? [id, profile] : null;
+      })
+      .filter((entry): entry is [string, LeanMemberProfile] => Boolean(entry)),
   );
+
+  // Order the members based on joined order
+  return memberIds.map((memberId) => {
+    const profile = profilesById.get(memberId);
+    const displayName =
+      profile?.name?.trim() ||
+      profile?.login?.trim() ||
+      fallbackMemberName(memberId);
+
+    return {
+      id: memberId,
+      name: displayName,
+      login: profile?.login ?? null,
+      email: profile?.email ?? null,
+      avatarUrl: profile?.avatarUrl ?? null,
+    };
+  });
+}
+
+// Fetch all data required to display the teammates list
+export default async function TeammatesPage() {
+  const session = await getServerSession(options);
+  if (!session?.user) {
+    redirect("/");
+  }
+
+  await connectMongoDB();
+
+  const user = await User.findOne({ githubId: session.user.id }).select(
+    "currentGroupId",
+  );
+
+  // If the user has no current group, show error message
+  if (!user?.currentGroupId) {
+    return (
+      <Teammates
+        status="empty"
+        statusMessage="No group selected. Create or join a group to see teammates."
+      />
+    );
+  }
+
+  // If the user's current group doesn't exist, show error message
+  const group = await Group.findById(user.currentGroupId).select("_id");
+  if (!group) {
+    return (
+      <Teammates status="empty" statusMessage="Current group not found." />
+    );
+  }
+
+  // Load teammates for the user's current group and display
+  const members = await loadTeammates(group._id);
+  return <Teammates status="ready" members={members} />;
 }
