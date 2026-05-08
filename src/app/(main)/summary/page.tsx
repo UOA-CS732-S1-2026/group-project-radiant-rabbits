@@ -2,9 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
-import SectionHeading from "@/components/shared/SectionHeading";
 
 type GroupSummaryOption = {
   id?: string;
@@ -390,55 +388,67 @@ export default function SummaryPage() {
   ]);
 
   return (
-    <PageContainer>
-      <SectionHeading
-        title="Sprint Review Summary"
-        subtitle="Review the generated summary for the current sprint."
-      />
-
-      <section>
-        <Card>
-          <div className="flex flex-col gap-sm">
-            <h2 className="text-h3 text-brand-dark">Generated Sprint Review</h2>
-
-            <p className="text-body-sm text-brand-dark/70">
-              {selectedGroup?.name ?? "No group selected"}
-              {selectedGroup?.repoOwner ? ` (${selectedGroup.repoOwner})` : ""}
-              {selectedSprint
-                ? ` • ${selectedSprint.name ?? "Unnamed sprint"} (${formatDateRange(selectedSprint.startDate, selectedSprint.endDate)})`
-                : ""}
-            </p>
-
-            <p className="text-body-xs text-brand-dark/60">
-              Last generated: {formatGeneratedAt(reviewMeta.generatedAt)}
-              {reviewMeta.provider ? ` • Provider: ${reviewMeta.provider}` : ""}
-              {reviewMeta.model ? ` • Model: ${reviewMeta.model}` : ""}
+    <div className="min-h-full bg-brand-background">
+      <PageContainer>
+        <div className="space-y-lg">
+          <div className="border-b border-brand-dark/10 pb-lg">
+            <h1 className="text-h2 font-bold text-brand-dark">
+              Sprint Review Summary
+            </h1>
+            <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+              {selectedSprint?.name ?? "No sprint selected"}
             </p>
           </div>
 
-          <div className="mt-md rounded-xl border border-brand-dark/10 bg-brand-background p-md">
-            {isLoadingGroups || isLoadingSprints || isLoadingReview ? (
-              <p className="text-body-sm text-brand-dark/70">
-                Loading review...
+          <section>
+            <div className="flex flex-col gap-xs">
+              <h2 className="text-body-lg font-semibold text-brand-dark">
+                Generated Sprint Review
+              </h2>
+
+              <p className="text-body-sm text-brand-dark/60">
+                {selectedGroup?.name ?? "No group selected"}
+                {selectedGroup?.repoOwner
+                  ? ` (${selectedGroup.repoOwner})`
+                  : ""}
+                {selectedSprint
+                  ? ` • ${selectedSprint.name ?? "Unnamed sprint"} (${formatDateRange(selectedSprint.startDate, selectedSprint.endDate)})`
+                  : ""}
               </p>
-            ) : isGenerating ? (
-              <p className="text-body-sm text-brand-dark/70">
-                Generating sprint review...
+
+              <p className="text-body-xs text-brand-dark/60">
+                Last generated: {formatGeneratedAt(reviewMeta.generatedAt)}
+                {reviewMeta.provider
+                  ? ` • Provider: ${reviewMeta.provider}`
+                  : ""}
+                {reviewMeta.model ? ` • Model: ${reviewMeta.model}` : ""}
               </p>
-            ) : errorMessage ? (
-              <p className="text-body-sm text-red-700">{errorMessage}</p>
-            ) : review ? (
-              <pre className="whitespace-pre-wrap text-body-sm text-brand-dark/80">
-                {review}
-              </pre>
-            ) : (
-              <p className="text-body-sm text-brand-dark/70">
-                No sprint review has been generated yet for this sprint.
-              </p>
-            )}
-          </div>
-        </Card>
-      </section>
-    </PageContainer>
+            </div>
+
+            <div className="mt-md border-t border-brand-dark/10 pt-md">
+              {isLoadingGroups || isLoadingSprints || isLoadingReview ? (
+                <p className="text-body-md text-brand-dark/70">
+                  Loading review...
+                </p>
+              ) : isGenerating ? (
+                <p className="text-body-md text-brand-dark/70">
+                  Generating sprint review...
+                </p>
+              ) : errorMessage ? (
+                <p className="text-body-md text-red-700">{errorMessage}</p>
+              ) : review ? (
+                <pre className="whitespace-pre-wrap font-sans text-body-sm text-brand-dark/70">
+                  {review}
+                </pre>
+              ) : (
+                <p className="text-body-md text-brand-dark/70">
+                  No sprint review has been generated yet for this sprint.
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
   );
 }
