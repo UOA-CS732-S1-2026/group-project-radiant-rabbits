@@ -50,6 +50,7 @@ type SprintInfo = {
   id: string;
   number: number;
   name: string;
+  goal?: string;
   startDate: string | Date;
   endDate: string | Date;
   status: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -135,6 +136,30 @@ export default function CurrentSprint({
   const router = useRouter();
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
+  const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
+
+  const handleSaveSprintFocus = async (newFocus: string) => {
+    if (!groupId || !sprint?.id) return;
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/sprints/${sprint.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ goal: newFocus }),
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to update focus");
+
+      setSprintFocus(newFocus);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save sprint focus.");
+    }
+  };
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -257,7 +282,11 @@ export default function CurrentSprint({
           </div>
 
           {/* Sprint Focus */}
-          <SprintFocus focus="Add your sprint focus here..." editable />
+          <SprintFocus
+            focus={sprint?.goal || ""}
+            onUpdate={handleSaveSprintFocus}
+            editable
+          />
 
           {/* Sprint Timeline */}
           <SprintTimeline
