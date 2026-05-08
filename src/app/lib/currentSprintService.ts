@@ -313,17 +313,16 @@ async function getPeriodActivityFromDb(
         $match: {
           group: groupId,
           date: inWindow,
-          "author.name": { $nin: [null, ""] },
+          "author.login": { $nin: [null, ""] },
         },
       },
       {
         $group: {
-          _id: "$author.name",
-          login: { $first: "$author.login" },
+          _id: { $ifNull: ["$author.login", "$author.email"] },
           count: { $sum: 1 },
         },
       },
-      { $project: { _id: 0, name: "$_id", login: 1, count: 1 } },
+      { $project: { _id: 0, name: "$_id", login: "$_id", count: 1 } },
     ]),
     PullRequest.aggregate<{ name: string; count: number }>([
       {
@@ -382,7 +381,8 @@ async function getPeriodActivityFromDb(
   ]);
 
   const timelineFromCommits: SprintActivity[] = recentCommits.map((commit) => {
-    const authorName = commit.author?.name?.trim() || "Unknown";
+    const authorName =
+      commit.author?.login?.trim() || commit.author?.email?.trim() || "Unknown";
     return {
       date: commit.date,
       text: `${authorName} pushed a commit`,
@@ -429,7 +429,7 @@ async function getPeriodActivityFromDb(
     .slice(0, 18);
 
   // Merge the three per-author buckets into one row using a case-insensitive
-  // key, so "Anna" (commit name) and "anna" (login) merge.
+  // GitHub login key whenever available.
   type DbContributorEntry = {
     name: string;
     login: string | null;
@@ -458,8 +458,8 @@ async function getPeriodActivityFromDb(
     if (!entry.login && login) entry.login = login;
     contributorMap.set(key, entry);
   };
-  // Commits carry author.login from sync; for PR/issue rows the bucket key
-  // is itself the login.
+  // Commits carry author.login from sync; for PR/issue rows the bucket key is
+  // already the GitHub login string.
   for (const b of commitAuthorBuckets)
     upsert(b.name, "commitCount", b.count, b.login ?? null);
   for (const b of prAuthorBuckets) upsert(b.name, "prCount", b.count, b.name);

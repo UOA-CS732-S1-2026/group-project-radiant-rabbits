@@ -174,9 +174,9 @@ export async function calculateGithubMetrics(
       closedAt: { $gte: start, $lte: end },
     }),
     Contributor.countDocuments({ group: gid }),
-    Commit.distinct("author.name", {
+    Commit.distinct("author.login", {
       group: gid,
-      "author.name": { $nin: [null, ""] },
+      "author.login": { $nin: [null, ""] },
     }),
   ]);
 
