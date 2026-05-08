@@ -29,10 +29,10 @@ export async function PUT(request: Request) {
 
     await connectMongoDB();
 
-    const userId = session.user.id;
+    const normalisedUserId = session.user.id;
 
     // Find the user in the database
-    const user = await User.findOne({ githubId: userId });
+    const user = await User.findById(normalisedUserId);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -56,7 +56,7 @@ export async function PUT(request: Request) {
     }
 
     // Check if the user is actually a member of the group
-    if (!isUserInGroup(group.members, user.githubId)) {
+    if (!isUserInGroup(group.members, normalisedUserId)) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
         { status: 403 },
@@ -66,7 +66,7 @@ export async function PUT(request: Request) {
     // Remove the user from the group's members array
     const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
-      { $pull: { members: user._id } },
+      { $pull: { members: normalisedUserId } },
       { new: true },
     );
 
@@ -75,10 +75,9 @@ export async function PUT(request: Request) {
     }
 
     // Update the user's currentGroupId to null
-    await User.findOneAndUpdate(
-      { githubId: user.githubId },
-      { $set: { currentGroupId: null } },
-    );
+    await User.findByIdAndUpdate(normalisedUserId, {
+      $set: { currentGroupId: null },
+    });
 
     return NextResponse.json(
       { message: "Successfully left the group" },

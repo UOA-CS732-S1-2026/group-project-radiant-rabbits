@@ -38,12 +38,12 @@ jest.mock(
 jest.mock("@/app/lib/models", () => ({
   Group: {
     findById: jest.fn(),
-    findByIdAndUpdate: jest.fn(), // Add this
-    findByIdAndDelete: jest.fn(), // Add this
+    findByIdAndUpdate: jest.fn(),
+    findByIdAndDelete: jest.fn(),
   },
   User: {
-    findOne: jest.fn(),
-    findOneAndUpdate: jest.fn(), // Add this
+    findById: jest.fn(),
+    findByIdAndUpdate: jest.fn(),
   },
 }));
 
@@ -77,12 +77,12 @@ const mockGroupFindById = Group.findById as jest.MockedFunction<
   typeof Group.findById
 >;
 
-const mockUserFindOne = User.findOne as jest.MockedFunction<
-  typeof User.findOne
+const mockUserFindById = User.findById as jest.MockedFunction<
+  typeof User.findById
 >;
 
-const mockUserFindOneAndUpdate = User.findOneAndUpdate as jest.MockedFunction<
-  typeof User.findOneAndUpdate
+const mockUserFindByIdAndUpdate = User.findByIdAndUpdate as jest.MockedFunction<
+  typeof User.findByIdAndUpdate
 >;
 
 const mockIsUserInGroup = isUserInGroup as jest.MockedFunction<
@@ -141,7 +141,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockConnectMongoDB.mockResolvedValue(undefined);
 
-    mockUserFindOne.mockResolvedValue(null);
+    mockUserFindById.mockResolvedValue(null);
 
     const request = new Request("http://localhost:3000/api/groups/leave", {
       method: "PUT",
@@ -164,7 +164,7 @@ describe("PUT /api/groups/leave", () => {
     });
 
     mockConnectMongoDB.mockResolvedValue(undefined);
-    mockUserFindOne.mockResolvedValue({
+    mockUserFindById.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
     });
@@ -190,7 +190,7 @@ describe("PUT /api/groups/leave", () => {
     });
 
     mockConnectMongoDB.mockResolvedValue(undefined);
-    mockUserFindOne.mockResolvedValue({
+    mockUserFindById.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
@@ -244,13 +244,13 @@ describe("PUT /api/groups/leave", () => {
   // Test case 7: Successful group leave
   it("should return 200 when user successfully leaves the group", async () => {
     mockGetServerSession.mockResolvedValue({
-      user: { id: "123", name: "Test" },
+      user: { id: "mongo-user-id-123", name: "Test" },
       accessToken: "token123",
     });
 
     mockConnectMongoDB.mockResolvedValue(undefined);
 
-    mockUserFindOne.mockResolvedValue({
+    mockUserFindById.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
@@ -265,7 +265,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockIsUserInGroup.mockReturnValue(true);
 
-    mockUserFindOneAndUpdate.mockResolvedValue({
+    mockUserFindByIdAndUpdate.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
     });
@@ -323,13 +323,13 @@ describe("PUT /api/groups/leave", () => {
   // Test case 9: Group has no members left after user leaves, group should be deleted
   it("should return 200 and delete the group if there are no members left after user leaves", async () => {
     mockGetServerSession.mockResolvedValue({
-      user: { id: "123", name: "Test" },
+      user: { id: "mongo-user-id-123", name: "Test" },
       accessToken: "token123",
     });
 
     mockConnectMongoDB.mockResolvedValue(undefined);
 
-    mockUserFindOne.mockResolvedValue({
+    mockUserFindById.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
