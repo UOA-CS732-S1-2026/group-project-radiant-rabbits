@@ -609,7 +609,7 @@ export default function CurrentSprint({
                         <input
                           type="text"
                           className="mt-xs w-full rounded border border-brand-accent/40 bg-brand-surface px-sm py-xs text-body-lg text-brand-dark outline-none focus:border-brand-accent"
-                          value={sprintFocus}
+                          value={sprintFocus || ""}
                           onChange={(e) => setSprintFocus(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleSaveSprintFocus();
