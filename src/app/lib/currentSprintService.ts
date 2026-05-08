@@ -447,7 +447,7 @@ async function getLivePeriodActivity(
       (item) => item.date instanceof Date && !Number.isNaN(item.date.getTime()),
     )
     .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, 8);
+    .slice(0, 18);
 
   return {
     issuesCreated: issuesInPeriodRaw.length,
@@ -601,7 +601,7 @@ async function getPeriodActivityFromDb(
       (item) => item.date instanceof Date && !Number.isNaN(item.date.getTime()),
     )
     .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, 8);
+    .slice(0, 18);
 
   // Merge the three per-author buckets into one row using a case-insensitive
   // key, so "Anna" (commit name) and "anna" (login) merge.
