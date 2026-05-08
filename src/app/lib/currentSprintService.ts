@@ -281,6 +281,12 @@ async function getPeriodActivityFromDb(
   sprintStartDate: Date,
   sprintEndDate: Date,
 ): Promise<PeriodActivity> {
+  const inWindow = { $gte: sprintStartDate, $lte: sprintEndDate };
+
+  // Per-author bucket aggregations key on the same identifier across sources
+  // so commit / PR / issue counts can merge cleanly downstream.
+  const authorBucketProjection = { _id: 0, name: "$_id", count: 1 } as const;
+
   const [
     issuesCreated,
     commitsCount,
@@ -290,41 +296,29 @@ async function getPeriodActivityFromDb(
     prAuthorBuckets,
     issueAuthorBuckets,
     recentCommits,
-    recentIssues,
+    issuesCreatedInWindow,
+    issuesClosedInWindow,
     recentMergedPRs,
   ] = await Promise.all([
-    Issue.countDocuments({
-      group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
-    }),
-    Commit.countDocuments({
-      group: groupId,
-      date: { $gte: sprintStartDate, $lte: sprintEndDate },
-    }),
-    PullRequest.countDocuments({
-      group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
-    }),
+    Issue.countDocuments({ group: groupId, createdAt: inWindow }),
+    Commit.countDocuments({ group: groupId, date: inWindow }),
+    PullRequest.countDocuments({ group: groupId, createdAt: inWindow }),
     PullRequest.countDocuments({
       group: groupId,
       state: "MERGED",
-      mergedAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+      mergedAt: inWindow,
     }),
-    // Per-author counts. Commits group by author.name; PRs/issues by author
-    // (login). Merged below — mismatches between name and login still split.
     Commit.aggregate<{ name: string; login: string | null; count: number }>([
       {
         $match: {
           group: groupId,
-          date: { $gte: sprintStartDate, $lte: sprintEndDate },
+          date: inWindow,
           "author.name": { $nin: [null, ""] },
         },
       },
       {
         $group: {
           _id: "$author.name",
-          // Pick any login we've stored for this name.
-          // Older docs without login show no avatar.
           login: { $first: "$author.login" },
           count: { $sum: 1 },
         },
@@ -335,44 +329,51 @@ async function getPeriodActivityFromDb(
       {
         $match: {
           group: groupId,
-          createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+          createdAt: inWindow,
           author: { $nin: [null, ""] },
         },
       },
       { $group: { _id: "$author", count: { $sum: 1 } } },
-      { $project: { _id: 0, name: "$_id", count: 1 } },
+      { $project: authorBucketProjection },
     ]),
     Issue.aggregate<{ name: string; count: number }>([
       {
         $match: {
           group: groupId,
-          createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+          createdAt: inWindow,
           author: { $nin: [null, ""] },
         },
       },
       { $group: { _id: "$author", count: { $sum: 1 } } },
-      { $project: { _id: 0, name: "$_id", count: 1 } },
+      { $project: authorBucketProjection },
     ]),
-    Commit.find({
-      group: groupId,
-      date: { $gte: sprintStartDate, $lte: sprintEndDate },
-    })
+    Commit.find({ group: groupId, date: inWindow })
       .select("author message date")
       .sort({ date: -1 })
       .limit(6)
       .lean(),
+    // Issues created and issues closed in the window are queried separately
+    // so a single issue can produce two timeline entries (one Created, one
+    // Closed) at their respective timestamps. Querying only by createdAt
+    // would drop the close event for issues opened before the sprint.
+    Issue.find({ group: groupId, createdAt: inWindow })
+      .select("number createdAt author")
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean(),
     Issue.find({
       group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+      state: "CLOSED",
+      closedAt: { ...inWindow, $ne: null },
     })
-      .select("number state title createdAt author")
-      .sort({ createdAt: -1 })
+      .select("number closedAt author")
+      .sort({ closedAt: -1 })
       .limit(6)
       .lean(),
     PullRequest.find({
       group: groupId,
       state: "MERGED",
-      mergedAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+      mergedAt: inWindow,
     })
       .select("number title mergedAt author")
       .sort({ mergedAt: -1 })
@@ -390,15 +391,23 @@ async function getPeriodActivityFromDb(
     };
   });
 
-  const timelineFromIssues: SprintActivity[] = recentIssues.map((issue) => ({
-    date: issue.createdAt,
-    text:
-      issue.state === "CLOSED"
-        ? `Closed Issue #${issue.number}`
-        : `Created Issue #${issue.number}`,
-    initials: "I",
-    avatarUrl: avatarUrlForLogin(issue.author),
-  }));
+  const timelineFromIssuesCreated: SprintActivity[] = issuesCreatedInWindow.map(
+    (issue) => ({
+      date: issue.createdAt,
+      text: `Created Issue #${issue.number}`,
+      initials: "I",
+      avatarUrl: avatarUrlForLogin(issue.author),
+    }),
+  );
+
+  const timelineFromIssuesClosed: SprintActivity[] = issuesClosedInWindow.map(
+    (issue) => ({
+      date: issue.closedAt,
+      text: `Closed Issue #${issue.number}`,
+      initials: "I",
+      avatarUrl: avatarUrlForLogin(issue.author),
+    }),
+  );
 
   const timelineFromPRs: SprintActivity[] = recentMergedPRs.map((pr) => ({
     date: pr.mergedAt,
@@ -409,7 +418,8 @@ async function getPeriodActivityFromDb(
 
   const timeline = [
     ...timelineFromPRs,
-    ...timelineFromIssues,
+    ...timelineFromIssuesClosed,
+    ...timelineFromIssuesCreated,
     ...timelineFromCommits,
   ]
     .filter(
@@ -556,11 +566,9 @@ export async function getCurrentSprintData(): Promise<{
     }
 
     const { sprint, sprintObjectId } = resolved;
-    const sessionWithToken = session as { accessToken?: string };
 
-    // Period metrics scan Commit/Issue/PR by sprint window,
-    // tasks come from SprintTask docs already linked to this sprint.
-
+    // Period metrics scan Commit/Issue/PR by sprint window in parallel with
+    // the SprintTask query that drives the task list and breakdown.
     const [periodActivity, taskData] = await Promise.all([
       getPeriodActivityFromDb(group._id, sprint.startDate, sprint.endDate),
       loadSprintTasks(group._id, sprintObjectId),
