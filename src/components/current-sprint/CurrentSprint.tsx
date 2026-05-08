@@ -50,7 +50,7 @@ type SprintInfo = {
   id: string;
   number: number;
   name: string;
-  goal: string;
+  goal?: string;
   startDate: string | Date;
   endDate: string | Date;
   status: "PLANNING" | "ACTIVE" | "COMPLETED";

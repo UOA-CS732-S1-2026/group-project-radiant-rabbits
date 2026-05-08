@@ -55,6 +55,13 @@ export default function Teammates({
             >
               + Invite Member
             </button>
+            {/* Leave button */}
+            <button
+              type="button"
+              className="shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-status-todo-fg/90"
+            >
+              Leave Group
+            </button>
           </div>
           {/* Teammate rows */}
           {memberList.length === 0 ? (
