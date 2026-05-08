@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings } from "lucide-react";
+import { Clock, History, Home, LogOut, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -8,10 +8,10 @@ import AppLogoMark from "@/components/landing-page/AppLogoMark";
 import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/current-sprint", label: "Current Sprint" },
-  { href: "/past-sprints", label: "Past Sprints" },
-  { href: "/teammates", label: "Teammates" },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/current-sprint", label: "Current Sprint", icon: Clock },
+  { href: "/past-sprints", label: "Past Sprints", icon: History },
+  { href: "/teammates", label: "Teammates", icon: Users },
 ];
 
 const bottomItems = [
@@ -51,6 +51,7 @@ export default function SideNav() {
           <div className="flex flex-col gap-xs pr-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
+              const Icon = item.icon;
 
               return (
                 <Link
@@ -58,10 +59,11 @@ export default function SideNav() {
                   href={item.href}
                   className={
                     isActive
-                      ? "rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-lg font-semibold text-brand-dark"
-                      : "rounded-md py-1.5 pl-3 pr-2 text-body-lg text-brand-dark transition hover:bg-brand-accent/10"
+                      ? "flex items-center gap-sm rounded-md border-1-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-lg font-semibold text-brand-dark"
+                      : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-lg text-brand-dark transition hover:bg-brand-accent/10"
                   }
                 >
+                  <Icon size={18} className="shrink-0" />
                   {item.label}
                 </Link>
               );
