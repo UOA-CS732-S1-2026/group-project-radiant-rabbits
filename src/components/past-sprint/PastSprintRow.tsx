@@ -43,6 +43,9 @@ export default function PastSprintRow({
         <p className="text-body-sm text-brand-dark/60">
           {formatDate(sprint.startDate)} — {formatDate(sprint.endDate)}
         </p>
+        <p className="mt-xs text-body-sm font-medium text-brand-accent">
+          Click to view sprint review
+        </p>
         <p className="mt-xs text-body-sm text-brand-dark/70">
           {sprint.summary}
         </p>
