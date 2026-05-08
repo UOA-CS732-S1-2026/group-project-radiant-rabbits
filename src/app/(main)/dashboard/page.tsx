@@ -34,7 +34,10 @@ type SprintForDashboard = {
 async function loadSprintsForDashboard(
   groupId: import("mongoose").Types.ObjectId,
 ): Promise<SprintForDashboard[]> {
-  const sprints = await Sprint.find({ group: groupId })
+  const sprints = await Sprint.find({
+    group: groupId,
+    startDate: { $lte: new Date() },
+  })
     .sort({ startDate: 1 })
     .lean<
       Array<{
@@ -234,7 +237,7 @@ async function loadRepositoryContributors(
     "var(--color-brand-accent)",
   ];
 
-  // Convert to array, sort by total contributions and take top 5
+  // Convert to array, sort by total contributions and take top 6
   return Array.from(contributorMap.values())
     .filter((c) => c.commits + c.prs + c.issues > 0)
     .sort(
