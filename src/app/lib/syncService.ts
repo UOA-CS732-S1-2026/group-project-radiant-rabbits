@@ -179,13 +179,15 @@ async function upsertPullRequests(
         $set: {
           title: pr.title,
           state: pr.state,
-          createdAt: new Date(pr.createdAt),
           closedAt: pr.closedAt ? new Date(pr.closedAt) : null,
           mergedAt: pr.mergedAt ? new Date(pr.mergedAt) : null,
           author: pr.author,
           group: groupId,
         },
-        $setOnInsert: { number: pr.number },
+        $setOnInsert: {
+          number: pr.number,
+          createdAt: new Date(pr.createdAt),
+        },
       },
       upsert: true,
     },
