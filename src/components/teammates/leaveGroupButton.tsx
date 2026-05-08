@@ -19,7 +19,7 @@ export default function LeaveGroupButton() {
         throw new Error(data.error || "Failed to leave group");
       }
 
-      router.push("/groups");
+      router.push("/join-create-switch-group");
       router.refresh();
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");

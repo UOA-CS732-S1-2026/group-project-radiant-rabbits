@@ -30,7 +30,7 @@ export async function PUT(request: Request) {
     await connectMongoDB();
 
     // Find the user in the database
-    const user = await User.findById({ githubId: session.user.id });
+    const user = await User.findOne({ githubId: session.user.id });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
