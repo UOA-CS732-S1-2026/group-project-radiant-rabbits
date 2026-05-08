@@ -207,12 +207,14 @@ async function upsertIssues(
         $set: {
           title: issue.title,
           state: issue.state,
-          createdAt: new Date(issue.createdAt),
           closedAt: issue.closedAt ? new Date(issue.closedAt) : null,
           author: issue.author,
           group: groupId,
         },
-        $setOnInsert: { number: issue.number },
+        $setOnInsert: {
+          number: issue.number,
+          createdAt: new Date(issue.createdAt),
+        },
       },
       upsert: true,
     },
