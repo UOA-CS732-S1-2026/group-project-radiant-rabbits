@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import ActivityTimeline from "@/components/current-sprint/ActivityTimeline";
 import BreakdownCard from "@/components/current-sprint/BreakdownCard";
 import ContributionCard from "@/components/current-sprint/ContributionCard";
@@ -9,7 +16,12 @@ import SprintFocus from "@/components/current-sprint/SprintFocus";
 import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
 import Button from "@/components/shared/Button";
+import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import PageContainer from "@/components/shared/PageContainer";
+import SprintGitHubTicketsOverlay from "@/components/shared/SprintGitHubTicketsOverlay";
+import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewOverlay";
+import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
+import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
 import { getInitials } from "@/lib/formatters";
 
 // Fetch all required data to display the current sprint metrics
@@ -137,6 +149,26 @@ export default function CurrentSprint({
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
   const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
+  const [sprintReviewPreviewOpen, setSprintReviewPreviewOpen] = useState(false);
+  const [nextSprintWelcomeOpen, setNextSprintWelcomeOpen] = useState(false);
+  const [githubTicketsOverlayOpen, setGithubTicketsOverlayOpen] =
+    useState(false);
+  const pendingSprintFocusRef = useRef("");
+  const [isFinishingSprint, setIsFinishingSprint] = useState(false);
+  const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
+    useState(false);
+
+  useEffect(() => {
+    if (status !== "ready") {
+      setFinishConfirmOpen(false);
+      setSprintReviewPromptOpen(false);
+      setSprintReviewPreviewOpen(false);
+      setNextSprintWelcomeOpen(false);
+      setGithubTicketsOverlayOpen(false);
+    }
+  }, [status]);
 
   const handleSaveSprintFocus = async (newFocus: string) => {
     if (!groupId || !sprint?.id) return;
@@ -191,6 +223,43 @@ export default function CurrentSprint({
     });
   }, [groupId, router]);
 
+  const openFinishSprintConfirm = useCallback(() => {
+    if (!groupId || !sprint) return;
+    setFinishConfirmOpen(true);
+  }, [groupId, sprint]);
+
+  const confirmFinishSprint = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsFinishingSprint(true);
+    try {
+      setFinishConfirmOpen(false);
+      setSprintReviewPromptOpen(true);
+    } finally {
+      setIsFinishingSprint(false);
+    }
+  }, [groupId, sprint]);
+
+  const proceedFromWelcomeToGithubTickets = useCallback(
+    (sprintFocus: string) => {
+      pendingSprintFocusRef.current = sprintFocus;
+      setNextSprintWelcomeOpen(false);
+      setGithubTicketsOverlayOpen(true);
+    },
+    [],
+  );
+
+  const finalizeSprintHandoffFromTicketsOverlay = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsSprintHandoffSubmitting(true);
+    try {
+      setGithubTicketsOverlayOpen(false);
+      pendingSprintFocusRef.current = "";
+      router.refresh();
+    } finally {
+      setIsSprintHandoffSubmitting(false);
+    }
+  }, [groupId, sprint, router]);
+
   const sprintTasks: SprintTaskRow[] = useMemo(
     () =>
       (metrics?.tasks || []).map((task) => ({
@@ -206,6 +275,17 @@ export default function CurrentSprint({
         labels: task.labels || [],
       })),
     [metrics?.tasks],
+  );
+
+  const ticketOverlayTasks = useMemo(
+    () =>
+      sprintTasks.map((t) => ({
+        id: t.id,
+        ref: t.ref,
+        title: t.title,
+        status: t.status,
+      })),
+    [sprintTasks],
   );
 
   const contributors: ContributorRow[] = useMemo(
@@ -252,75 +332,133 @@ export default function CurrentSprint({
 
   // Display the current sprint page with the fetched metrics
   return (
-    <div className="min-h-full bg-brand-background">
-      <PageContainer>
-        <div className="space-y-lg">
-          {refreshError ? (
-            <p className="text-body-md text-brand-todo">{refreshError}</p>
-          ) : null}
+    <>
+      <div className="min-h-full bg-brand-background">
+        <PageContainer>
+          <div className="space-y-lg">
+            {refreshError ? (
+              <p className="text-body-md text-brand-todo">{refreshError}</p>
+            ) : null}
 
-          {/* Header: sprint title + refresh button */}
-          <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
-            <div>
-              <h1 className="text-h2 font-bold text-brand-dark">
-                {sprint.name}
-              </h1>
-              <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
-                {formatShortDate(sprint.startDate)} —{" "}
-                {formatShortDate(sprint.endDate)} ·{" "}
-                {sprint.progress.remainingDays} days remaining
-              </p>
+            {/* Header: sprint title + refresh button */}
+            <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
+              <div>
+                <h1 className="text-h2 font-bold text-brand-dark">
+                  {sprint.name}
+                </h1>
+                <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                  {formatShortDate(sprint.startDate)} —{" "}
+                  {formatShortDate(sprint.endDate)} ·{" "}
+                  {sprint.progress.remainingDays} days remaining
+                </p>
+              </div>
+              <div className="flex gap-md">
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={openFinishSprintConfirm}
+                  disabled={isFinishingSprint}
+                >
+                  Finish Sprint
+                </Button>
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </Button>
+              </div>
             </div>
-            <Button
-              variant="purple"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              {isRefreshing ? "Refreshing..." : "Refresh"}
-            </Button>
+
+            {/* Sprint Focus */}
+            <SprintFocus
+              focus={sprint?.goal || ""}
+              onUpdate={handleSaveSprintFocus}
+              editable
+            />
+
+            {/* Sprint Timeline */}
+            <SprintTimeline
+              sprint={{
+                startDate: sprint.startDate,
+                endDate: sprint.endDate,
+                progressPercent: sprint.progress.progressPercent,
+                elapsedDays: sprint.progress.elapsedDays,
+                remainingDays: sprint.progress.remainingDays,
+                totalDays: sprint.progress.totalDays,
+              }}
+            />
+
+            {/* Breakdown cards */}
+            <BreakdownCard
+              todoCount={todoCount}
+              inProgressCount={inProgressCount}
+              doneCount={doneCount}
+            />
+
+            {/* Tasks and Contributions */}
+            <div className="grid min-w-0 gap-lg lg:grid-cols-[1.4fr_1fr]">
+              <div className="min-w-0">
+                <SprintTaskSection tasks={sprintTasks} />
+              </div>
+              <div className="min-w-0">
+                <ContributionCard contributors={contributors} />
+              </div>
+            </div>
+
+            {/* Activity Timeline */}
+            <ActivityTimeline items={timeline} />
           </div>
+        </PageContainer>
+      </div>
 
-          {/* Sprint Focus */}
-          <SprintFocus
-            focus={sprint?.goal || ""}
-            onUpdate={handleSaveSprintFocus}
-            editable
-          />
+      <ConfirmOverlay
+        open={finishConfirmOpen}
+        title="Finish Sprint?"
+        description={`Are you ready to wrap up ${sprint.name}? This will lead you to create a Sprint Review.`}
+        onConfirm={confirmFinishSprint}
+        onClose={() => setFinishConfirmOpen(false)}
+        confirmLabel="Finish Sprint"
+      />
 
-          {/* Sprint Timeline */}
-          <SprintTimeline
-            sprint={{
-              startDate: sprint.startDate,
-              endDate: sprint.endDate,
-              progressPercent: sprint.progress.progressPercent,
-              elapsedDays: sprint.progress.elapsedDays,
-              remainingDays: sprint.progress.remainingDays,
-              totalDays: sprint.progress.totalDays,
-            }}
-          />
+      <SprintReviewPromptOverlay
+        open={sprintReviewPromptOpen}
+        onGenerateSprintReview={() => {
+          setSprintReviewPromptOpen(false);
+          setSprintReviewPreviewOpen(true);
+        }}
+        onSkip={() => {
+          setSprintReviewPromptOpen(false);
+          setNextSprintWelcomeOpen(true);
+        }}
+        onClose={() => setSprintReviewPromptOpen(false)}
+      />
 
-          {/* Breakdown cards */}
-          <BreakdownCard
-            todoCount={todoCount}
-            inProgressCount={inProgressCount}
-            doneCount={doneCount}
-          />
+      <SprintReviewPreviewOverlay
+        open={sprintReviewPreviewOpen}
+        onContinue={() => {
+          setSprintReviewPreviewOpen(false);
+          setNextSprintWelcomeOpen(true);
+        }}
+        onDismiss={() => setSprintReviewPreviewOpen(false)}
+      />
 
-          {/* Tasks and Contributions */}
-          <div className="grid min-w-0 gap-lg lg:grid-cols-[1.4fr_1fr]">
-            <div className="min-w-0">
-              <SprintTaskSection tasks={sprintTasks} />
-            </div>
-            <div className="min-w-0">
-              <ContributionCard contributors={contributors} />
-            </div>
-          </div>
+      <SprintWelcomeOverlay
+        open={nextSprintWelcomeOpen}
+        sprintNumber={sprint.number + 1}
+        onContinue={proceedFromWelcomeToGithubTickets}
+        onClose={() => setNextSprintWelcomeOpen(false)}
+      />
 
-          {/* Activity Timeline */}
-          <ActivityTimeline items={timeline} />
-        </div>
-      </PageContainer>
-    </div>
+      <SprintGitHubTicketsOverlay
+        open={githubTicketsOverlayOpen}
+        tasks={ticketOverlayTasks}
+        onContinue={finalizeSprintHandoffFromTicketsOverlay}
+        onDismiss={() => setGithubTicketsOverlayOpen(false)}
+        isContinuing={isFinishingSprint}
+      />
+    </>
   );
 }
