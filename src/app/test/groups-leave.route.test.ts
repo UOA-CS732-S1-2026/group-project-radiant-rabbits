@@ -42,6 +42,7 @@ jest.mock("@/app/lib/models", () => ({
     findByIdAndDelete: jest.fn(),
   },
   User: {
+    findOne: jest.fn(),
     findById: jest.fn(),
     findByIdAndUpdate: jest.fn(),
   },
@@ -75,6 +76,10 @@ const mockConnectMongoDB = connectMongoDB as jest.MockedFunction<
 
 const mockGroupFindById = Group.findById as jest.MockedFunction<
   typeof Group.findById
+>;
+
+const mockUserFindOne = User.findOne as jest.MockedFunction<
+  typeof User.findOne
 >;
 
 const mockUserFindById = User.findById as jest.MockedFunction<

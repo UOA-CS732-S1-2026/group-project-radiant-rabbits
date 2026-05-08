@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import { isUserInGroup } from "@/app/lib/userRef";
+import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
 
 export async function PUT(request: Request) {
   try {
@@ -29,14 +29,14 @@ export async function PUT(request: Request) {
 
     await connectMongoDB();
 
-    const normalisedUserId = session.user.id;
-
     // Find the user in the database
-    const user = await User.findById(normalisedUserId);
+    const user = await User.findById({ githubId: session.user.id });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    const normalisedUserId = user._id.toString();
 
     // Check if the user is currently in a group
     if (!user.currentGroupId) {
