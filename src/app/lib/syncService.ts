@@ -338,12 +338,17 @@ async function upsertSprints(
       isCurrent = false;
     }
 
+    const name = iter.title.replace(/\s+/g, " ").trim();
+    console.log(
+      `Upserting sprint "${name}" with iterationId ${iter.id} and status ${status}`,
+    );
+
     return {
       updateOne: {
         filter: { iterationId: iter.id, group: groupId },
         update: {
           $set: {
-            name: iter.title,
+            name: name,
             startDate,
             endDate,
             status,

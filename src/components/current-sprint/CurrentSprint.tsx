@@ -299,14 +299,25 @@ export default function CurrentSprint({
         const sprints = Array.isArray(sprintList) ? sprintList : [];
 
         // Find the next sprint by name pattern
-        const nextSprintName = `Sprint ${sprint.number + 1}`;
+        const nextSprintNumber = sprint.number + 1;
+        const targetName = `sprint${nextSprintNumber}`;
+
         const nextSprint = sprints.find(
-          (s: { name?: string; _id?: string }) =>
-            s.name?.trim().toLowerCase() === nextSprintName.toLowerCase(),
+          (s: { name?: string; _id?: string }) => {
+            if (!s.name) return false;
+
+            const normalizedDbName = s.name.replace(/\s/g, "").toLowerCase();
+
+            console.log(
+              `Checking normalized "${normalizedDbName}" against target "${targetName}"`,
+            );
+
+            return normalizedDbName === targetName;
+          },
         );
 
         if (!nextSprint || !nextSprint._id) {
-          console.warn(`Next sprint "${nextSprintName}" not found`);
+          console.warn(`Next sprint "${nextSprintNumber}" not found`);
           setNextSprintTasks([]);
         } else {
           // Update next sprint's goal with the sprint focus
@@ -367,6 +378,7 @@ export default function CurrentSprint({
     try {
       setGithubTicketsOverlayOpen(false);
       pendingSprintFocusRef.current = "";
+
       router.refresh();
     } finally {
       setIsSprintHandoffSubmitting(false);
