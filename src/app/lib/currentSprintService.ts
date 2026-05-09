@@ -212,20 +212,41 @@ async function loadCurrentSprintAndPosition(
 
   if (sprints.length === 0) return null;
 
-  let idx = sprints.findIndex((s) => s.status === "ACTIVE");
+  const now = new Date();
 
+  let idx = sprints.findIndex((s) => s.status === "ACTIVE");
   if (idx === -1) {
     const currentIdx = sprints.findIndex((s) => s.isCurrent);
     idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
   }
 
+  // Auto-sprint completion
+  if (idx !== -1 && idx < sprints.length - 1) {
+    const currentDoc = sprints[idx];
+    const expiryDate = new Date(currentDoc.endDate);
+
+    if (now > expiryDate && currentDoc.status !== "COMPLETED") {
+      await Sprint.updateOne(
+        { _id: currentDoc._id },
+        { $set: { status: "COMPLETED", isCurrent: false } },
+      );
+
+      const nextSprint = sprints[idx + 1];
+      await Sprint.updateOne(
+        { _id: nextSprint._id },
+        { $set: { status: "ACTIVE", isCurrent: true } },
+      );
+
+      idx = idx + 1;
+    }
+  }
+
   if (idx === -1) {
-    const now = new Date();
     idx = sprints.findIndex((s) => now >= s.startDate && now <= s.endDate);
+    if (idx === -1) idx = sprints.length - 1;
   }
 
   const doc = sprints[idx];
-  const now = new Date();
 
   return {
     sprint: {
