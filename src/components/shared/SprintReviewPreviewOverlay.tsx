@@ -10,6 +10,10 @@ export type SprintReviewPreviewOverlayProps = {
   open: boolean;
   onContinue: () => void;
   onDismiss: () => void;
+  reviewText?: string;
+  sprintName?: string;
+  dateRange?: string;
+  isLoading?: boolean;
 };
 
 /** Placeholder sprint review body until generation/API exists. */
@@ -17,6 +21,10 @@ export default function SprintReviewPreviewOverlay({
   open,
   onContinue,
   onDismiss,
+  reviewText,
+  sprintName,
+  dateRange,
+  isLoading,
 }: SprintReviewPreviewOverlayProps) {
   const headingId = useId();
 
@@ -83,34 +91,29 @@ export default function SprintReviewPreviewOverlay({
 
                   <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#E2E8F0] px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">
                     <div className="mx-auto min-h-[min(65vh,44rem)] w-full max-w-[68rem] rounded-lg border border-brand-dark/15 bg-brand-surface px-6 py-8 shadow-sm sm:px-10 sm:py-10 md:px-14 md:py-12">
-                      <p className="text-body-md font-medium text-brand-dark/85">
-                        Sprint · placeholder name
-                      </p>
-                      <p className="mt-1 text-body-md text-brand-dark/60">
-                        1 Mar – 14 Mar 2026 (hardcoded)
-                      </p>
+                      {isLoading ? (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-brand-dark/50">
+                            Generating review content...
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-body-md font-medium text-brand-dark/85">
+                            {sprintName || "Sprint Review"}
+                          </p>
+                          <p className="mt-1 text-body-md text-brand-dark/60">
+                            {dateRange}
+                          </p>
 
-                      <h3 className="mt-8 text-body-lg font-semibold text-brand-dark">
-                        Highlights
-                      </h3>
-                      <ul className="mt-3 list-outside list-disc space-y-2 pl-5 text-body-md leading-relaxed text-brand-dark/90 sm:pl-6">
-                        <li>Shipped GitHub sync improvements (placeholder).</li>
-                        <li>Closed 12 issues on the board (placeholder).</li>
-                        <li>3 contributors above 10 commits (placeholder).</li>
-                      </ul>
-
-                      <h3 className="mt-8 text-body-lg font-semibold text-brand-dark">
-                        Risks & next sprint
-                      </h3>
-                      <p className="mt-3 max-w-[52rem] text-body-md leading-relaxed text-brand-dark/90">
-                        Plan auth hardening and milestone GraphQL follow-ups
-                        (placeholder copy until generation runs for real).
-                      </p>
-
-                      <p className="mt-10 text-body-sm italic text-brand-dark/45">
-                        Preview only — replace with API output when sprint
-                        review generation is implemented.
-                      </p>
+                          <div className="mt-8 border-t border-brand-dark/5 pt-6">
+                            {/* Use whitespace-pre-wrap to preserve formatting from the AI */}
+                            <pre className="whitespace-pre-wrap font-sans text-body-md leading-relaxed text-brand-dark/90">
+                              {reviewText || "No review content available."}
+                            </pre>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 

@@ -168,6 +168,9 @@ export default function CurrentSprint({
   const [nextSprintTasks, setNextSprintTasks] = useState<NextSprintTaskRow[]>(
     [],
   );
+  const [reviewText, setReviewText] = useState("");
+  const [isGeneratingReview, setIsGeneratingReview] = useState(false);
+  const [reviewError, setReviewError] = useState("");
 
   useEffect(() => {
     if (status !== "ready") {
@@ -200,6 +203,38 @@ export default function CurrentSprint({
       alert("Failed to save sprint focus.");
     }
   };
+
+  const handleGenerateReview = useCallback(async () => {
+    if (!groupId || !sprint?.id) return;
+
+    setReviewError("");
+    setIsGeneratingReview(true);
+
+    setSprintReviewPromptOpen(false);
+    setSprintReviewPreviewOpen(true);
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/sprints/${sprint.id}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ regenerate: false }),
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to generate review");
+
+      setReviewText(data.review);
+    } catch (err) {
+      console.error(err);
+      setReviewError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setIsGeneratingReview(false);
+    }
+  }, [groupId, sprint?.id]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -492,10 +527,7 @@ export default function CurrentSprint({
 
       <SprintReviewPromptOverlay
         open={sprintReviewPromptOpen}
-        onGenerateSprintReview={() => {
-          setSprintReviewPromptOpen(false);
-          setSprintReviewPreviewOpen(true);
-        }}
+        onGenerateSprintReview={handleGenerateReview}
         onSkip={() => {
           setSprintReviewPromptOpen(false);
           setNextSprintWelcomeOpen(true);
@@ -505,6 +537,9 @@ export default function CurrentSprint({
 
       <SprintReviewPreviewOverlay
         open={sprintReviewPreviewOpen}
+        reviewText={reviewText}
+        sprintName={sprint?.name}
+        isLoading={isGeneratingReview}
         onContinue={() => {
           setSprintReviewPreviewOpen(false);
           setNextSprintWelcomeOpen(true);
