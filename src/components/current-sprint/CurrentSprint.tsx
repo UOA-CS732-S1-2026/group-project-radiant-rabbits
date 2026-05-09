@@ -1,16 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import ActivityTimeline from "@/components/current-sprint/ActivityTimeline";
 import BreakdownCard from "@/components/current-sprint/BreakdownCard";
 import ContributionCard from "@/components/current-sprint/ContributionCard";
+import CurrentSprintStatusWithHelp from "@/components/current-sprint/CurrentSprintStatusWithHelp";
 import SprintFocus from "@/components/current-sprint/SprintFocus";
 import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
 import Button from "@/components/shared/Button";
 import PageContainer from "@/components/shared/PageContainer";
 import { getInitials } from "@/lib/formatters";
+import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 // Fetch all required data to display the current sprint metrics
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
@@ -99,6 +107,7 @@ type SprintMetrics = {
 type CurrentSprintProps = {
   status: "ready" | "empty" | "error";
   statusMessage?: string;
+  iterationGuidanceVariant?: GitHubIterationGuidanceVariant;
   groupId?: string;
   sprint?: SprintInfo;
   metrics?: SprintMetrics;
@@ -114,21 +123,11 @@ function formatShortDate(value: string | Date) {
   });
 }
 
-// Helper function to compute the status message for the sprint
-function StatusBlock({ message }: { message: string }) {
-  return (
-    <div className="min-h-full bg-brand-background">
-      <PageContainer>
-        <p className="text-body-md text-brand-dark/70">{message}</p>
-      </PageContainer>
-    </div>
-  );
-}
-
 // Page component that shows when the current sprint is loading or if it has an error
 export default function CurrentSprint({
   status,
   statusMessage,
+  iterationGuidanceVariant,
   groupId,
   sprint,
   metrics,
@@ -137,6 +136,10 @@ export default function CurrentSprint({
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
   const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
+
+  useEffect(() => {
+    setSprintFocus(sprint?.goal || "");
+  }, [sprint?.goal]);
 
   const handleSaveSprintFocus = async (newFocus: string) => {
     if (!groupId || !sprint?.id) return;
@@ -234,7 +237,7 @@ export default function CurrentSprint({
 
   if (status === "error") {
     return (
-      <StatusBlock
+      <CurrentSprintStatusWithHelp
         message={statusMessage ?? "Failed to load current sprint."}
       />
     );
@@ -242,7 +245,10 @@ export default function CurrentSprint({
 
   if (status === "empty" || !sprint) {
     return (
-      <StatusBlock message={statusMessage ?? "No current sprint available."} />
+      <CurrentSprintStatusWithHelp
+        message={statusMessage ?? "No current sprint available."}
+        iterationGuidanceVariant={iterationGuidanceVariant}
+      />
     );
   }
 
@@ -283,7 +289,7 @@ export default function CurrentSprint({
 
           {/* Sprint Focus */}
           <SprintFocus
-            focus={sprint?.goal || ""}
+            focus={sprintFocus}
             onUpdate={handleSaveSprintFocus}
             editable
           />
