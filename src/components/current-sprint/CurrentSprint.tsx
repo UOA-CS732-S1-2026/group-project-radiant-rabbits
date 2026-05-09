@@ -1,5 +1,6 @@
 "use client";
 
+import { set } from "mongoose";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
@@ -240,12 +241,43 @@ export default function CurrentSprint({
   }, [groupId, sprint]);
 
   const proceedFromWelcomeToGithubTickets = useCallback(
-    (sprintFocus: string) => {
-      pendingSprintFocusRef.current = sprintFocus;
-      setNextSprintWelcomeOpen(false);
-      setGithubTicketsOverlayOpen(true);
+    async (sprintFocus: string) => {
+      if (!groupId || !sprint) return;
+
+      try {
+        setIsSprintHandoffSubmitting(true);
+
+        const groupSprints = await fetch(`/api/groups/${groupId}/sprints`);
+        const data = await groupSprints.json();
+        const sprintList = Array.isArray(data) ? data : data.sprints || [];
+
+        const nextSprintName = `Sprint ${sprint.number + 1}`;
+        const nextSprint = sprintList.find(
+          (s: any) =>
+            s.name?.trim().toLowerCase() === nextSprintName.toLowerCase(),
+        );
+
+        if (nextSprint._id) {
+          const response = await fetch(
+            `/api/groups/${groupId}/sprints/${nextSprint._id}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ goal: sprintFocus?.trim() || "" }),
+            },
+          );
+
+          if (!response.ok) throw new Error("Failed to update Mongo");
+        }
+      } catch (err) {
+        console.error("Handoff error:", err);
+      } finally {
+        setIsSprintHandoffSubmitting(false);
+        setNextSprintWelcomeOpen(false);
+        setGithubTicketsOverlayOpen(true);
+      }
     },
-    [],
+    [groupId, sprint],
   );
 
   const finalizeSprintHandoffFromTicketsOverlay = useCallback(async () => {
@@ -279,12 +311,14 @@ export default function CurrentSprint({
 
   const ticketOverlayTasks = useMemo(
     () =>
-      sprintTasks.map((t) => ({
-        id: t.id,
-        ref: t.ref,
-        title: t.title,
-        status: t.status,
-      })),
+      sprintTasks
+        .filter((t) => t.status !== "DONE")
+        .map((t) => ({
+          id: t.id,
+          ref: t.ref,
+          title: t.title,
+          status: t.status,
+        })),
     [sprintTasks],
   );
 
