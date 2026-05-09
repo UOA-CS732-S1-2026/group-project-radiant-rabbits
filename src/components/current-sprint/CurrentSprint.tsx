@@ -282,7 +282,7 @@ export default function CurrentSprint({
                   <p>
                     The sprint name and dates match the{" "}
                     <span className="font-semibold">current iteration</span> on
-                    your GitHub Project (via the project&apos;s iteration
+                    your GitHub Project (via the project&apos;s iteration{" "}
                     field).
                   </p>
                   <p>

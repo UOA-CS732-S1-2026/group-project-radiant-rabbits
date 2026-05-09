@@ -413,17 +413,6 @@ export default function SummaryPage() {
                   the sprint, built from your synced GitHub activity. It is
                   stored per sprint so your team can read it again later.
                 </p>
-                <p>
-                  Arriving from{" "}
-                  <span className="font-semibold">Past Sprints</span> may start
-                  generation automatically once if no review exists yet.
-                </p>
-                <p>
-                  If numbers or tasks look stale, run{" "}
-                  <span className="font-semibold">Refresh</span> on{" "}
-                  <span className="font-semibold">Current Sprint</span> first,
-                  then open this sprint again.
-                </p>
               </div>
             </HelpOverlayTrigger>
           </div>

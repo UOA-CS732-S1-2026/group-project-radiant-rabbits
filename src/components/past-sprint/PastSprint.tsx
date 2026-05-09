@@ -65,18 +65,12 @@ export default function PastSprint({
                   (completed iteration), then synced into this app.
                 </p>
                 <p>
-                  The short line under the title is your sprint{" "}
-                  <span className="font-semibold">focus / goal</span> from
-                  GitHub, not the AI review.{" "}
-                  <span className="font-semibold">Open a row</span> to go to{" "}
+                  <span className="font-semibold">Click on a row</span> to go to{" "}
                   <span className="font-semibold">Sprint Review Summary</span>,
                   where a sprint review can be generated or viewed.
                 </p>
                 <p>
-                  Commit and issue counts use that sprint&apos;s date range. New
-                  completions may need a sync from{" "}
-                  <span className="font-semibold">Current Sprint</span> (or your
-                  usual refresh) before they show here.
+                  Commit and issue counts use that sprint&apos;s date range.
                 </p>
               </div>
             </HelpOverlayTrigger>
