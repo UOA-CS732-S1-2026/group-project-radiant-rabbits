@@ -401,6 +401,17 @@ export default function CurrentSprint({
     }
   }, [groupId, sprint, router]);
 
+  const isFinishDisabled = useMemo(() => {
+    if (!sprint?.endDate) return true;
+
+    const now = new Date();
+    const end = new Date(sprint.endDate);
+
+    const windowStart = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+
+    return now < windowStart || isFinishingSprint || isRefreshing;
+  }, [sprint?.endDate, isFinishingSprint, isRefreshing]);
+
   const sprintTasks: SprintTaskRow[] = useMemo(
     () =>
       (metrics?.tasks || []).map((task) => ({
@@ -482,23 +493,41 @@ export default function CurrentSprint({
                   {sprint.progress.remainingDays} days remaining
                 </p>
               </div>
-              <div className="flex gap-md">
-                <Button
-                  variant="purple"
-                  size="sm"
-                  onClick={openFinishSprintConfirm}
-                  disabled={isFinishingSprint}
-                >
-                  Finish Sprint
-                </Button>
-                <Button
-                  variant="purple"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                >
-                  {isRefreshing ? "Refreshing..." : "Refresh"}
-                </Button>
+              <div className="flex flex-col items-end gap-xs">
+                <div className="flex gap-md">
+                  <Button
+                    variant="purple"
+                    size="sm"
+                    onClick={openFinishSprintConfirm}
+                    disabled={isFinishDisabled}
+                    aria-label={
+                      isFinishDisabled
+                        ? "Sprints can only be finished within 24 hours of the end date."
+                        : ""
+                    }
+                  >
+                    Finish Sprint
+                  </Button>
+                  <Button
+                    variant="purple"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
+                  </Button>
+                </div>
+                {isFinishDisabled && !isFinishingSprint && !isRefreshing && (
+                  <p className="text-body-xs mt-xs tracking-[0.14em]">
+                    Finish available{" "}
+                    {formatShortDate(
+                      new Date(
+                        new Date(sprint.endDate).getTime() -
+                          24 * 60 * 60 * 1000,
+                      ),
+                    )}
+                  </p>
+                )}
               </div>
             </div>
 
