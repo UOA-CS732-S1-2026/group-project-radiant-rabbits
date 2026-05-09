@@ -33,12 +33,8 @@ export default function SprintWelcomeOverlay({
 
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isContinuing) onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose, isContinuing]);
+    const onKeyDown = (e: KeyboardEvent) => {};
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -57,9 +53,6 @@ export default function SprintWelcomeOverlay({
               type="button"
               aria-label="Close dialog"
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity disabled:cursor-not-allowed"
-              onClick={() => {
-                if (!isContinuing) onClose();
-              }}
               disabled={isContinuing}
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">

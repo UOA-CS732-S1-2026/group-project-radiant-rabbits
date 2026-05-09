@@ -16,7 +16,6 @@ export type SprintReviewPromptOverlayProps = {
 /** Shown after “finish sprint” confirm; Generate opens the preview overlay. */
 export default function SprintReviewPromptOverlay({
   open,
-  onClose,
   onSkip,
   onGenerateSprintReview,
   title = "Sprint complete",
@@ -26,12 +25,7 @@ export default function SprintReviewPromptOverlay({
 
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +44,6 @@ export default function SprintReviewPromptOverlay({
               type="button"
               aria-label="Close dialog"
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity"
-              onClick={onClose}
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">
               <div className="pointer-events-auto w-full max-w-[28rem] shrink-0">

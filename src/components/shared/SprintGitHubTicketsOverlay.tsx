@@ -67,11 +67,6 @@ export default function SprintGitHubTicketsOverlay({
 
   useEffect(() => {
     if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
   }, [open]);
 
   const overlay =
@@ -83,9 +78,6 @@ export default function SprintGitHubTicketsOverlay({
               type="button"
               aria-label="Close dialog"
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity disabled:cursor-not-allowed"
-              onClick={() => {
-                if (!isContinuing) onDismiss();
-              }}
               disabled={isContinuing}
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">

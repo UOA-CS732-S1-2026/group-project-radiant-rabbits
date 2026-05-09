@@ -20,7 +20,6 @@ export type SprintReviewPreviewOverlayProps = {
 export default function SprintReviewPreviewOverlay({
   open,
   onContinue,
-  onDismiss,
   reviewText,
   sprintName,
   dateRange,
@@ -30,12 +29,7 @@ export default function SprintReviewPreviewOverlay({
 
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismiss();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onDismiss]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -54,7 +48,6 @@ export default function SprintReviewPreviewOverlay({
               type="button"
               aria-label="Close preview"
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity"
-              onClick={onDismiss}
             />
             <div className="pointer-events-none absolute inset-0 grid place-items-center p-3 sm:p-4 md:p-5">
               <div className="pointer-events-auto w-full max-w-[min(96vw,72rem)] min-w-[min(100%,18rem)]">
