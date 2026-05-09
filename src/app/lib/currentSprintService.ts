@@ -208,21 +208,22 @@ async function loadCurrentSprintAndPosition(
 } | null> {
   const sprints = await Sprint.find({ group: groupId })
     .sort({ startDate: 1 })
-    .lean<
-      Array<{
-        _id: mongoose.Types.ObjectId;
-        name: string;
-        goal?: string;
-        startDate: Date;
-        endDate: Date;
-        isCurrent: boolean;
-      }>
-    >();
+    .lean<any[]>();
 
   if (sprints.length === 0) return null;
 
-  const currentIdx = sprints.findIndex((s) => s.isCurrent);
-  const idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
+  let idx = sprints.findIndex((s) => s.status === "ACTIVE");
+
+  if (idx === -1) {
+    const currentIdx = sprints.findIndex((s) => s.isCurrent);
+    idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
+  }
+
+  if (idx === -1) {
+    const now = new Date();
+    idx = sprints.findIndex((s) => now >= s.startDate && now <= s.endDate);
+  }
+
   const doc = sprints[idx];
   const now = new Date();
 
@@ -234,7 +235,11 @@ async function loadCurrentSprintAndPosition(
       goal: doc.goal,
       startDate: doc.startDate,
       endDate: doc.endDate,
-      status: computeStatus(now, doc.startDate, doc.endDate),
+      status:
+        doc.status ||
+        (doc.isCurrent
+          ? "ACTIVE"
+          : computeStatus(now, doc.startDate, doc.endDate)),
       progress: computeProgress(now, doc.startDate, doc.endDate),
     },
     sprintObjectId: doc._id,

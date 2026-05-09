@@ -376,10 +376,26 @@ export default function CurrentSprint({
     if (!groupId || !sprint) return;
     setIsSprintHandoffSubmitting(true);
     try {
+      const response = await fetch(
+        `/api/groups/${groupId}/sprints/transition`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentSprintId: sprint.id,
+            nextSprintNumber: sprint.number + 1,
+          }),
+        },
+      );
+
+      if (!response.ok) throw new Error("Transition failed");
+
       setGithubTicketsOverlayOpen(false);
       pendingSprintFocusRef.current = "";
 
       router.refresh();
+    } catch (err) {
+      console.error("Transition failed. Please refresh the page.", err);
     } finally {
       setIsSprintHandoffSubmitting(false);
     }
