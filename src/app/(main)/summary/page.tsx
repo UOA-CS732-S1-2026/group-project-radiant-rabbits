@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 
 type GroupSummaryOption = {
@@ -391,13 +392,29 @@ export default function SummaryPage() {
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <div className="border-b border-brand-dark/10 pb-lg">
-            <h1 className="text-h2 font-bold text-brand-dark">
-              Sprint Review Summary
-            </h1>
-            <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
-              {selectedSprint?.name ?? "No sprint selected"}
-            </p>
+          <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
+            <div>
+              <h1 className="text-h2 font-bold text-brand-dark">
+                Sprint Review Summary
+              </h1>
+              <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                {selectedSprint?.name ?? "No sprint selected"}
+              </p>
+            </div>
+            <HelpOverlayTrigger
+              label="Help: sprint review summary"
+              title="AI sprint review"
+              className="shrink-0 self-start pt-0.5"
+            >
+              <div className="space-y-3 text-left">
+                <p>
+                  This page shows a{" "}
+                  <span className="font-semibold">generated narrative</span> of
+                  the sprint, built from your synced GitHub activity. It is
+                  stored per sprint so your team can read it again later.
+                </p>
+              </div>
+            </HelpOverlayTrigger>
           </div>
 
           <section>
