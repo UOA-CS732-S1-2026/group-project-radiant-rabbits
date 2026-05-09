@@ -16,6 +16,7 @@ import SprintFocus from "@/components/current-sprint/SprintFocus";
 import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
 import Button from "@/components/shared/Button";
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 import { getInitials } from "@/lib/formatters";
 import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
@@ -265,7 +266,7 @@ export default function CurrentSprint({
             <p className="text-body-md text-brand-todo">{refreshError}</p>
           ) : null}
 
-          {/* Header: sprint title + refresh button */}
+          {/* Header: sprint title + help + refresh */}
           <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
             <div>
               <h1 className="text-h2 font-bold text-brand-dark">
@@ -277,14 +278,41 @@ export default function CurrentSprint({
                 {sprint.progress.remainingDays} days remaining
               </p>
             </div>
-            <Button
-              variant="purple"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              {isRefreshing ? "Refreshing..." : "Refresh"}
-            </Button>
+            <div className="flex shrink-0 items-center gap-sm">
+              <HelpOverlayTrigger
+                label="Help: current sprint and GitHub"
+                title="How this page maps to GitHub"
+                className="self-start pt-0.5"
+              >
+                <div className="space-y-3 text-left">
+                  <p>
+                    The sprint name and dates match the{" "}
+                    <span className="font-semibold">current iteration</span> on
+                    your GitHub Project (via the project&apos;s iteration{" "}
+                    field).
+                  </p>
+                  <p>
+                    <span className="font-semibold">Sprint tasks</span> are
+                    issues assigned to that iteration. Use{" "}
+                    <span className="font-semibold">Refresh</span> after you
+                    change issues or iterations on GitHub to pull the latest
+                    data.
+                  </p>
+                  <p>
+                    <span className="font-semibold">Sprint focus</span> is
+                    stored for your team in this app; edit it here anytime.
+                  </p>
+                </div>
+              </HelpOverlayTrigger>
+              <Button
+                variant="purple"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
           </div>
 
           {/* Sprint Focus */}
