@@ -160,6 +160,7 @@ export default function CurrentSprint({
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
   const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
+  const [nextSprintTasks, setNextSprintTasks] = useState<any[]>([]);
 
   useEffect(() => {
     if (status !== "ready") {
@@ -268,6 +269,20 @@ export default function CurrentSprint({
           );
 
           if (!response.ok) throw new Error("Failed to update Mongo");
+
+          const nextSprintTasks = loadS;
+          const taskData = await nextSprintTasks.json();
+
+          const mappedTasks = (taskData.tasks || taskData || []).map(
+            (t: any) => ({
+              id: t.id || t._id,
+              ref: t.issueNumber ? `#${t.issueNumber}` : "",
+              title: t.title,
+              status: t.status,
+            }),
+          );
+
+          setNextSprintTasks(mappedTasks);
         }
       } catch (err) {
         console.error("Handoff error:", err);
@@ -488,7 +503,7 @@ export default function CurrentSprint({
 
       <SprintGitHubTicketsOverlay
         open={githubTicketsOverlayOpen}
-        tasks={ticketOverlayTasks}
+        tasks={nextSprintTasks}
         onContinue={finalizeSprintHandoffFromTicketsOverlay}
         onDismiss={() => setGithubTicketsOverlayOpen(false)}
         isContinuing={isFinishingSprint}
