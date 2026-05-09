@@ -265,6 +265,15 @@ async function upsertSprintTasks(
   tasks: Awaited<ReturnType<typeof fetchProjectTasks>>,
   iterationMap: IterationMap,
 ) {
+  const existingSprints = await Sprint.find({ group: groupId })
+    .select("_id iterationId")
+    .lean();
+
+  const dbIterationMap = new Map(
+    existingSprints
+      .filter((s) => s.iterationId)
+      .map((s) => [s.iterationId, s._id]),
+  );
   // Sprint tasks from GitHub Projects are upserted by issueNumber + group.
   // Tasks without an issueNumber (draft issues) are matched by title + group
   const operations = tasks.map((task) => {
@@ -275,7 +284,9 @@ async function upsertSprintTasks(
     // Resolve the local Sprint _id for the task's iteration, if any.
     // null means the task is not assigned to any iteration (i.e. backlog).
     const sprintId = task.iterationId
-      ? (iterationMap.get(task.iterationId) ?? null)
+      ? iterationMap.get(task.iterationId) ||
+        dbIterationMap.get(task.iterationId) ||
+        null
       : null;
 
     return {
@@ -339,9 +350,6 @@ async function upsertSprints(
     }
 
     const name = iter.title.replace(/\s+/g, " ").trim();
-    console.log(
-      `Upserting sprint "${name}" with iterationId ${iter.id} and status ${status}`,
-    );
 
     return {
       updateOne: {
