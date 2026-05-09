@@ -1,7 +1,7 @@
 import PageContainer from "@/components/shared/PageContainer";
 import ContributionBreakdownCard from "./ContributionBreakdownCard";
+import ProjectMetricsGrid from "./ProjectMetricsGrid";
 import SprintVelocityCard from "./SprintVelocityCard";
-import StatsRow from "./StatsRow";
 
 // Fetch all data required to display the dashboard metrics and pass it to the Dashboard component for rendering
 type RepositoryInfo = {
@@ -96,12 +96,16 @@ export default function Dashboard({
     );
   }
 
+  const hasVelocityChart = Boolean(sprints && sprints.length > 0);
+  const iterationGuidanceVariant =
+    iterationFieldConfigured === false ? "no-field" : "no-iterations";
+
   // Display the dashboard with the fetched metrics and timeline chart
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <div className="mb-lg flex flex-col items-start justify-between gap-md lg:flex-row lg:items-center">
+          <div className="mb-lg w-full min-w-0 space-y-sm md:space-y-md">
             <div>
               <h1 className="text-h2 font-bold text-brand-dark">
                 Project Overview
@@ -110,16 +114,19 @@ export default function Dashboard({
                 Project metrics
               </p>
             </div>
+            <ProjectMetricsGrid
+              metrics={metrics}
+              sprintVelocityGuidance={
+                hasVelocityChart
+                  ? undefined
+                  : { variant: iterationGuidanceVariant }
+              }
+            />
           </div>
 
-          {/* Headline stat cards */}
-          <StatsRow metrics={metrics} />
-
-          {/* Sprint velocity + repository contribution breakdown */}
           <div className="grid gap-lg lg:grid-cols-[6fr_4fr]">
             <SprintVelocityCard
               sprints={sprints}
-              iterationFieldConfigured={iterationFieldConfigured}
               nextSprintStart={nextSprintStart}
             />
             <ContributionBreakdownCard contributors={repoContributors ?? []} />
