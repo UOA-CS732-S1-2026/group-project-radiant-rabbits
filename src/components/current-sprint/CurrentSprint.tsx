@@ -1,6 +1,5 @@
 "use client";
 
-import { set } from "mongoose";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
@@ -27,6 +26,13 @@ import { getInitials } from "@/lib/formatters";
 
 // Fetch all required data to display the current sprint metrics
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+type NextSprintTaskRow = {
+  id: string;
+  ref: string;
+  title: string;
+  status: TaskStatus;
+};
 
 type Assignee = {
   name: string;
@@ -149,7 +155,6 @@ export default function CurrentSprint({
   const router = useRouter();
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
-  const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
   const [sprintReviewPreviewOpen, setSprintReviewPreviewOpen] = useState(false);
@@ -160,7 +165,9 @@ export default function CurrentSprint({
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
   const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
-  const [nextSprintTasks, setNextSprintTasks] = useState<any[]>([]);
+  const [nextSprintTasks, setNextSprintTasks] = useState<NextSprintTaskRow[]>(
+    [],
+  );
 
   useEffect(() => {
     if (status !== "ready") {
@@ -187,7 +194,6 @@ export default function CurrentSprint({
 
       if (!response.ok) throw new Error("Failed to update focus");
 
-      setSprintFocus(newFocus);
       router.refresh();
     } catch (err) {
       console.error(err);
@@ -248,18 +254,28 @@ export default function CurrentSprint({
       try {
         setIsSprintHandoffSubmitting(true);
 
-        const groupSprints = await fetch(`/api/groups/${groupId}/sprints`);
-        const data = await groupSprints.json();
-        const sprintList = Array.isArray(data) ? data : data.sprints || [];
+        // Fetch all sprints for the group
+        const sprintsResponse = await fetch(`/api/groups/${groupId}/sprints`);
+        if (!sprintsResponse.ok) {
+          throw new Error("Failed to load sprints");
+        }
 
+        const sprintList = await sprintsResponse.json();
+        const sprints = Array.isArray(sprintList) ? sprintList : [];
+
+        // Find the next sprint by name pattern
         const nextSprintName = `Sprint ${sprint.number + 1}`;
-        const nextSprint = sprintList.find(
-          (s: any) =>
+        const nextSprint = sprints.find(
+          (s: { name?: string; _id?: string }) =>
             s.name?.trim().toLowerCase() === nextSprintName.toLowerCase(),
         );
 
-        if (nextSprint._id) {
-          const response = await fetch(
+        if (!nextSprint || !nextSprint._id) {
+          console.warn(`Next sprint "${nextSprintName}" not found`);
+          setNextSprintTasks([]);
+        } else {
+          // Update next sprint's goal with the sprint focus
+          const updateResponse = await fetch(
             `/api/groups/${groupId}/sprints/${nextSprint._id}`,
             {
               method: "PUT",
@@ -268,24 +284,39 @@ export default function CurrentSprint({
             },
           );
 
-          if (!response.ok) throw new Error("Failed to update Mongo");
+          if (!updateResponse.ok) {
+            console.error("Failed to update next sprint goal");
+          }
 
-          const nextSprintTasks = loadS;
-          const taskData = await nextSprintTasks.json();
-
-          const mappedTasks = (taskData.tasks || taskData || []).map(
-            (t: any) => ({
-              id: t.id || t._id,
-              ref: t.issueNumber ? `#${t.issueNumber}` : "",
-              title: t.title,
-              status: t.status,
-            }),
+          // Fetch tasks for the next sprint
+          const tasksResponse = await fetch(
+            `/api/groups/${groupId}/sprints/${nextSprint._id}/tasks`,
           );
 
-          setNextSprintTasks(mappedTasks);
+          if (tasksResponse.ok) {
+            const taskData = await tasksResponse.json();
+            const mappedTasks = (taskData.tasks || []).map(
+              (t: {
+                id: string;
+                issueNumber?: number | null;
+                title: string;
+                status: TaskStatus;
+              }) => ({
+                id: t.id,
+                ref: t.issueNumber ? `#${t.issueNumber}` : "",
+                title: t.title,
+                status: t.status,
+              }),
+            );
+            setNextSprintTasks(mappedTasks);
+          } else {
+            console.error("Failed to fetch next sprint tasks");
+            setNextSprintTasks([]);
+          }
         }
       } catch (err) {
-        console.error("Handoff error:", err);
+        console.error("Sprint handoff error:", err);
+        setNextSprintTasks([]);
       } finally {
         setIsSprintHandoffSubmitting(false);
         setNextSprintWelcomeOpen(false);
@@ -322,19 +353,6 @@ export default function CurrentSprint({
         labels: task.labels || [],
       })),
     [metrics?.tasks],
-  );
-
-  const ticketOverlayTasks = useMemo(
-    () =>
-      sprintTasks
-        .filter((t) => t.status !== "DONE")
-        .map((t) => ({
-          id: t.id,
-          ref: t.ref,
-          title: t.title,
-          status: t.status,
-        })),
-    [sprintTasks],
   );
 
   const contributors: ContributorRow[] = useMemo(
@@ -499,6 +517,7 @@ export default function CurrentSprint({
         sprintNumber={sprint.number + 1}
         onContinue={proceedFromWelcomeToGithubTickets}
         onClose={() => setNextSprintWelcomeOpen(false)}
+        isContinuing={isSprintHandoffSubmitting}
       />
 
       <SprintGitHubTicketsOverlay
@@ -506,7 +525,7 @@ export default function CurrentSprint({
         tasks={nextSprintTasks}
         onContinue={finalizeSprintHandoffFromTicketsOverlay}
         onDismiss={() => setGithubTicketsOverlayOpen(false)}
-        isContinuing={isFinishingSprint}
+        isContinuing={isSprintHandoffSubmitting}
       />
     </>
   );

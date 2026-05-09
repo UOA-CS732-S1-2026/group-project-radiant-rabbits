@@ -362,10 +362,9 @@ async function upsertSprints(
   // Look up the Sprint _ids we just upserted so we can return the iteration map
   const upsertedSprints = await Sprint.find({
     group: groupId,
-    iterationId: { $in: iterations.map((i) => i.id) },
   })
     .select("_id iterationId")
-    .lean<Array<{ _id: mongoose.Types.ObjectId; iterationId: string }>>();
+    .lean();
 
   const map: IterationMap = new Map();
   for (const sprint of upsertedSprints) {
