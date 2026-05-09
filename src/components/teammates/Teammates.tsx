@@ -1,3 +1,4 @@
+import Button from "@/components/shared/Button";
 import PageContainer from "@/components/shared/PageContainer";
 import TeammateRow, {
   type TeammateRowData,
@@ -48,20 +49,22 @@ export default function Teammates({
                 </p>
               )}
             </div>
-            {/* Invite button */}
-            <button
+            <Button
               type="button"
-              className="shrink-0 rounded-lg bg-brand-accent px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-brand-accent/90"
+              variant="purple"
+              size="sm"
+              className="shrink-0 text-brand-surface hover:bg-brand-accent/90 hover:opacity-100"
             >
               + Invite Member
-            </button>
-            {/* Leave button */}
-            <button
+            </Button>
+            <Button
               type="button"
-              className="shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-status-todo-fg/90"
+              variant="purple"
+              size="sm"
+              className="shrink-0 bg-status-todo-fg text-brand-surface hover:bg-status-todo-fg/90 hover:opacity-100"
             >
               Leave Group
-            </button>
+            </Button>
           </div>
           {/* Teammate rows */}
           {memberList.length === 0 ? (
