@@ -120,8 +120,8 @@ export default function HelpOverlayTrigger({
           onClick={() => setOpen(true)}
           className={
             size === "comfortable"
-              ? "flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-body-md font-bold text-brand-dark shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-12 sm:w-12"
-              : "flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary text-body-sm font-bold text-brand-dark shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-11 sm:w-11"
+              ? "flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-body-md font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-12 sm:w-12"
+              : "flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent text-body-sm font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-11 sm:w-11"
           }
         >
           ?
