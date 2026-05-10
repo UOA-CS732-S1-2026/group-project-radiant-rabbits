@@ -235,7 +235,8 @@ async function upsertContributors(
   // Deduplicate by login or email - a person may have many commits
   const seen = new Map<string, (typeof commits)[0]>();
   for (const commit of commits) {
-    const key = commit.author.login || commit.author.email;
+    const key =
+      commit.author.login || commit.author.name || commit.author.email;
     if (!key) continue;
     // Keep the most recent commit's author info (commits are newest-first)
     if (!seen.has(key)) {

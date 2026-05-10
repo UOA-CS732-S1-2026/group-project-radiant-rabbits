@@ -118,7 +118,7 @@ export async function aggregateDashboard(
     { $match: { group: gid, date: { $gte: start, $lte: end } } },
     {
       $group: {
-        _id: { $ifNull: ["$author.login", "$author.email"] },
+        _id: { $ifNull: ["$author.login", "$author.name"] },
         commitCount: { $sum: 1 },
       },
     },

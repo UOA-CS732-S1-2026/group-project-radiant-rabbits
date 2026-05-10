@@ -123,7 +123,7 @@ export async function calculateGithubMetricsLive(
   const contributorKeys = new Set<string>();
   for (const commit of commits) {
     const key =
-      commit.author.login || commit.author.email || commit.author.name;
+      commit.author.login || commit.author.name || commit.author.email;
     if (key) contributorKeys.add(key);
   }
 

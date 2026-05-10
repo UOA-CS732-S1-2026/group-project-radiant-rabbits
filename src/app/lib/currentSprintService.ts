@@ -318,7 +318,7 @@ async function getPeriodActivityFromDb(
       },
       {
         $group: {
-          _id: { $ifNull: ["$author.login", "$author.email"] },
+          _id: { $ifNull: ["$author.login", "$author.name"] },
           count: { $sum: 1 },
         },
       },
@@ -382,7 +382,7 @@ async function getPeriodActivityFromDb(
 
   const timelineFromCommits: SprintActivity[] = recentCommits.map((commit) => {
     const authorName =
-      commit.author?.login?.trim() || commit.author?.email?.trim() || "Unknown";
+      commit.author?.login?.trim() || commit.author?.name?.trim() || "Unknown";
     return {
       date: commit.date,
       text: `${authorName} pushed a commit`,
