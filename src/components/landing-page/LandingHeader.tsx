@@ -19,7 +19,7 @@ export default function LandingHeader({
           href="/"
           className="flex min-w-0 flex-1 items-center justify-start gap-2 sm:gap-3"
         >
-          <AppLogoMark className="h-10 w-10 sm:h-11 sm:w-11" />
+          <AppLogoMark className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl overflow-hidden" />
           <SprintHubTitle
             as="span"
             size="md"
