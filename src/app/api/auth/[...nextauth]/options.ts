@@ -10,11 +10,8 @@ const githubId = process.env.AUTH_GITHUB_ID;
 const githubSecret = process.env.AUTH_GITHUB_SECRET;
 const e2eTestMode = process.env.E2E_TEST_MODE === "true";
 
-if (
-  !e2eTestMode &&
-  process.env.NEXT_PHASE !== "phase-production-build" &&
-  (!githubId || !githubSecret)
-) {
+// Only validate if not in any Next.js build/generation phase and not in E2E test mode
+if (!e2eTestMode && !process.env.NEXT_PHASE && (!githubId || !githubSecret)) {
   throw new Error("Missing AUTH_GITHUB_ID or AUTH_GITHUB_SECRET");
 }
 
