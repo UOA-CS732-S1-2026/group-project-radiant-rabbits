@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Avatar from "@/components/shared/Avatar";
 import BorderedPanel from "@/components/shared/BorderedPanel";
-import FilterChip from "./FilterChip";
+import FilterChip from "../shared/FilterChip";
 import StatusBadge from "./StatusBadge";
 
 type TaskStatus = "UNASSIGNED" | "TODO" | "IN_PROGRESS" | "DONE";
