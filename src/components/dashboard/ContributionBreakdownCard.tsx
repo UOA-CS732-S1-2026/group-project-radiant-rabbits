@@ -23,27 +23,30 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
   );
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="space-y-2xl">
+    <div className="flex flex-col">
+      <div className="overflow-y-auto">
         {rows.map((row) => {
           return (
-            <div key={row.name} className="grid grid-cols-[3fr_7fr] space-y-sm">
+            <div
+              key={row.name}
+              className="grid grid-cols-[2.5fr_7.5fr] grid-rows-[auto_auto_auto]"
+            >
               {/* Contributor name and avatar */}
-              <div className="flex items-center ml-lg gap-sm min-w-0">
+              <div className="row-start-2 flex w-full items-center ml-lg gap-sm min-w-0 text-left">
                 <Avatar
                   name={row.name}
                   initials={row.initials}
                   avatarUrl={row.avatarUrl}
                   size={24}
                 />
-                <span className="truncate text-(length:--text-body-sm) font-medium text-brand-dark">
+                <span className="text-left text-(length:--text-body-sm) font-medium text-brand-dark">
                   {row.name}
                 </span>
               </div>
               {/* Contribution bars */}
-              <div className="flex flex-col gap-sm">
+              <div className="row-span-3 flex flex-col">
                 {/* Commits bar */}
-                <div className="flex items-center gap-sm">
+                <div className="flex items-center mt-md gap-sm">
                   <div className="w-12 text-right">
                     <span className="text-brand-accent font-semibold text-(length:--text-body-xs)">
                       {row.commits}
@@ -71,7 +74,7 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
                   </div>
                 </div>
                 {/* Issues bar */}
-                <div className="flex items-center gap-sm">
+                <div className="flex items-center mb-lg gap-sm">
                   <div className="w-12 text-right">
                     <span className="text-brand-in-progress/70 font-semibold text-(length:--text-body-xs)">
                       {row.issues}
