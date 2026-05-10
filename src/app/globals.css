@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #0d1f4a;
-}
-
 @theme inline {
   /* Brand colors */
   --color-brand-primary: #7bbcfe;
@@ -38,43 +33,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Typography */
-  --text-display: 3rem;
-  --text-hero: 2.25rem;
-  --text-title-lg: 1.5rem;
-  --text-title-md: 1.25rem;
-  --text-title-sm: 1rem;
-
-  --text-h1: 2.25rem;
-  --text-h1--line-height: 2.75rem;
-
-  --text-h2: 1.875rem;
-  --text-h2--line-height: 2.25rem;
-
-  --text-h3: 1.5rem;
-  --text-h3--line-height: 2rem;
-
-  --text-3xl: 1.875rem;
-  --text-3xl--line-height: 1.2rem;
-
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: 1.333rem;
-
-  --text-xl: 1.25rem;
-  --text-xl--line-height: 1.4rem;
-
-  --text-body-lg: 1.125rem;
-  --text-body-lg--line-height: 1.75rem;
-
-  --text-body-md: 1rem;
-  --text-body-md--line-height: 1.5rem;
-
-  --text-body-sm: 0.875rem;
-  --text-body-sm--line-height: 1.25rem;
-
-  --text-body-xs: 0.75rem;
-  --text-body-xs--line-height: 1rem;
-
   /* Spacing — matches `dev`; powers `p-md`, `px-xl`, `gap-lg`, etc. */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
@@ -99,8 +57,11 @@
   --container-form: 42rem;
 }
 
-/* Default text sizing (for smaller screens) */
+/* Default background colours and text sizing (for smaller screens) */
 :root {
+  --background: #ffffff;
+  --foreground: #0d1f4a;
+
   --text-display: 3rem;
   --text-hero: 2.25rem;
   --text-title-lg: 1.5rem;
