@@ -12,6 +12,18 @@ const contributionSummarySchema = new Schema(
       ref: "Sprint",
       required: true,
     },
+    kind: {
+      type: String,
+      enum: ["team", "contributor"],
+      required: true,
+    },
+    // For kind="contributor", the contributor's display name (matches the
+    // value the frontend sends in the POST body). Null for kind="team".
+    contributorKey: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     summary: {
       type: String,
       required: true,
