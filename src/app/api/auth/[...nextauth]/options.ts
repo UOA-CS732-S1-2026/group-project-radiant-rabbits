@@ -1,5 +1,6 @@
 import type { NextAuthOptions, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import { User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
@@ -7,27 +8,66 @@ import { normalizeUserRef } from "@/app/lib/userRef";
 
 const githubId = process.env.AUTH_GITHUB_ID;
 const githubSecret = process.env.AUTH_GITHUB_SECRET;
+const e2eTestMode = process.env.E2E_TEST_MODE === "true";
 
-if (!githubId || !githubSecret) {
+if (!e2eTestMode && (!githubId || !githubSecret)) {
   throw new Error("Missing AUTH_GITHUB_ID or AUTH_GITHUB_SECRET");
 }
 
 export const options: NextAuthOptions = {
   providers: [
-    GitHubProvider({
-      clientId: githubId,
-      clientSecret: githubSecret,
-      authorization: {
-        params: {
-          // 1. Request 'repo' and 'read:project' scopes so we can read GitHub Projects
-          scope: "read:user user:email repo read:project",
-        },
-      },
-    }),
+    ...(githubId && githubSecret
+      ? [
+          GitHubProvider({
+            clientId: githubId,
+            clientSecret: githubSecret,
+            authorization: {
+              params: {
+                // 1. Request 'repo' and 'read:project' scopes so we can read GitHub Projects
+                scope: "read:user user:email repo read:project",
+              },
+            },
+          }),
+        ]
+      : []),
+    ...(e2eTestMode
+      ? [
+          CredentialsProvider({
+            name: "Test Sign In",
+            credentials: {},
+            async authorize() {
+              // Return a fixed test user
+              return {
+                id: process.env.E2E_TEST_USER_ID || "smoke-user-1",
+                name: "Test User",
+                email: "test@example.com",
+                image: undefined,
+              };
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     // 2. Capture the token from the account when the user signs in
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
+      // For credentials provider (test mode), just use the user data directly
+      if (user && !account) {
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
+        return token;
+      }
+
+      if (account?.provider === "credentials") {
+        token.id = user?.id ?? token.id;
+        token.name = user?.name ?? token.name;
+        token.email = user?.email ?? token.email;
+        token.picture = user?.image ?? token.picture;
+        return token;
+      }
+
       if (account) {
         // Keep token values used by server routes.
         token.accessToken = account.access_token;

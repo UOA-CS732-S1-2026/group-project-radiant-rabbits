@@ -1,4 +1,5 @@
 import SignInButton from "@/components/auth/SignInButton";
+import TestSignInButton from "@/components/auth/TestSignInButton";
 import { LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS } from "@/components/landing-page/landingStack";
 
 type LandingClosingCtaSectionProps = {
@@ -9,6 +10,8 @@ type LandingClosingCtaSectionProps = {
 export default function LandingClosingCtaSection({
   className = "",
 }: LandingClosingCtaSectionProps) {
+  const isTestMode = process.env.E2E_TEST_MODE === "true";
+
   return (
     <section
       className={`w-full min-w-0 ${className}`}
@@ -30,12 +33,23 @@ export default function LandingClosingCtaSection({
             Sign in with GitHub, connect a repo, and pull your sprint story
             together in minutes.
           </p>
-          <div className="mt-5 flex w-full min-w-0 justify-center sm:mt-6">
+          <div className="mt-5 flex w-full min-w-0 flex-col items-center gap-3 sm:mt-6">
             <SignInButton
               className={LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS}
             >
               Get started with GitHub
             </SignInButton>
+            {isTestMode && (
+              <>
+                <p className="text-xs text-white/50">or</p>
+                <TestSignInButton
+                  className={LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS}
+                >
+                  Test Sign In
+                </TestSignInButton>
+                <p className="text-xs text-blue-300 mt-2">🧪 E2E Test Mode</p>
+              </>
+            )}
           </div>
         </article>
       </div>

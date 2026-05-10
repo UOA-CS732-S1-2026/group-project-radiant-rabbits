@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import { normalizeUserRefString } from "@/app/lib/userRef";
+import { normalizeUserRef, normalizeUserRefString } from "@/app/lib/userRef";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -12,9 +12,10 @@ export async function GET(_request: NextRequest) {
       accessToken?: string;
       user?: { id?: string; name?: string };
     };
+    const e2eTestMode = process.env.E2E_TEST_MODE === "true";
 
-    // Check if user has logged in and has a token
-    if (!sessionWithToken?.user?.id || !sessionWithToken.accessToken) {
+    // Check if user is authenticated. In E2E mode we allow no GitHub token.
+    if (!sessionWithToken?.user?.id) {
       return NextResponse.json(
         { error: "Authentication and GitHub token required" },
         { status: 401 },
@@ -22,6 +23,30 @@ export async function GET(_request: NextRequest) {
     }
 
     const userId = normalizeUserRefString(sessionWithToken.user.id);
+    await connectMongoDB();
+
+    if (e2eTestMode && !sessionWithToken.accessToken) {
+      const currentGroups = await Group.find({
+        members: normalizeUserRef(sessionWithToken.user.id),
+      }).lean();
+
+      return NextResponse.json({
+        currentGroups: currentGroups.map((group) => ({
+          id: group._id.toString(),
+          name: group.repoName,
+          repoOwner: group.repoOwner,
+        })),
+        joinGroups: [],
+        createGroups: [],
+      });
+    }
+
+    if (!sessionWithToken.accessToken) {
+      return NextResponse.json(
+        { error: "Authentication and GitHub token required" },
+        { status: 401 },
+      );
+    }
 
     // Fetching all the repositories the user has access to from GitHub
     const githubResponse = await fetch(
@@ -45,7 +70,6 @@ export async function GET(_request: NextRequest) {
     }>;
 
     // Fetch all groups from mongodb
-    await connectMongoDB();
     const allGroups = await Group.find({}).lean();
 
     // Initialising groups

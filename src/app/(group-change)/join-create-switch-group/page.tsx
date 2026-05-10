@@ -26,6 +26,7 @@ type GroupListCard = {
 function JoinCreateSwitchGroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isE2ETestMode = process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true";
   const dashboardReturn = useMemo(
     () => safeDashboardReturn(searchParams.get("returnTo")),
     [searchParams],
@@ -218,6 +219,17 @@ function JoinCreateSwitchGroupContent() {
         )}
 
         <BorderedPanel className="w-full shrink-0 overflow-hidden p-4 sm:p-5 md:p-6">
+          {isE2ETestMode && (
+            <div className="mb-4 flex justify-center">
+              <Button
+                onClick={() => router.push("/dashboard")}
+                className="font-semibold"
+              >
+                Continue to Test Dashboard
+              </Button>
+            </div>
+          )}
+
           {/* Display for loading and empty states */}
           {isFetching && (
             <p className="text-center text-gray-500">

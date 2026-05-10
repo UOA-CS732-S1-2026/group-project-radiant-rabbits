@@ -253,10 +253,40 @@ async function loadRepositoryContributors(
 // Fetch all data required to display the dashboard metrics
 // Could take a while as it may involve multiple calls for githubCalculator
 export default async function DashboardPage() {
+  const e2eTestMode = process.env.E2E_TEST_MODE === "true";
   const session = await getServerSession(options);
 
   if (!session?.user) {
     redirect("/");
+  }
+
+  if (e2eTestMode) {
+    return (
+      <Dashboard
+        status="ready"
+        repository={{
+          owner: "e2e-owner",
+          name: "e2e-repo",
+          isConnected: true,
+          syncStatus: "success",
+          syncError: null,
+          validationError: null,
+        }}
+        metrics={{
+          totalCommits: 0,
+          commitsLastSprint: 0,
+          totalPullRequests: 0,
+          pullRequestsMergedLastSprint: 0,
+          totalIssuesClosed: 0,
+          issuesClosedLastSprint: 0,
+          activeContributors: 0,
+        }}
+        sprints={[]}
+        repoContributors={[]}
+        iterationFieldConfigured={false}
+        nextSprintStart={null}
+      />
+    );
   }
 
   const accessToken = (session as { accessToken?: string }).accessToken;

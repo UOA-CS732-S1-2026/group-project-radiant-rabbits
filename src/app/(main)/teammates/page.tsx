@@ -67,9 +67,14 @@ async function loadTeammates(
 
 // Fetch all data required to display the teammates list
 export default async function TeammatesPage() {
+  const e2eTestMode = process.env.E2E_TEST_MODE === "true";
   const session = await getServerSession(options);
   if (!session?.user) {
     redirect("/");
+  }
+
+  if (e2eTestMode) {
+    return <Teammates status="ready" members={[]} />;
   }
 
   await connectMongoDB();
