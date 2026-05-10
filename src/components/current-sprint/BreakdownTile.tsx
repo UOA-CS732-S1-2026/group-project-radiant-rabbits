@@ -20,15 +20,17 @@ export default function BreakdownTile({
           className="h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: dotColour }}
         />
-        <span className="text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-dark/55">
+        <span className="text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-dark/55">
           {label}
         </span>
       </div>
       <div className="mt-md flex items-baseline gap-xs">
-        <span className="text-h1 font-bold leading-none text-brand-dark">
+        <span className="text-(length:--text-h1) font-bold leading-none text-brand-dark">
           {count}
         </span>
-        <span className="text-body-sm text-brand-dark/50">/ {total} </span>
+        <span className="text-(length:--text-body-sm) text-brand-dark/50">
+          / {total}
+        </span>
       </div>
       <div className="mt-md h-1.5 w-full overflow-hidden rounded-full bg-brand-dark/5">
         <div
@@ -36,7 +38,7 @@ export default function BreakdownTile({
           style={{ width: `${percentage}%`, backgroundColor: dotColour }}
         />
       </div>
-      <p className="mt-xs text-body-xs text-brand-dark/55">
+      <p className="mt-xs text-(length:--text-body-xs) text-brand-dark/55">
         {percentage}% of sprint
       </p>
     </div>

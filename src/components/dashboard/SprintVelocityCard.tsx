@@ -160,14 +160,14 @@ export default function SprintVelocityCard({
     <Card className="flex flex-col p-md">
       <div className="mb-md flex items-start justify-between gap-md">
         <div>
-          <h3 className="text-body-lg font-semibold text-brand-dark">
+          <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Sprint velocity
           </h3>
-          <p className="text-body-xs text-brand-dark/50">
+          <p className="text-(length:--text-body-xs) text-brand-dark/50">
             Total number of issues closed per sprint
           </p>
         </div>
-        <span className="rounded-md bg-brand-accent/10 px-sm py-xs text-body-xs font-medium text-brand-accent">
+        <span className="rounded-md bg-brand-accent/10 px-sm py-xs text-(length:--text-body-xs) font-medium text-brand-accent">
           {sprints?.length ?? 0} iterations
         </span>
       </div>
@@ -177,7 +177,7 @@ export default function SprintVelocityCard({
             <MiniVelocityChart data={velocitySeries} />
           </div>
           {sprints && !sprints.some((s) => s.isCurrent) && nextSprintStart ? (
-            <p className="mt-md text-body-sm text-brand-dark/60">
+            <p className="mt-md text-(length:--text-body-sm) text-brand-dark/60">
               No iteration is active right now. The next iteration starts on{" "}
               <span className="font-semibold text-brand-dark">
                 {formatDateLabel(nextSprintStart)}
@@ -189,7 +189,7 @@ export default function SprintVelocityCard({
       ) : (
         <div className="rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
           {iterationFieldConfigured === false ? (
-            <p className="text-body-sm text-brand-dark/60">
+            <p className="text-(length:--text-body-sm) text-brand-dark/60">
               This repo&apos;s GitHub Project doesn&apos;t have an iteration
               field yet. Once you{" "}
               <a
@@ -204,7 +204,7 @@ export default function SprintVelocityCard({
               tickets to it, sprint metrics will appear here on the next sync.
             </p>
           ) : (
-            <p className="text-body-sm text-brand-dark/60">
+            <p className="text-(length:--text-body-sm) text-brand-dark/60">
               Your iteration field is set up but has no iterations yet. Create
               one in your GitHub Project, assign tickets to it, then refresh.
             </p>

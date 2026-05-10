@@ -39,7 +39,7 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
                   avatarUrl={row.avatarUrl}
                   size={24}
                 />
-                <span className="truncate text-body-sm font-medium text-brand-dark">
+                <span className="truncate text-(length:--text-body-sm) font-medium text-brand-dark">
                   {row.name}
                 </span>
               </div>
@@ -57,14 +57,14 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
                   style={{ width: `${(row.issues / max) * 100}%` }}
                 />
               </div>
-              <div className="text-right text-body-xs font-semibold text-brand-dark/60">
+              <div className="text-right text-(length:--text-body-xs) font-semibold text-brand-dark/60">
                 {total}
               </div>
             </div>
           );
         })}
       </div>
-      <div className="mt-auto flex flex-wrap gap-md pt-md text-body-xs text-brand-dark/50">
+      <div className="mt-auto flex flex-wrap gap-md pt-md text-(length:--text-body-xs) text-brand-dark/50">
         <span className="inline-flex items-center gap-xs">
           <span className="h-2 w-2 rounded-full bg-brand-accent" />
           Commits
@@ -90,10 +90,10 @@ export default function ContributionBreakdownCard({
     <Card className="flex flex-col p-md">
       <div className="mb-md flex items-start justify-between gap-md">
         <div>
-          <h3 className="text-body-lg font-semibold text-brand-dark">
+          <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Contribution Breakdown
           </h3>
-          <p className="text-body-xs text-brand-dark/50">
+          <p className="text-(length:--text-body-xs) text-brand-dark/50">
             Total work across the repository, by person
           </p>
         </div>

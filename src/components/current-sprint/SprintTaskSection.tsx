@@ -57,7 +57,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
   return (
     <BorderedPanel className="p-md">
       <div className="mb-md flex flex-col items-start gap-sm">
-        <h4 className="text-body-lg font-semibold text-brand-dark">
+        <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Sprint Tasks
         </h4>
         <div className="flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs">
@@ -92,7 +92,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
       {/* Task list */}
       <div className="h-80 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
-          <p className="text-body-md text-brand-dark/60">
+          <p className="text-(length:--text-body-md) text-brand-dark/60">
             No tasks in this category. Assign tickets to this iteration in your
             GitHub Project to see them here.
           </p>
@@ -106,13 +106,13 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
                     index === 0 ? "" : "border-t border-brand-dark/10 pt-md"
                   }`}
                 >
-                  <span className="shrink-0 text-body-xs font-semibold text-brand-dark/60">
+                  <span className="shrink-0 text-(length:--text-body-xs) font-semibold text-brand-dark/60">
                     {task.ref || `#${task.id}`}
                   </span>
 
                   <div className="min-w-0 flex-1">
                     <div
-                      className="truncate text-body-sm font-medium text-brand-dark"
+                      className="truncate text-(length:--text-body-sm) font-medium text-brand-dark"
                       style={{
                         textDecoration:
                           task.status === "DONE" ? "line-through" : "none",
@@ -126,7 +126,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
                         {task.labels.map((label) => (
                           <span
                             key={label}
-                            className="inline-block rounded-sm bg-brand-dark/5 px-xs py-0.5 text-body-xs text-brand-dark/70"
+                            className="inline-block rounded-sm bg-brand-dark/5 px-xs py-0.5 text-(length:--text-body-xs) text-brand-dark/70"
                           >
                             {label}
                           </span>

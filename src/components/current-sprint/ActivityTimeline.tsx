@@ -19,10 +19,10 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
   if (items.length === 0) {
     return (
       <BorderedPanel className="p-md">
-        <h4 className="text-body-lg font-semibold text-brand-dark">
+        <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Activity Timeline
         </h4>
-        <p className="mt-md text-body-md text-brand-dark/60">
+        <p className="mt-md text-(length:--text-body-md) text-brand-dark/60">
           No activity captured for this sprint period.
         </p>
       </BorderedPanel>
@@ -34,10 +34,10 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
     <BorderedPanel className="p-md">
       <div className="mb-md flex items-baseline justify-between gap-md">
         <div>
-          <h4 className="text-body-lg font-semibold text-brand-dark">
+          <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Activity Timeline
           </h4>
-          <p className="text-body-xs text-brand-dark/50">
+          <p className="text-(length:--text-body-xs) text-brand-dark/50">
             Chronological sprint activity
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
               index > 0 ? "border-t border-brand-dark/10 pt-md" : ""
             }`}
           >
-            <div className="text-body-xs font-medium text-brand-dark/50">
+            <div className="text-(length:--text-body-xs) font-medium text-brand-dark/50">
               {item.date}
             </div>
 
@@ -64,14 +64,14 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
                   size={20}
                   className="shrink-0"
                 />
-                <p className="truncate text-body-sm text-brand-dark/80">
+                <p className="truncate text-(length:--text-body-sm) text-brand-dark/80">
                   {item.text}
                 </p>
               </div>
             </div>
 
             {item.flag ? (
-              <span className="justify-self-end rounded-md bg-brand-in-progress/20 px-sm py-xs text-body-xs font-medium text-brand-in-progress">
+              <span className="justify-self-end rounded-md bg-brand-in-progress/20 px-sm py-xs text-(length:--text-body-xs) font-medium text-brand-in-progress">
                 Unlinked
               </span>
             ) : (

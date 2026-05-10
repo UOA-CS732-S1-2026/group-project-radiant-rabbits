@@ -29,7 +29,7 @@ export default function LandingHeader({
         </a>
 
         {showSignInButton ? (
-          <SignInButton className="shrink-0 rounded-lg border border-brand-dark/25 bg-white px-3 py-1.5 text-xs font-semibold text-brand-dark shadow-sm transition hover:brightness-[0.97] active:brightness-[0.9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:px-4 sm:py-2 sm:text-body-sm" />
+          <SignInButton className="shrink-0 rounded-lg border border-brand-dark/25 bg-white px-3 py-1.5 text-(length:--text-body-sm) font-semibold text-brand-dark shadow-sm transition hover:brightness-[0.97] active:brightness-[0.9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:px-4 sm:py-2" />
         ) : null}
       </div>
     </header>

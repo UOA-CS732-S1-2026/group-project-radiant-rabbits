@@ -33,7 +33,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
   };
   return (
     <span
-      className="inline-flex min-w-16 justify-center rounded-md px-sm py-xs text-body-xs font-semibold"
+      className="inline-flex min-w-16 justify-center rounded-md px-sm py-xs text-(length:--text-body-xs) font-semibold"
       style={styles[status]}
     >
       {labels[status]}

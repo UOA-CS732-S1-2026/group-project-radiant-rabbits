@@ -17,7 +17,9 @@ function StatusBlock({ message }: { message: string }) {
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
-        <p className="text-body-md text-brand-dark/70">{message}</p>
+        <p className="text-(length:--text-body-md) text-brand-dark/70">
+          {message}
+        </p>
       </PageContainer>
     </div>
   );
@@ -46,10 +48,10 @@ export default function PastSprint({
         <div className="space-y-lg">
           <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
             <div>
-              <h1 className="text-h2 font-bold text-brand-dark">
+              <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 Past Sprints
               </h1>
-              <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
                 {completedCount} completed
               </p>
             </div>
@@ -77,7 +79,7 @@ export default function PastSprint({
           </div>
           {/* Past sprint rows */}
           {sprintList.length === 0 ? (
-            <p className="text-body-md text-brand-dark/70">
+            <p className="text-(length:--text-body-md) text-brand-dark/70">
               No sprints yet. Once an iteration ends, it will appear here.
             </p>
           ) : (

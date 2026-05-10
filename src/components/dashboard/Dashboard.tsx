@@ -57,10 +57,12 @@ function StatusBlock({ message }: { message: string }) {
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <h2 className="text-h3 font-bold text-brand-dark">
+          <h2 className="text-(length:--text-h3) font-bold text-brand-dark">
             Project Overview
           </h2>
-          <p className="mt-sm text-body-sm text-brand-dark/70">{message}</p>
+          <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
+            {message}
+          </p>
         </div>
       </PageContainer>
     </div>
@@ -104,10 +106,10 @@ export default function Dashboard({
         <div className="space-y-lg">
           <div className="mb-lg flex flex-col items-start justify-between gap-md sm:flex-row sm:items-start">
             <div>
-              <h1 className="text-h2 font-bold text-brand-dark">
+              <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 Project Overview
               </h1>
-              <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
                 Project metrics
               </p>
             </div>
