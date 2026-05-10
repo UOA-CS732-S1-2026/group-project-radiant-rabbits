@@ -1,4 +1,5 @@
 export { Commit } from "./commit.model";
+export { ContributionSummary } from "./contributionSummary.model";
 export { Contributor } from "./contributor.model";
 export { Group } from "./group.model";
 export { Issue } from "./issue.model";
