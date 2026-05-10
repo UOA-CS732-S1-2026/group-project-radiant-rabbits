@@ -10,7 +10,11 @@ const githubId = process.env.AUTH_GITHUB_ID;
 const githubSecret = process.env.AUTH_GITHUB_SECRET;
 const e2eTestMode = process.env.E2E_TEST_MODE === "true";
 
-if (!e2eTestMode && (!githubId || !githubSecret)) {
+if (
+  !e2eTestMode &&
+  process.env.NEXT_PHASE !== "phase-production-build" &&
+  (!githubId || !githubSecret)
+) {
   throw new Error("Missing AUTH_GITHUB_ID or AUTH_GITHUB_SECRET");
 }
 
