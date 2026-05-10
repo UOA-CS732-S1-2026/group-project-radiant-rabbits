@@ -345,7 +345,11 @@ export default function CurrentSprint({
               <SprintTaskSection tasks={sprintTasks} />
             </div>
             <div className="min-w-0 h-full">
-              <ContributionCard contributors={contributors} />
+              <ContributionCard
+                contributors={contributors}
+                groupId={groupId}
+                sprintId={sprint.id}
+              />
             </div>
           </div>
 

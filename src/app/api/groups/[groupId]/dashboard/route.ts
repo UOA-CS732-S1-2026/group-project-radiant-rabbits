@@ -118,7 +118,7 @@ export async function aggregateDashboard(
     { $match: { group: gid, date: { $gte: start, $lte: end } } },
     {
       $group: {
-        _id: "$author.name",
+        _id: { $ifNull: ["$author.login", "$author.name"] },
         commitCount: { $sum: 1 },
       },
     },
@@ -130,6 +130,10 @@ export async function aggregateDashboard(
     (sum: number, c: { commitCount: number }) => sum + c.commitCount,
     0,
   );
+
+  // All-time commits for this group, ignoring the date filter.
+  // Used for the repo-wide "total commits" stat on the dashboard.
+  const allTimeCommits = await Commit.countDocuments({ group: gid });
 
   // Issues closed in range
   const totalIssuesClosed = await Issue.countDocuments({
@@ -181,6 +185,7 @@ export async function aggregateDashboard(
   return {
     contributors: contributorAgg,
     totalCommits,
+    allTimeCommits,
     totalIssuesClosed,
     totalPullRequestsOpened,
     totalPullRequestsMerged,
