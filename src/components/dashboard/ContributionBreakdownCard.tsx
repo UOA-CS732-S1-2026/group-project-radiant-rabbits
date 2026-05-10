@@ -15,7 +15,7 @@ type ContributionBreakdownCardProps = {
   contributors: ContributorRow[];
 };
 
-// Stacked bars showing each contributor's commits, PRs, and issues.
+// Individual bars showing each contributor's commits, PRs, and issues.
 function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
   const max = Math.max(
     ...rows.map((row) => row.commits + row.prs + row.issues),
@@ -24,15 +24,12 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="space-y-lg">
+      <div className="space-y-2xl">
         {rows.map((row) => {
-          const total = row.commits + row.prs + row.issues;
           return (
-            <div
-              key={row.name}
-              className="grid grid-cols-[110px_1fr_48px] items-center gap-md"
-            >
-              <div className="flex items-center gap-sm min-w-0">
+            <div key={row.name} className="grid grid-cols-[3fr_7fr] space-y-sm">
+              {/* Contributor name and avatar */}
+              <div className="flex items-center ml-lg gap-sm min-w-0">
                 <Avatar
                   name={row.name}
                   initials={row.initials}
@@ -43,22 +40,50 @@ function RepoContributionBars({ rows }: { rows: ContributorRow[] }) {
                   {row.name}
                 </span>
               </div>
-              <div className="flex h-5 overflow-hidden rounded-full bg-brand-dark/5">
-                <div
-                  className="bg-brand-accent"
-                  style={{ width: `${(row.commits / max) * 100}%` }}
-                />
-                <div
-                  className="bg-brand-completed/60"
-                  style={{ width: `${(row.prs / max) * 100}%` }}
-                />
-                <div
-                  className="bg-brand-in-progress/70"
-                  style={{ width: `${(row.issues / max) * 100}%` }}
-                />
-              </div>
-              <div className="text-right text-(length:--text-body-xs) font-semibold text-brand-dark/60">
-                {total}
+              {/* Contribution bars */}
+              <div className="flex flex-col gap-sm">
+                {/* Commits bar */}
+                <div className="flex items-center gap-sm">
+                  <div className="w-12 text-right">
+                    <span className="text-brand-accent font-semibold text-(length:--text-body-xs)">
+                      {row.commits}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 h-4 overflow-hidden rounded-full bg-brand-dark/5">
+                    <div
+                      className="bg-brand-accent"
+                      style={{ width: `${(row.commits / max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                {/* PRs bar */}
+                <div className="flex items-center gap-sm">
+                  <div className="w-12 text-right">
+                    <span className="text-brand-completed/60 font-semibold text-(length:--text-body-xs)">
+                      {row.prs}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 h-4 overflow-hidden rounded-full bg-brand-dark/5">
+                    <div
+                      className="bg-brand-completed/60"
+                      style={{ width: `${(row.prs / max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                {/* Issues bar */}
+                <div className="flex items-center gap-sm">
+                  <div className="w-12 text-right">
+                    <span className="text-brand-in-progress/70 font-semibold text-(length:--text-body-xs)">
+                      {row.issues}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 h-4 overflow-hidden rounded-full bg-brand-dark/5">
+                    <div
+                      className="bg-brand-in-progress/70"
+                      style={{ width: `${(row.issues / max) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           );
