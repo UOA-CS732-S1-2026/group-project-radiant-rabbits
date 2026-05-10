@@ -99,6 +99,7 @@
   --container-form: 42rem;
 }
 
+/* Default text sizing (for smaller screens) */
 :root {
   --text-display: 3rem;
   --text-hero: 2.25rem;
