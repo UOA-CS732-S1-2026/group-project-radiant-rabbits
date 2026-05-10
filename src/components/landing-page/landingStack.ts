@@ -39,8 +39,8 @@ export const LANDING_FEATURE_GRID_GAP = LANDING_BLOCK_GAP;
 
 /** Primary GitHub CTA on light surfaces (hero card). */
 export const LANDING_SIGN_IN_BUTTON_PRIMARY_CLASS =
-  "rounded-xl bg-brand-primary px-6 py-3 text-body-sm font-semibold text-brand-dark shadow-md transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark";
+  "rounded-xl bg-brand-accent px-6 py-3 text-body-sm font-semibold text-brand-dark shadow-md transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark";
 
 /** Outline GitHub CTA on dark navy (closing card). */
 export const LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS =
-  "rounded-xl border-2 border-white bg-transparent px-5 py-2.5 text-body-sm font-semibold text-white transition hover:bg-white/15 active:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6 sm:py-3";
+  "rounded-xl border-2 border-brand-border bg-brand-border/15 px-5 py-2.5 text-body-sm font-semibold text-black transition hover:bg-white/15 active:bg-brand-border/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6 sm:py-3";
