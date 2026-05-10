@@ -35,6 +35,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Check secret presence (masked)
+        run: |
+          [ -n "${AUTH_GITHUB_ID}" ] && echo "AUTH_GITHUB_ID is set" || echo "AUTH_GITHUB_ID is MISSING"
+          [ -n "${AUTH_GITHUB_SECRET}" ] && echo "AUTH_GITHUB_SECRET is set" || echo "AUTH_GITHUB_SECRET is MISSING"
+        env:
+          AUTH_GITHUB_ID: ${{ secrets.AUTH_GITHUB_ID }}
+          AUTH_GITHUB_SECRET: ${{ secrets.AUTH_GITHUB_SECRET }}
+
       - name: Build app
         run: npm run build
 
