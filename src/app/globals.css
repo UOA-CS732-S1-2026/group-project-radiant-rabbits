@@ -5,76 +5,6 @@
   --foreground: #0d1f4a;
 }
 
-/* Text sizing for laptop screens */
-@media (min-width: 768px) {
-  :root {
-    --text-h1: 1.875rem;
-    --text-h1--line-height: 2.25rem;
-
-    --text-h2: 1.5rem;
-    --text-h2--line-height: 2rem;
-
-    --text-h3: 1.125rem;
-    --text-h3--line-height: 1.75rem;
-
-    --text-3xl: 1.5rem;
-    --text-3xl--line-height: 1.333rem;
-
-    --text-2xl: 1.25rem;
-    --text-2xl--line-height: 1.4rem;
-
-    --text-xl: 1rem;
-    --text-xl--line-height: 1.46rem;
-
-    --text-body-lg: 1rem;
-    --text-body-lg--line-height: 1.5rem;
-
-    --text-body-md: 0.875rem;
-    --text-body-md--line-height: 1.25rem;
-
-    --text-body-sm: 0.75rem;
-    --text-body-sm--line-height: 1rem;
-
-    --text-body-xs: 0.625rem;
-    --text-body-xs--line-height: 0.875rem;
-  }
-}
-
-/* Text sizing for desktop screens */
-@media (min-width: 1024px) {
-  :root {
-    --text-h1: 2.25rem;
-    --text-h1--line-height: 2.75rem;
-
-    --text-h2: 1.875rem;
-    --text-h2--line-height: 2.25rem;
-
-    --text-h3: 1.5rem;
-    --text-h3--line-height: 2rem;
-
-    --text-3xl: 1.875rem;
-    --text-3xl--line-height: 1.2rem;
-
-    --text-2xl: 1.5rem;
-    --text-2xl--line-height: 1.333rem;
-
-    --text-xl: 1.25rem;
-    --text-xl--line-height: 1.4rem;
-
-    --text-body-lg: 1.125rem;
-    --text-body-lg--line-height: 1.75rem;
-
-    --text-body-md: 1rem;
-    --text-body-md--line-height: 1.5rem;
-
-    --text-body-sm: 0.875rem;
-    --text-body-sm--line-height: 1.25rem;
-
-    --text-body-xs: 0.75rem;
-    --text-body-xs--line-height: 1rem;
-  }
-}
-
 @theme inline {
   /* Brand colors */
   --color-brand-primary: #7bbcfe;
@@ -109,6 +39,12 @@
   --font-mono: var(--font-geist-mono);
 
   /* Typography */
+  --text-display: 3rem;
+  --text-hero: 2.25rem;
+  --text-title-lg: 1.5rem;
+  --text-title-md: 1.25rem;
+  --text-title-sm: 1rem;
+
   --text-h1: 2.25rem;
   --text-h1--line-height: 2.75rem;
 
@@ -117,6 +53,15 @@
 
   --text-h3: 1.5rem;
   --text-h3--line-height: 2rem;
+
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.2rem;
+
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.333rem;
+
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.4rem;
 
   --text-body-lg: 1.125rem;
   --text-body-lg--line-height: 1.75rem;
@@ -152,6 +97,126 @@
   /* Container widths */
   --container-container: 80rem;
   --container-form: 42rem;
+}
+
+:root {
+  --text-display: 3rem;
+  --text-hero: 2.25rem;
+  --text-title-lg: 1.5rem;
+  --text-title-md: 1.25rem;
+  --text-title-sm: 1rem;
+
+  --text-h1: 2rem;
+  --text-h1--line-height: 2.5rem;
+
+  --text-h2: 1.625rem;
+  --text-h2--line-height: 2.125rem;
+
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.875rem;
+
+  --text-3xl: 1.625rem;
+  --text-3xl--line-height: 1.875rem;
+
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.875rem;
+
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.625rem;
+
+  --text-body-md: 0.9375rem;
+  --text-body-md--line-height: 1.375rem;
+
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.125rem;
+
+  --text-body-xs: 0.6875rem;
+  --text-body-xs--line-height: 0.9375rem;
+}
+
+/* Text sizing for laptop screens */
+@media (min-width: 768px) {
+  :root {
+    --text-display: 4rem;
+    --text-hero: 3.25rem;
+    --text-title-lg: 2rem;
+    --text-title-md: 1.625rem;
+    --text-title-sm: 1.25rem;
+
+    --text-h1: 2rem;
+    --text-h1--line-height: 2.5rem;
+
+    --text-h2: 1.625rem;
+    --text-h2--line-height: 2.125rem;
+
+    --text-h3: 1.25rem;
+    --text-h3--line-height: 1.875rem;
+
+    --text-3xl: 1.625rem;
+    --text-3xl--line-height: 1.875rem;
+
+    --text-2xl: 1.375rem;
+    --text-2xl--line-height: 1.875rem;
+
+    --text-xl: 1.125rem;
+    --text-xl--line-height: 1.625rem;
+
+    --text-body-lg: 1.0625rem;
+    --text-body-lg--line-height: 1.625rem;
+
+    --text-body-md: 0.9375rem;
+    --text-body-md--line-height: 1.375rem;
+
+    --text-body-sm: 0.8125rem;
+    --text-body-sm--line-height: 1.125rem;
+
+    --text-body-xs: 0.6875rem;
+    --text-body-xs--line-height: 0.9375rem;
+  }
+}
+
+/* Text sizing for desktop screens */
+@media (min-width: 1024px) {
+  :root {
+    --text-display: 4.5rem;
+    --text-hero: 3.75rem;
+    --text-title-lg: 2.25rem;
+    --text-title-md: 1.5rem;
+    --text-title-sm: 1.25rem;
+
+    --text-h1: 2.25rem;
+    --text-h1--line-height: 2.75rem;
+
+    --text-h2: 1.875rem;
+    --text-h2--line-height: 2.25rem;
+
+    --text-h3: 1.5rem;
+    --text-h3--line-height: 2rem;
+
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: 1.2rem;
+
+    --text-2xl: 1.5rem;
+    --text-2xl--line-height: 1.333rem;
+
+    --text-xl: 1.25rem;
+    --text-xl--line-height: 1.4rem;
+
+    --text-body-lg: 1.125rem;
+    --text-body-lg--line-height: 1.75rem;
+
+    --text-body-md: 1rem;
+    --text-body-md--line-height: 1.5rem;
+
+    --text-body-sm: 0.875rem;
+    --text-body-sm--line-height: 1.25rem;
+
+    --text-body-xs: 0.75rem;
+    --text-body-xs--line-height: 1rem;
+  }
 }
 
 html {
