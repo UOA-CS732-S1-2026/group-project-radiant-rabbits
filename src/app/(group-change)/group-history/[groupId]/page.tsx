@@ -11,7 +11,6 @@ import BorderedPanel from "@/components/shared/BorderedPanel";
 import Button from "@/components/shared/Button";
 import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
-import SectionHeading from "@/components/shared/SectionHeading";
 
 type PastSprintRow = {
   id: string;
@@ -154,10 +153,16 @@ export default async function GroupHistoryPage({
           Back to Groups
         </Button>
       </div>
-      <SectionHeading
-        title={`${group.name} (Archived)`}
-        subtitle="Past sprints and teammate list for this archived project."
-      />
+      <div className="mb-lg flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
+        <div>
+          <h1 className="text-h2 font-bold text-brand-dark">
+            {group.name} (Archived)
+          </h1>
+          <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+            Past sprints and teammate list
+          </p>
+        </div>
+      </div>
 
       <div className="grid gap-md lg:grid-cols-2">
         <Card className="border border-brand-dark/10 border-l-0 shadow-none">

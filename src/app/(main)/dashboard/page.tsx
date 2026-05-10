@@ -17,7 +17,6 @@ import {
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
-import EndProjectButton from "@/components/dashboard/EndProjectButton";
 
 type DashboardStatus = "ready" | "loading" | "empty" | "error";
 
@@ -363,32 +362,28 @@ export default async function DashboardPage() {
 
   // Display the dashboard with the fetched metrics
   return (
-    <>
-      <div className="px-4 pt-4 md:px-6 md:pt-5">
-        <EndProjectButton groupId={group._id.toString()} />
-      </div>
-      <Dashboard
-        status={status}
-        statusMessage={statusMessage}
-        repository={{
-          owner: group.repoOwner,
-          name: group.repoName,
-          isConnected: Boolean(group.repoOwner && group.repoName),
-          syncStatus: group.syncStatus,
-          syncError: group.syncError,
-          validationError:
-            group.repoOwner && group.repoName
-              ? null
-              : "No repository is connected to this group.",
-        }}
-        metrics={githubMetrics}
-        sprints={sprints}
-        repoContributors={repoContributorsData}
-        iterationFieldConfigured={group.iterationFieldConfigured ?? null}
-        nextSprintStart={
-          nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
-        }
-      />
-    </>
+    <Dashboard
+      status={status}
+      statusMessage={statusMessage}
+      repository={{
+        owner: group.repoOwner,
+        name: group.repoName,
+        isConnected: Boolean(group.repoOwner && group.repoName),
+        syncStatus: group.syncStatus,
+        syncError: group.syncError,
+        validationError:
+          group.repoOwner && group.repoName
+            ? null
+            : "No repository is connected to this group.",
+      }}
+      metrics={githubMetrics}
+      sprints={sprints}
+      repoContributors={repoContributorsData}
+      iterationFieldConfigured={group.iterationFieldConfigured ?? null}
+      nextSprintStart={
+        nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
+      }
+      groupId={group._id.toString()}
+    />
   );
 }

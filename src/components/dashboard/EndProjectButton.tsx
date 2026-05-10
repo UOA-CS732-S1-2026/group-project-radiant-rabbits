@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
+import DangerActionButton from "@/components/shared/DangerActionButton";
 
 type EndProjectButtonProps = {
   groupId: string;
@@ -39,15 +40,9 @@ export default function EndProjectButton({ groupId }: EndProjectButtonProps) {
 
   return (
     <>
-      <div className="mb-md flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="rounded-lg border border-red-400 bg-red-50 px-4 py-2 text-body-sm font-semibold text-red-700 transition hover:bg-red-100"
-        >
-          End Project
-        </button>
-      </div>
+      <DangerActionButton onClick={() => setIsOpen(true)}>
+        End Project
+      </DangerActionButton>
       {errorMessage ? (
         <p className="mb-md rounded-md bg-red-100 px-md py-sm text-body-sm text-red-700">
           {errorMessage}

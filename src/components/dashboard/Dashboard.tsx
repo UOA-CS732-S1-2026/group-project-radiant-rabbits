@@ -1,5 +1,6 @@
 import PageContainer from "@/components/shared/PageContainer";
 import ContributionBreakdownCard from "./ContributionBreakdownCard";
+import EndProjectButton from "./EndProjectButton";
 import SprintVelocityCard from "./SprintVelocityCard";
 import StatsRow from "./StatsRow";
 
@@ -48,6 +49,7 @@ type DashboardProps = {
     issues: number;
     colour: string;
   }>;
+  groupId?: string;
 };
 
 // Reusable status/error block so every failure surfaces in the dashboard UI
@@ -76,6 +78,7 @@ export default function Dashboard({
   iterationFieldConfigured,
   nextSprintStart,
   repoContributors,
+  groupId,
 }: DashboardProps) {
   if (status !== "ready") {
     return (
@@ -110,6 +113,7 @@ export default function Dashboard({
                 Project metrics
               </p>
             </div>
+            {groupId ? <EndProjectButton groupId={groupId} /> : null}
           </div>
 
           {/* Headline stat cards */}
