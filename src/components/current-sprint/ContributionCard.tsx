@@ -22,7 +22,9 @@ export default function ContributionCard({
 }: ContributionCardProps) {
   if (contributors.length === 0) {
     return (
-      <BorderedPanel className={`p-md ${className}`}>
+      <BorderedPanel
+        className={`flex h-full max-h-128 flex-col overflow-hidden p-md ${className}`}
+      >
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Contribution · this sprint
         </h4>
@@ -38,7 +40,9 @@ export default function ContributionCard({
 
   // If there are contributors, display their activity
   return (
-    <BorderedPanel className={`p-md ${className}`}>
+    <BorderedPanel
+      className={`flex h-full max-h-128 flex-col overflow-hidden p-md ${className}`}
+    >
       <div className="mb-md">
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Contribution · this sprint
@@ -48,7 +52,7 @@ export default function ContributionCard({
         </p>
       </div>
 
-      <div className="h-96 space-y-sm overflow-y-auto pr-xs">
+      <div className="min-h-0 flex-1 space-y-sm overflow-y-auto pr-xs">
         {contributors.map((person, index) => (
           <div
             key={person.name}

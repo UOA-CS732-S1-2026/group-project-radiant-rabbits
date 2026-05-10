@@ -55,7 +55,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
   });
 
   return (
-    <BorderedPanel className="p-md">
+    <BorderedPanel className="flex h-full max-h-128 flex-col overflow-hidden p-md">
       <div className="mb-md flex flex-col items-start gap-sm">
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Sprint Tasks
@@ -90,7 +90,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
       </div>
 
       {/* Task list */}
-      <div className="h-80 overflow-y-auto pr-xs">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
           <p className="text-(length:--text-body-md) text-brand-dark/60">
             No tasks in this category. Assign tickets to this iteration in your

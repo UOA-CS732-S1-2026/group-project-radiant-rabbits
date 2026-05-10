@@ -340,11 +340,11 @@ export default function CurrentSprint({
           />
 
           {/* Tasks and Contributions */}
-          <div className="grid min-w-0 gap-lg lg:grid-cols-[1.4fr_1fr]">
-            <div className="min-w-0">
+          <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
+            <div className="min-w-0 h-full">
               <SprintTaskSection tasks={sprintTasks} />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 h-full">
               <ContributionCard contributors={contributors} />
             </div>
           </div>
