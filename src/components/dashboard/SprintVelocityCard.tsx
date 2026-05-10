@@ -37,7 +37,7 @@ function formatDateLabel(value: string) {
 function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   const w = 760;
   const h = 240;
-  const pad = { l: 26, r: 40, t: 12, b: 32 };
+  const pad = { l: 26, r: 26, t: 12, b: 32 };
   const safeData = data.length > 0 ? data : [{ label: "S1", value: 0 }];
   const max = Math.max(...safeData.map((point) => point.value), 10);
   const xs = (index: number) =>
@@ -56,7 +56,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
     <svg
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="none"
-      className="h-full w-full flex-1"
+      className="items-center block h-full w-full"
       role="img"
       aria-label="Sprint velocity chart"
     >
@@ -157,7 +157,7 @@ export default function SprintVelocityCard({
     })) ?? [];
 
   return (
-    <Card className="flex flex-col p-md">
+    <Card className="flex h-full flex-col p-md">
       <div className="mb-md flex items-start justify-between gap-md">
         <div>
           <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
@@ -172,8 +172,8 @@ export default function SprintVelocityCard({
         </span>
       </div>
       {velocitySeries.length > 0 ? (
-        <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
-          <div className="flex h-68 items-stretch">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
+          <div className="flex min-h-0 flex-1 items-stretch">
             <MiniVelocityChart data={velocitySeries} />
           </div>
           {sprints && !sprints.some((s) => s.isCurrent) && nextSprintStart ? (

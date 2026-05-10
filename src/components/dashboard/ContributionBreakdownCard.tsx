@@ -139,7 +139,7 @@ export default function ContributionBreakdownCard({
       </div>
 
       <div className="mb-md">
-        <div className="flex flex-wrap gap-sm">
+        <div className="inline-flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs">
           <FilterChip
             label={`Commits (${contributors.reduce((s, c) => s + c.commits, 0)})`}
             active={metric === "commits"}
