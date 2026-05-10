@@ -6,8 +6,12 @@ const githubId = process.env.AUTH_GITHUB_ID;
 const githubSecret = process.env.AUTH_GITHUB_SECRET;
 const e2eTestMode = process.env.E2E_TEST_MODE === "true";
 
-// Validate OAuth credentials at startup (skip in test mode).
-if (!e2eTestMode && (!githubId || !githubSecret)) {
+// Validate OAuth credentials at startup (skip in test mode or during build).
+if (
+  !e2eTestMode &&
+  process.env.NEXT_PHASE !== "phase-production-build" &&
+  (!githubId || !githubSecret)
+) {
   throw new Error("Missing AUTH_GITHUB_ID or AUTH_GITHUB_SECRET");
 }
 
