@@ -1,6 +1,7 @@
 import PastSprintRow, {
   type PastSprintRowData,
 } from "@/components/past-sprint/PastSprintRow";
+import GitHubIterationGuidanceCallout from "@/components/shared/GitHubIterationGuidanceCallout";
 import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 
@@ -77,9 +78,11 @@ export default function PastSprint({
           </div>
           {/* Past sprint rows */}
           {sprintList.length === 0 ? (
-            <p className="text-body-md text-brand-dark/70">
-              No sprints yet. Once an iteration ends, it will appear here.
-            </p>
+            <GitHubIterationGuidanceCallout title="No sprints yet">
+              <p className="text-body-sm leading-relaxed text-brand-dark/85 sm:text-body-md">
+                Once an iteration ends, it will appear here.
+              </p>
+            </GitHubIterationGuidanceCallout>
           ) : (
             <div>
               {sprintList.map((sprint, index) => (
