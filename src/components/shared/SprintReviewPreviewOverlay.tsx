@@ -14,6 +14,7 @@ export type SprintReviewPreviewOverlayProps = {
   sprintName?: string;
   dateRange?: string;
   isLoading?: boolean;
+  groupName?: string;
 };
 
 /** Placeholder sprint review body until generation/API exists. */
@@ -22,6 +23,7 @@ export default function SprintReviewPreviewOverlay({
   onContinue,
   reviewText,
   sprintName,
+  groupName,
   dateRange,
   isLoading,
 }: SprintReviewPreviewOverlayProps) {
@@ -39,6 +41,32 @@ export default function SprintReviewPreviewOverlay({
       document.body.style.overflow = previous;
     };
   }, [open]);
+
+  const handleExport = () => {
+    if (!reviewText) return;
+
+    const fileContent = `# ${sprintName || "Sprint Review"}\n${dateRange || ""}\n\n${reviewText}`;
+
+    const rawFileName = `${groupName || "group"}-${sprintName || "sprint"}-review`;
+
+    const safeFileName = rawFileName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const blob = new Blob([fileContent], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${safeFileName}.md`;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const overlay =
     open && typeof document !== "undefined"
@@ -71,7 +99,8 @@ export default function SprintReviewPreviewOverlay({
                         size="sm"
                         className="gap-1.5 !border-brand-dark/15 shadow-none transition-colors hover:!bg-slate-100 active:!bg-slate-200"
                         aria-label="Export sprint review"
-                        onClick={() => {}}
+                        onClick={handleExport}
+                        disabled={isLoading || !reviewText}
                       >
                         <Download
                           className="h-4 w-4 shrink-0 opacity-90"

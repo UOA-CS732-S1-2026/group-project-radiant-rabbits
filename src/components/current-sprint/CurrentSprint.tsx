@@ -1,5 +1,6 @@
 "use client";
 
+import { group } from "console";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
@@ -119,6 +120,7 @@ type CurrentSprintProps = {
   status: "ready" | "empty" | "error";
   statusMessage?: string;
   groupId?: string;
+  groupName?: string;
   sprint?: SprintInfo;
   metrics?: SprintMetrics;
 };
@@ -149,6 +151,7 @@ export default function CurrentSprint({
   status,
   statusMessage,
   groupId,
+  groupName,
   sprint,
   metrics,
 }: CurrentSprintProps) {
@@ -596,6 +599,7 @@ export default function CurrentSprint({
         open={sprintReviewPreviewOpen}
         reviewText={reviewText}
         sprintName={sprint?.name}
+        groupName={groupName}
         isLoading={isGeneratingReview}
         onContinue={() => {
           setSprintReviewPreviewOpen(false);
