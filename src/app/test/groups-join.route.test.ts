@@ -33,6 +33,9 @@ jest.mock(
       findOne: jest.fn(),
       findByIdAndUpdate: jest.fn(),
     },
+    User: {
+      findByIdAndUpdate: jest.fn(),
+    },
   }),
   { virtual: true },
 );

@@ -123,7 +123,7 @@ export async function calculateGithubMetricsLive(
   const contributorKeys = new Set<string>();
   for (const commit of commits) {
     const key =
-      commit.author.login || commit.author.name || commit.author.email;
+      commit.author.login || commit.author.email || commit.author.name;
     if (key) contributorKeys.add(key);
   }
 
@@ -174,9 +174,9 @@ export async function calculateGithubMetrics(
       closedAt: { $gte: start, $lte: end },
     }),
     Contributor.countDocuments({ group: gid }),
-    Commit.distinct("author.login", {
+    Commit.distinct("author.name", {
       group: gid,
-      "author.login": { $nin: [null, ""] },
+      "author.name": { $nin: [null, ""] },
     }),
   ]);
 

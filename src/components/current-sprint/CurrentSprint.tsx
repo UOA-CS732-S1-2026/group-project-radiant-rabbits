@@ -1,16 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import ActivityTimeline from "@/components/current-sprint/ActivityTimeline";
 import BreakdownCard from "@/components/current-sprint/BreakdownCard";
 import ContributionCard from "@/components/current-sprint/ContributionCard";
+import CurrentSprintStatusWithHelp from "@/components/current-sprint/CurrentSprintStatusWithHelp";
 import SprintFocus from "@/components/current-sprint/SprintFocus";
 import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
 import Button from "@/components/shared/Button";
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 import { getInitials } from "@/lib/formatters";
+import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 // Fetch all required data to display the current sprint metrics
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
@@ -50,6 +59,7 @@ type SprintInfo = {
   id: string;
   number: number;
   name: string;
+  goal?: string;
   startDate: string | Date;
   endDate: string | Date;
   status: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -98,6 +108,7 @@ type SprintMetrics = {
 type CurrentSprintProps = {
   status: "ready" | "empty" | "error";
   statusMessage?: string;
+  iterationGuidanceVariant?: GitHubIterationGuidanceVariant;
   groupId?: string;
   sprint?: SprintInfo;
   metrics?: SprintMetrics;
@@ -113,21 +124,11 @@ function formatShortDate(value: string | Date) {
   });
 }
 
-// Helper function to compute the status message for the sprint
-function StatusBlock({ message }: { message: string }) {
-  return (
-    <div className="min-h-full bg-brand-background">
-      <PageContainer>
-        <p className="text-body-md text-brand-dark/70">{message}</p>
-      </PageContainer>
-    </div>
-  );
-}
-
 // Page component that shows when the current sprint is loading or if it has an error
 export default function CurrentSprint({
   status,
   statusMessage,
+  iterationGuidanceVariant,
   groupId,
   sprint,
   metrics,
@@ -135,6 +136,34 @@ export default function CurrentSprint({
   const router = useRouter();
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
+  const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
+
+  useEffect(() => {
+    setSprintFocus(sprint?.goal || "");
+  }, [sprint?.goal]);
+
+  const handleSaveSprintFocus = async (newFocus: string) => {
+    if (!groupId || !sprint?.id) return;
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/sprints/${sprint.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ goal: newFocus }),
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to update focus");
+
+      setSprintFocus(newFocus);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save sprint focus.");
+    }
+  };
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -209,7 +238,7 @@ export default function CurrentSprint({
 
   if (status === "error") {
     return (
-      <StatusBlock
+      <CurrentSprintStatusWithHelp
         message={statusMessage ?? "Failed to load current sprint."}
       />
     );
@@ -217,7 +246,10 @@ export default function CurrentSprint({
 
   if (status === "empty" || !sprint) {
     return (
-      <StatusBlock message={statusMessage ?? "No current sprint available."} />
+      <CurrentSprintStatusWithHelp
+        message={statusMessage ?? "No current sprint available."}
+        iterationGuidanceVariant={iterationGuidanceVariant}
+      />
     );
   }
 
@@ -234,7 +266,7 @@ export default function CurrentSprint({
             <p className="text-body-md text-brand-todo">{refreshError}</p>
           ) : null}
 
-          {/* Header: sprint title + refresh button */}
+          {/* Header: sprint title + help + refresh */}
           <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
             <div>
               <h1 className="text-h2 font-bold text-brand-dark">
@@ -246,18 +278,49 @@ export default function CurrentSprint({
                 {sprint.progress.remainingDays} days remaining
               </p>
             </div>
-            <Button
-              variant="purple"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              {isRefreshing ? "Refreshing..." : "Refresh"}
-            </Button>
+            <div className="flex shrink-0 items-center gap-sm">
+              <HelpOverlayTrigger
+                label="Help: current sprint and GitHub"
+                title="How this page maps to GitHub"
+                className="self-start pt-0.5"
+              >
+                <div className="space-y-3 text-left">
+                  <p>
+                    The sprint name and dates match the{" "}
+                    <span className="font-semibold">current iteration</span> on
+                    your GitHub Project (via the project&apos;s iteration{" "}
+                    field).
+                  </p>
+                  <p>
+                    <span className="font-semibold">Sprint tasks</span> are
+                    issues assigned to that iteration. Use{" "}
+                    <span className="font-semibold">Refresh</span> after you
+                    change issues or iterations on GitHub to pull the latest
+                    data.
+                  </p>
+                  <p>
+                    <span className="font-semibold">Sprint focus</span> is
+                    stored for your team in this app; edit it here anytime.
+                  </p>
+                </div>
+              </HelpOverlayTrigger>
+              <Button
+                variant="purple"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
           </div>
 
           {/* Sprint Focus */}
-          <SprintFocus focus="Add your sprint focus here..." editable />
+          <SprintFocus
+            focus={sprintFocus}
+            onUpdate={handleSaveSprintFocus}
+            editable
+          />
 
           {/* Sprint Timeline */}
           <SprintTimeline
@@ -284,11 +347,7 @@ export default function CurrentSprint({
               <SprintTaskSection tasks={sprintTasks} />
             </div>
             <div className="min-w-0">
-              <ContributionCard
-                contributors={contributors}
-                groupId={groupId}
-                sprintId={sprint.id}
-              />
+              <ContributionCard contributors={contributors} />
             </div>
           </div>
 
