@@ -31,10 +31,10 @@ export const LANDING_HEADING_INNER_STACK =
 /** Stack inside each how-it-works step (number, title, body). */
 export const LANDING_STEP_INNER_STACK = "flex flex-col gap-3 sm:gap-4";
 
-/** Step grid gap — same scale as `LANDING_BLOCK_GAP`. */
+/** Step grid gap; same scale as `LANDING_BLOCK_GAP`. */
 export const LANDING_STEP_GRID_GAP = LANDING_BLOCK_GAP;
 
-/** Feature card flex-wrap grid — same scale as `LANDING_BLOCK_GAP`. */
+/** Feature card flex-wrap grid; same scale as `LANDING_BLOCK_GAP`. */
 export const LANDING_FEATURE_GRID_GAP = LANDING_BLOCK_GAP;
 
 /** Primary GitHub CTA on light surfaces (hero card). */
