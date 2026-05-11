@@ -9,7 +9,6 @@ import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup, normalizeUserRefString } from "@/app/lib/userRef";
 import BorderedPanel from "@/components/shared/BorderedPanel";
 import Button from "@/components/shared/Button";
-import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 
 type PastSprintRow = {
@@ -165,91 +164,87 @@ export default async function GroupHistoryPage({
       </div>
 
       <div className="grid gap-md lg:grid-cols-2">
-        <Card className="border border-brand-dark/10 border-l-0 shadow-none">
-          <BorderedPanel className="p-lg">
-            <h2 className="text-h3 font-semibold text-brand-dark">
-              Past Sprints
-            </h2>
-            {pastSprints.length === 0 ? (
-              <p className="mt-md text-body-md text-brand-dark/70">
-                No completed sprints recorded for this project.
-              </p>
-            ) : (
-              <div className="mt-md space-y-sm">
-                {pastSprints.map((sprint) => (
-                  <div
-                    key={sprint.id}
-                    className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md"
-                  >
-                    <h3 className="text-body-lg font-semibold text-brand-dark">
-                      {sprint.name}
-                    </h3>
-                    <p className="mt-xs text-body-sm text-brand-dark/60">
-                      {formatDate(sprint.startDate)} -{" "}
-                      {formatDate(sprint.endDate)}
-                    </p>
-                    <div className="mt-sm">
-                      <Button size="sm" variant="white">
-                        Open Sprint Review
-                      </Button>
-                    </div>
+        <BorderedPanel className="p-lg">
+          <h2 className="text-h3 font-semibold text-brand-dark">
+            Past Sprints
+          </h2>
+          {pastSprints.length === 0 ? (
+            <p className="mt-md text-body-md text-brand-dark/70">
+              No completed sprints recorded for this project.
+            </p>
+          ) : (
+            <div className="mt-md space-y-sm">
+              {pastSprints.map((sprint) => (
+                <div
+                  key={sprint.id}
+                  className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-md"
+                >
+                  <h3 className="text-body-lg font-semibold text-brand-dark">
+                    {sprint.name}
+                  </h3>
+                  <p className="mt-xs text-body-sm text-brand-dark/60">
+                    {formatDate(sprint.startDate)} -{" "}
+                    {formatDate(sprint.endDate)}
+                  </p>
+                  <div className="mt-sm">
+                    <Button size="sm" variant="white">
+                      Open Sprint Review
+                    </Button>
                   </div>
-                ))}
-              </div>
-            )}
-          </BorderedPanel>
-        </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </BorderedPanel>
 
-        <Card className="border border-brand-dark/10 border-l-0 shadow-none">
-          <BorderedPanel className="p-lg">
-            <h2 className="text-h3 font-semibold text-brand-dark">Teammates</h2>
-            {teammates.length === 0 ? (
-              <p className="mt-md text-body-md text-brand-dark/70">
-                No teammates found for this archived project.
-              </p>
-            ) : (
-              <div className="mt-md space-y-sm">
-                {teammates.map((person) => (
-                  <div
-                    key={person.id}
-                    className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-sm"
-                  >
-                    <div className="flex items-center gap-sm">
-                      {person.avatarUrl ? (
-                        <Image
-                          src={person.avatarUrl}
-                          alt={`${person.name} avatar`}
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent/20 text-body-sm font-semibold text-brand-dark">
-                          {getInitials(person.name)}
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-body-md font-semibold text-brand-dark">
-                          {person.name}
-                        </p>
-                        {person.login ? (
-                          <p className="text-body-sm text-brand-dark/70">
-                            @{person.login}
-                          </p>
-                        ) : null}
-                        {person.email ? (
-                          <p className="text-body-sm text-brand-dark/60">
-                            {person.email}
-                          </p>
-                        ) : null}
+        <BorderedPanel className="p-lg">
+          <h2 className="text-h3 font-semibold text-brand-dark">Teammates</h2>
+          {teammates.length === 0 ? (
+            <p className="mt-md text-body-md text-brand-dark/70">
+              No teammates found for this archived project.
+            </p>
+          ) : (
+            <div className="mt-md space-y-sm">
+              {teammates.map((person) => (
+                <div
+                  key={person.id}
+                  className="rounded-xl border border-brand-dark/10 bg-brand-surface px-md py-sm"
+                >
+                  <div className="flex items-center gap-sm">
+                    {person.avatarUrl ? (
+                      <Image
+                        src={person.avatarUrl}
+                        alt={`${person.name} avatar`}
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent/20 text-body-sm font-semibold text-brand-dark">
+                        {getInitials(person.name)}
                       </div>
+                    )}
+                    <div>
+                      <p className="text-body-md font-semibold text-brand-dark">
+                        {person.name}
+                      </p>
+                      {person.login ? (
+                        <p className="text-body-sm text-brand-dark/70">
+                          @{person.login}
+                        </p>
+                      ) : null}
+                      {person.email ? (
+                        <p className="text-body-sm text-brand-dark/60">
+                          {person.email}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </BorderedPanel>
-        </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </BorderedPanel>
       </div>
     </PageContainer>
   );
