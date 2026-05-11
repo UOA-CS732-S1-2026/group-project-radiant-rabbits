@@ -155,7 +155,10 @@ export default function CurrentSprint({
         },
       );
 
-      if (!response.ok) throw new Error("Failed to update focus");
+      if (!response.ok) {
+        console.log("Failed to save sprint focus:", await response.text());
+        throw new Error("Failed to update focus");
+      }
 
       setSprintFocus(newFocus);
       router.refresh();
