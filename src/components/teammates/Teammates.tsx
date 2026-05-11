@@ -49,7 +49,6 @@ export default function Teammates({
                 </p>
               )}
             </div>
-            {/* Leave button */}
             <LeaveGroupButton />
           </div>
           {/* Teammate rows */}
