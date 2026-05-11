@@ -410,7 +410,7 @@ export async function buildContributorWorkloadProfile(
 export function buildTeamSummaryPrompt(profile: TeamWorkloadProfile): string {
   return [
     "You are summarising what a software team built during a sprint.",
-    "Write a factual 3-4 sentence summary focused on the WORK, not rankings.",
+    "Write a factual 2-3 sentence summary focused on the WORK, not rankings.",
     "Use the PR titles and closed-issue titles in 'highlights' to identify",
     "the main themes of the sprint (e.g. 'sync pipeline fixes', 'auth",
     "refactor', 'UI polish'). Group similar titles into 2-3 themes.",
@@ -419,7 +419,7 @@ export function buildTeamSummaryPrompt(profile: TeamWorkloadProfile): string {
     "worked on Y' or 'X focused on A and B'.",
     "Cite concrete work themes and project areas; do not invent any.",
     "Return plain text only, no headings, no bullets, no markdown.",
-    "Aim for 400-600 characters. Do not stop mid-sentence.",
+    "Aim for 200-300 characters. Do not stop mid-sentence.",
     "",
     "Sprint workload (JSON):",
     JSON.stringify(profile, null, 2),
@@ -442,7 +442,7 @@ export function buildContributorSummaryPrompt(
     "Do not say 'top contributor', 'most active', or anything ranking-related.",
     "Cite concrete themes; do not invent work that isn't in the titles.",
     "Return plain text only, no headings or bullets.",
-    "Aim for 250-400 characters. Do not stop mid-sentence.",
+    "Aim for 100-200 characters. Do not stop mid-sentence.",
     "",
     "Contributor workload (JSON):",
     JSON.stringify(profile, null, 2),
