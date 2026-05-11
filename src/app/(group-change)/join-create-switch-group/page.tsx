@@ -15,24 +15,30 @@ const TAB_OPTIONS = [
   { id: "create", label: "Create a Group" },
   { id: "current", label: "Your Groups" },
 ] as const;
+const CURRENT_GROUP_FILTER_OPTIONS = [
+  { id: "active", label: "Active" },
+  { id: "archived", label: "Archived" },
+] as const;
 
 type GroupListCard = {
   id: string;
   name: string;
   repoOwner: string;
   inviteCode?: string;
+  active?: boolean;
 };
 
 function JoinCreateSwitchGroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isE2ETestMode = process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true";
   const dashboardReturn = useMemo(
     () => safeDashboardReturn(searchParams.get("returnTo")),
     [searchParams],
   );
 
   const [tab, setTab] = useState<string>("join");
+  const [currentGroupFilter, setCurrentGroupFilter] =
+    useState<string>("active");
 
   // State to hold the lists of groups for each tab
   const [lists, setLists] = useState({
@@ -94,6 +100,10 @@ function JoinCreateSwitchGroupContent() {
     setIsAuthError(false);
 
     if (tab === "current") {
+      if (card.active === false) {
+        router.push(`/group-history/${card.id}`);
+        return;
+      }
       setIsActionLoading(true);
 
       try {
@@ -171,6 +181,14 @@ function JoinCreateSwitchGroupContent() {
   };
 
   const cards = lists[tab as keyof typeof lists];
+  const displayCards =
+    tab === "current"
+      ? cards.filter((card) =>
+          currentGroupFilter === "active"
+            ? card.active !== false
+            : card.active === false,
+        )
+      : cards;
 
   return (
     <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-brand-background px-5 pb-4 pt-16 sm:px-8 sm:pb-5 sm:pt-20 md:px-12">
@@ -219,17 +237,15 @@ function JoinCreateSwitchGroupContent() {
         )}
 
         <BorderedPanel className="w-full shrink-0 overflow-hidden p-4 sm:p-5 md:p-6">
-          {isE2ETestMode && (
+          {tab === "current" ? (
             <div className="mb-4 flex justify-center">
-              <Button
-                onClick={() => router.push("/dashboard")}
-                className="font-semibold"
-              >
-                Continue to Test Dashboard
-              </Button>
+              <SegmentedControl
+                options={CURRENT_GROUP_FILTER_OPTIONS}
+                value={currentGroupFilter}
+                onChange={setCurrentGroupFilter}
+              />
             </div>
-          )}
-
+          ) : null}
           {/* Display for loading and empty states */}
           {isFetching && (
             <p className="text-center text-gray-500">
@@ -237,22 +253,22 @@ function JoinCreateSwitchGroupContent() {
             </p>
           )}
           {isActionLoading && (
-            <p className="text-center text-brand-accent">
+            <p className="mb-4 text-center text-brand-accent">
               Processing your request...
             </p>
           )}
 
-          {!isFetching && (!cards || cards.length === 0) && (
+          {!isFetching && (!displayCards || displayCards.length === 0) && (
             <p className="text-center text-gray-500">
               No repositories available for this tab.
             </p>
           )}
 
           {/* Displaying the repo/group cards */}
-          {!isFetching && cards && cards.length > 0 && (
+          {!isFetching && displayCards && displayCards.length > 0 && (
             <div className="scrollbar-thumb-accent max-h-[calc(100dvh-19rem)] overflow-y-auto pr-1 sm:max-h-[calc(100dvh-23rem)] sm:pr-2">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
-                {cards.map((card) => (
+                {displayCards.map((card) => (
                   // Button that uses card click handler to either join the group or start the group creation process, depending on the active tab.
                   <button
                     type="button"
@@ -261,7 +277,13 @@ function JoinCreateSwitchGroupContent() {
                     disabled={isActionLoading}
                     className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
                   >
-                    <GroupCard className="cursor-pointer transition-colors duration-150 hover:bg-slate-200">
+                    <GroupCard
+                      className={`cursor-pointer transition-colors duration-150 ${
+                        tab === "current" && card.active === false
+                          ? "bg-slate-200"
+                          : "hover:bg-slate-200"
+                      }`}
+                    >
                       <div className="flex flex-col items-center gap-1 text-center sm:gap-1.5">
                         <p className="text-body-md font-semibold leading-snug text-brand-dark sm:text-body-lg">
                           {card.name}
@@ -269,6 +291,11 @@ function JoinCreateSwitchGroupContent() {
                         <p className="text-body-sm leading-snug text-[#7A7A7A] sm:text-body-md">
                           {card.repoOwner}
                         </p>
+                        {tab === "current" && card.active === false ? (
+                          <span className="mt-1 rounded-full bg-slate-500 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
+                            Archived
+                          </span>
+                        ) : null}
                       </div>
                     </GroupCard>
                   </button>

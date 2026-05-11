@@ -2,8 +2,8 @@ module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
   roots: ["<rootDir>/src"],
-  testTimeout: 60000,
   testMatch: ["**/*.test.ts"],
+  testTimeout: 60000,
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
