@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BorderedPanel from "@/components/shared/BorderedPanel";
 
 type SprintFocusProps = {
@@ -15,6 +15,10 @@ export default function SprintFocus({
 }: SprintFocusProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(focus);
+
+  useEffect(() => {
+    setText(focus);
+  }, [focus]);
 
   const handleSave = () => {
     setIsEditing(false);
