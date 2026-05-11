@@ -174,6 +174,10 @@ export default function CurrentSprint({
   const [reviewText, setReviewText] = useState("");
   const [isGeneratingReview, setIsGeneratingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
+  const [transitionErrorOpen, setTransitionErrorOpen] = useState(false);
+  const [transitionErrorMessage, setTransitionErrorMessage] = useState("");
+  const [handoffErrorOpen, setHandoffErrorOpen] = useState(false);
+  const [handoffErrorMessage, setHandoffErrorMessage] = useState("");
 
   useEffect(() => {
     if (status !== "ready") {
@@ -311,17 +315,18 @@ export default function CurrentSprint({
 
             const normalizedDbName = s.name.replace(/\s/g, "").toLowerCase();
 
-            console.log(
-              `Checking normalized "${normalizedDbName}" against target "${targetName}"`,
-            );
-
             return normalizedDbName === targetName;
           },
         );
 
         if (!nextSprint || !nextSprint._id) {
-          console.warn(`Next sprint "${nextSprintNumber}" not found`);
+          setNextSprintWelcomeOpen(false);
           setNextSprintTasks([]);
+          setHandoffErrorMessage(
+            `Sprint ${nextSprintNumber} was not found. Please ensure it exists in your GitHub Project and sync your group.`,
+          );
+          setHandoffErrorOpen(true);
+          return;
         } else {
           // Update next sprint's goal with the sprint focus
           const updateResponse = await fetch(
@@ -364,8 +369,12 @@ export default function CurrentSprint({
           }
         }
       } catch (err) {
-        console.error("Sprint handoff error:", err);
+        setNextSprintWelcomeOpen(false);
         setNextSprintTasks([]);
+        setHandoffErrorMessage(
+          "Failed to prepare the next sprint. Please check your connection and try again.",
+        );
+        setHandoffErrorOpen(true);
       } finally {
         setIsSprintHandoffSubmitting(false);
         setNextSprintWelcomeOpen(false);
@@ -378,27 +387,56 @@ export default function CurrentSprint({
   const finalizeSprintHandoffFromTicketsOverlay = useCallback(async () => {
     if (!groupId || !sprint) return;
     setIsSprintHandoffSubmitting(true);
-    try {
-      const response = await fetch(
-        `/api/groups/${groupId}/sprints/transition`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            currentSprintId: sprint.id,
-            nextSprintNumber: sprint.number + 1,
-          }),
-        },
-      );
 
-      if (!response.ok) throw new Error("Transition failed");
+    const attemptTransition = async () => {
+      const res = await fetch(`/api/groups/${groupId}/sprints/transition`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentSprintId: sprint.id,
+          nextSprintNumber: sprint.number + 1,
+        }),
+      });
+      return res;
+    };
+
+    try {
+      let response = await attemptTransition();
+
+      // If 404 (Sprint not found), try to sync and retry once
+      if (response.status === 404) {
+        console.log("Next sprint not found. Attempting a background sync...");
+
+        const syncRes = await fetch(`/api/groups/${groupId}/sync`, {
+          method: "POST",
+        });
+
+        if (syncRes.ok || syncRes.status === 409) {
+          response = await attemptTransition();
+        }
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(
+            `Sprint ${sprint.number + 1} not found after sync. Please check that the iteration exists and is in the 'Planning' status.`,
+          );
+        } else {
+          throw new Error("Transition failed");
+        }
+      }
 
       setGithubTicketsOverlayOpen(false);
-      pendingSprintFocusRef.current = "";
-
       router.refresh();
     } catch (err) {
-      console.error("Transition failed. Please refresh the page.", err);
+      setGithubTicketsOverlayOpen(false);
+      setHandoffErrorMessage(
+        err instanceof Error ? err.message : "The sprint transition failed.",
+      );
+      setHandoffErrorOpen(true);
+      setTransitionErrorOpen(true);
     } finally {
       setIsSprintHandoffSubmitting(false);
     }
@@ -622,6 +660,21 @@ export default function CurrentSprint({
         onContinue={finalizeSprintHandoffFromTicketsOverlay}
         onDismiss={() => setGithubTicketsOverlayOpen(false)}
         isContinuing={isSprintHandoffSubmitting}
+      />
+      <ConfirmOverlay
+        open={handoffErrorOpen}
+        title="Handoff Failed"
+        description={handoffErrorMessage}
+        confirmLabel="Group Settings"
+        cancelLabel="Close"
+        onConfirm={() => {
+          setHandoffErrorOpen(false);
+          router.push("/join-create-switch-group");
+        }}
+        onClose={() => {
+          setHandoffErrorOpen(false);
+          router.push("/join-create-switch-group");
+        }}
       />
     </>
   );
