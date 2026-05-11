@@ -15,14 +15,14 @@ export const LANDING_HERO_SECTION_STACK =
 
 /** Section eyebrow labels (e.g. “Features”): small label treatment. */
 export const LANDING_SECTION_EYEBROW_TEXT_CLASS =
-  "text-body-sm font-bold uppercase tracking-[0.14em] text-brand-dark sm:text-body-md";
+  "text-body-sm font-bold uppercase tracking-[0.14em] text-brand-dark";
 
 /**
  * Hero lead under the display title: subtitle scale, semibold, softened colour
  * so it supports the gradient wordmark instead of competing with it.
  */
 export const LANDING_HERO_LEAD_TEXT_CLASS =
-  "text-body-md font-semibold leading-relaxed text-brand-dark/85 sm:text-body-lg";
+  "text-body-md font-semibold leading-relaxed text-brand-dark/85";
 
 /** Tighter stack only between section eyebrow and section title. */
 export const LANDING_HEADING_INNER_STACK =
@@ -39,8 +39,8 @@ export const LANDING_FEATURE_GRID_GAP = LANDING_BLOCK_GAP;
 
 /** Primary GitHub CTA on light surfaces (hero card). */
 export const LANDING_SIGN_IN_BUTTON_PRIMARY_CLASS =
-  "rounded-xl bg-brand-accent/70 px-6 py-3 text-body-sm font-semibold text-brand-dark shadow-md transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark";
+  "rounded-xl bg-brand-accent/70 px-6 py-3 text-(length:--text-body-sm) font-semibold text-brand-dark shadow-md transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark";
 
 /** Outline GitHub CTA on dark navy (closing card). */
 export const LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS =
-  "rounded-xl border-2 border-none bg-brand-accent/70 px-5 py-2.5 text-body-sm font-semibold text-black transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6 sm:py-3";
+  "rounded-xl border-2 border-none bg-brand-accent/70 px-5 py-2.5 text-(length:--text-body-sm) font-semibold text-black transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6 sm:py-3";

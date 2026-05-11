@@ -19,7 +19,7 @@ export default function LandingHeroSection({
       aria-labelledby="landing-hero-heading"
     >
       <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent px-3 py-1.5 text-body-xs font-semibold uppercase tracking-widest text-black">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent px-3 py-1.5 text-(length:--text-body-xs) font-semibold uppercase tracking-widest text-black">
           <span aria-hidden className="text-brand-dark/50">
             •
           </span>

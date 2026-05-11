@@ -22,11 +22,11 @@ export default function LandingClosingCtaSection({
           />
           <h2
             id="landing-closing-cta-heading"
-            className="mt-3 w-full min-w-0 text-balance text-body-lg font-bold leading-snug text-black sm:mt-3.5 sm:text-h3"
+            className="mt-3 w-full min-w-0 text-balance text-(length:--text-body-lg) font-bold leading-snug text-black sm:mt-3.5 sm:text-h3"
           >
             Ready for a retrospective that writes itself?
           </h2>
-          <p className="mt-2 w-full min-w-0 text-pretty text-body-md font-normal leading-snug text-black sm:mt-2.5 sm:text-body-lg sm:leading-snug">
+          <p className="mt-2 w-full min-w-0 text-pretty text-(length:--text-body-md) font-normal leading-snug text-black sm:mt-2.5 sm:leading-snug">
             Sign in with GitHub, connect a repo, and pull your sprint story
             together in minutes.
           </p>

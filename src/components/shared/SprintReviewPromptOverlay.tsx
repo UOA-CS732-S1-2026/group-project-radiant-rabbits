@@ -66,7 +66,7 @@ export default function SprintReviewPromptOverlay({
                   >
                     {title}
                   </h2>
-                  <p className="mx-auto mt-3 max-w-[22rem] text-body-md leading-relaxed text-brand-dark/90 md:max-w-none">
+                  <p className="mx-auto mt-3 max-w-[22rem] text-(length:--text-body-md) leading-relaxed text-brand-dark/90 md:max-w-none">
                     {description}
                   </p>
                   <div className="mt-6 flex flex-col items-center justify-center gap-3">

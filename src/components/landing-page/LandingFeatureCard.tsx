@@ -22,10 +22,10 @@ export default function LandingFeatureCard({
         style={{ backgroundColor: accentColor }}
         aria-hidden
       />
-      <h3 className="mt-3 text-body-lg font-bold leading-snug text-white sm:mt-3.5 sm:text-h3">
+      <h3 className="mt-3 text-(length:--text-body-md) font-bold leading-snug text-white sm:mt-3.5 sm:text-h3">
         {title}
       </h3>
-      <p className="mt-2 text-body-md leading-snug text-white sm:mt-2.5 sm:text-body-lg sm:leading-snug">
+      <p className="mt-2 text-(length:--text-body-md) leading-snug text-white sm:mt-2.5 sm:leading-snug">
         {description}
       </p>
     </article>

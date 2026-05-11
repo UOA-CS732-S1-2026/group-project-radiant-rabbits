@@ -97,7 +97,7 @@ export default function HelpOverlayTrigger({
                       <X className="h-5 w-5" aria-hidden />
                     </button>
                   </div>
-                  <div className="mt-4 text-body-md leading-relaxed text-brand-dark/90">
+                  <div className="mt-4 text-(length:--text-body-md) leading-relaxed text-brand-dark/90">
                     {children}
                   </div>
                 </div>
@@ -120,8 +120,8 @@ export default function HelpOverlayTrigger({
           onClick={() => setOpen(true)}
           className={
             size === "comfortable"
-              ? "flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-body-md font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-12 sm:w-12"
-              : "flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent text-body-sm font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-11 sm:w-11"
+              ? "flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-(length:--text-body-md) font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-12 sm:w-12"
+              : "flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent text-(length:--text-body-sm) font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-11 sm:w-11"
           }
         >
           ?

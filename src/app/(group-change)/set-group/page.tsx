@@ -73,7 +73,7 @@ function SetGroupContent() {
           )}
 
           <GroupCard>
-            <div className="flex w-full min-w-0 flex-col gap-md text-body-md text-brand-dark sm:gap-lg sm:text-body-lg">
+            <div className="flex w-full min-w-0 flex-col gap-md text-(length:--text-body-md) text-brand-dark sm:gap-lg">
               <p>
                 You&apos;re about to create a group for{" "}
                 <span className="font-semibold">

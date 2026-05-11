@@ -213,7 +213,7 @@ export default function ContributionCard({
                 index === 0 ? "" : "border-t border-brand-dark/10 pt-md"
               }
             >
-              <div className="grid grid-cols-[2rem_1fr_auto] items-center gap-md py-sm">
+              <div className="grid grid-cols-[2rem_1fr_auto] items-center gap-md py-sm text-(length:--text-body-sm)">
                 <Avatar
                   name={person.name}
                   initials={person.initials}
@@ -221,10 +221,10 @@ export default function ContributionCard({
                   size={32}
                 />
                 <div className="min-w-0">
-                  <p className="truncate text-body-sm font-medium text-brand-dark">
+                  <p className="truncate text-(length:--text-body-sm) font-medium text-brand-dark">
                     {person.name}
                   </p>
-                  <p className="text-body-xs text-brand-dark/60">
+                  <p className="text-(length:--text-body-xs) text-brand-dark/60">
                     <span className="font-semibold">{person.commits}</span>{" "}
                     commits ·{" "}
                     <span className="font-semibold">{person.prs}</span> PRs ·{" "}
@@ -289,7 +289,7 @@ function TeamSummary({
     return (
       <div className="mb-md flex items-start gap-sm rounded-lg bg-brand-accent/5 p-sm">
         <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-accent" />
-        <p className="flex-1 text-body-xs leading-relaxed text-brand-dark">
+        <p className="flex-1 text-(length:--text-body-xs) leading-relaxed text-brand-dark">
           {state.text}
         </p>
         <button
@@ -307,13 +307,13 @@ function TeamSummary({
   if (state.status === "error") {
     return (
       <div className="mb-md flex items-start gap-sm rounded-lg bg-brand-todo/10 p-sm">
-        <p className="flex-1 text-body-sm text-brand-dark/70">
+        <p className="flex-1 text-(length:--text-body-md) text-brand-dark/70">
           Couldn&apos;t load summary. {state.message}
         </p>
         <button
           type="button"
           onClick={onGenerate}
-          className="shrink-0 text-body-xs font-medium text-brand-accent hover:underline"
+          className="shrink-0 text-(length:--text-body-md) font-medium text-brand-accent hover:underline"
         >
           Retry
         </button>
@@ -324,13 +324,13 @@ function TeamSummary({
   return (
     <div className="mb-md flex items-center gap-sm rounded-lg border border-dashed border-brand-dark/15 p-sm">
       <Sparkles size={14} className="shrink-0 text-brand-accent" />
-      <p className="flex-1 text-body-sm text-brand-dark/60">
+      <p className="flex-1 text-(length:--text-body-md) text-brand-dark/60">
         Get an AI summary of how the team contributed this sprint.
       </p>
       <button
         type="button"
         onClick={onGenerate}
-        className="shrink-0 rounded-md bg-brand-accent px-sm py-1 text-body-xs font-medium text-white transition hover:opacity-90"
+        className="shrink-0 rounded-md bg-brand-accent px-sm py-1 text-(length:--text-body-sm) font-medium text-white transition hover:opacity-90"
       >
         Generate
       </button>
@@ -351,20 +351,20 @@ function ContributorSummary({
         <SummarySkeleton />
       ) : state.status === "error" ? (
         <div className="flex items-center justify-between gap-sm">
-          <p className="text-body-xs text-brand-dark/70">
+          <p className="text-brand-dark/70 text-(length:--text-body-sm)">
             Couldn&apos;t generate summary.
           </p>
           <button
             type="button"
             onClick={onRegenerate}
-            className="text-body-xs font-medium text-brand-accent hover:underline"
+            className="text-(length:--text-body-sm) font-medium text-brand-accent hover:underline"
           >
             Retry
           </button>
         </div>
       ) : state.status === "ready" ? (
         <div className="flex items-start gap-sm">
-          <p className="flex-1 text-body-xs leading-relaxed text-brand-dark">
+          <p className="flex-1 text-(length:--text-body-sm) leading-relaxed text-brand-dark">
             {state.text}
           </p>
           <button
