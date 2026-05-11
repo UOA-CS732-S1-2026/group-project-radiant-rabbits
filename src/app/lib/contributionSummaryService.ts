@@ -432,7 +432,7 @@ export function buildContributorSummaryPrompt(
 ): string {
   return [
     "You are summarising what one contributor worked on during a sprint.",
-    "Write a factual 2-3 sentence summary focused on the WORK they did.",
+    "Write a factual 2 or 3 sentence summary focused on the WORK they did.",
     "Use 'recentPrTitles' and 'recentClosedIssueTitles' to identify themes",
     "of their work (e.g. 'database migrations', 'frontend polish',",
     "'GitHub sync correctness'). Group similar titles into themes.",
