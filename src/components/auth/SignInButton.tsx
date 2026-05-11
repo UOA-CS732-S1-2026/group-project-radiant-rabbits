@@ -1,6 +1,8 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useState } from "react";
 
 type SignInButtonProps = {
   className?: string;
@@ -11,15 +13,29 @@ export default function SignInButton({
   className = "",
   children = "Sign in with GitHub",
 }: SignInButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    await signIn("github", { callbackUrl: "/join-create-switch-group" });
+  };
+
   return (
     <button
       type="button"
-      className={className}
-      onClick={() =>
-        signIn("github", { callbackUrl: "/join-create-switch-group" })
-      }
+      className={`inline-flex items-center justify-center gap-2 ${className}`}
+      onClick={handleClick}
+      disabled={isLoading}
+      aria-disabled={isLoading}
     >
-      {children}
+      {isLoading ? (
+        <>
+          <Loader2 size={16} className="animate-spin" aria-hidden />
+          Signing in…
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }
