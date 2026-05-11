@@ -1,3 +1,4 @@
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 import ContributionBreakdownCard from "./ContributionBreakdownCard";
 import EndProjectButton from "./EndProjectButton";
@@ -104,7 +105,7 @@ export default function Dashboard({
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <div className="mb-lg flex flex-col items-start justify-between gap-md lg:flex-row lg:items-center">
+          <div className="mb-lg flex flex-col items-start justify-between gap-md sm:flex-row sm:items-start">
             <div>
               <h1 className="text-h2 font-bold text-brand-dark">
                 Project Overview
@@ -113,6 +114,25 @@ export default function Dashboard({
                 Project metrics
               </p>
             </div>
+            <HelpOverlayTrigger
+              label="Help: dashboard and sprints"
+              title="Sprints on the dashboard"
+              className="self-start sm:pt-1"
+            >
+              <div className="space-y-3 text-left">
+                <p>
+                  High-level counts and charts reflect activity in your linked
+                  repository and GitHub Project.
+                </p>
+                <p>
+                  Sprint velocity uses{" "}
+                  <span className="font-semibold">completed iterations</span>{" "}
+                  synced from GitHub. If sprints look empty, confirm your
+                  project has an iteration field and that you&apos;ve run a sync
+                  from the app after connecting the repo.
+                </p>
+              </div>
+            </HelpOverlayTrigger>
             {groupId ? <EndProjectButton groupId={groupId} /> : null}
           </div>
 
