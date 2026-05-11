@@ -31,6 +31,27 @@ const sprintSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    aiReview: {
+      text: {
+        type: String,
+        default: null,
+        trim: true,
+      },
+      generatedAt: {
+        type: Date,
+        default: null,
+      },
+      model: {
+        type: String,
+        default: null,
+        trim: true,
+      },
+      provider: {
+        type: String,
+        default: null,
+        trim: true,
+      },
+    },
     group: {
       type: Schema.Types.ObjectId,
       ref: "Group",

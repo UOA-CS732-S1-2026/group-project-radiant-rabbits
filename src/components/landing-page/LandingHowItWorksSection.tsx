@@ -22,7 +22,7 @@ export default function LandingHowItWorksSection({
         <LandingSectionHeading
           id="landing-how-heading"
           eyebrow="How it works"
-          title="From GitHub to sprint review in minutes"
+          title="From GitHub iterations to sprint review"
         />
 
         <ol

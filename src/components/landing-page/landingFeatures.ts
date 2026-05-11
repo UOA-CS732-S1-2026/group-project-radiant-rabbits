@@ -1,40 +1,43 @@
-/** Copy + swatches for marketing feature tiles — grid lays out any length (e.g. 6 → 3×2, 5 → 3+2). */
+/** Copy + swatches for marketing feature tiles; grid lays out any length (e.g. 6 → 3×2). */
 export type LandingFeature = {
   title: string;
   description: string;
   accentColor: string;
+  /** Renders the in-app blue ? help control before the description (Tips tile). */
+  usesAppHelpTrigger?: boolean;
 };
 
 export const LANDING_FEATURES = [
   {
     title: "Sprint Configuration",
     description:
-      "Set sprint dates; GitHub activity auto-filters to that window.",
+      "Sprint dates come from your Project iteration field in GitHub. Each iteration is a sprint window your team already plans there.",
     accentColor: "#99D1C1",
   },
   {
-    title: "AI Sprint Summaries",
+    title: "Sprint review drafts",
     description:
-      "Plain language summaries per contributor, including work not tied to issues.",
+      "When an iteration ends, Generate Sprint Review uses synced commits, PRs, and issues.",
     accentColor: "#B8A9FE",
-  },
-  {
-    title: "Contributor Insights",
-    description:
-      "See workload balance across the team. Catch uneven load early.",
-    accentColor: "#6BCF8E",
   },
   {
     title: "Issue Tracking",
     description:
-      "GitHub issues mapped to your sprint. Planned vs shipped at a glance.",
+      "Project items tied to an iteration show on the current sprint. See planned versus done at a glance.",
     accentColor: "#C4D65E",
   },
   {
-    title: "Velocity Tracking",
+    title: "Sprint metrics",
     description:
-      "Team velocity by sprint. Spot trends and plan the next one with confidence.",
+      "Per-iteration velocity plus contributor activity so trends and uneven load show before the next sprint.",
     accentColor: "#7BB8FF",
+  },
+  {
+    title: "Tips on every screen",
+    description:
+      "Click the '?' for more information on what that screen shows.",
+    accentColor: "#9EC8F0",
+    usesAppHelpTrigger: true,
   },
   {
     title: "Secure GitHub OAuth",
@@ -42,4 +45,4 @@ export const LANDING_FEATURES = [
       "Sign in with GitHub. Only repos you connect are ever accessed.",
     accentColor: "#B8A9FE",
   },
-] as const satisfies readonly LandingFeature[];
+] satisfies readonly LandingFeature[];
