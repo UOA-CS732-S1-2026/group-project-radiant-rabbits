@@ -111,29 +111,27 @@ async function graphqlRequest(
   return json.data;
 }
 
-// Fetches commit history from the repo's default branch (usually main).
-// GitHub GraphQL API paginates results, so we loop until we've fetched all commits.
+// Fetches commit history from every branch of the repo.
+// For each branch, only fetch commits inside the time window.
 
 const COMMITS_QUERY = `
-  query($owner: String!, $repo: String!, $after: String, $since: GitTimestamp) {
-    repository(owner: $owner, name: $repo) {
-      defaultBranchRef {
+query($owner: String!, $repo: String!, $branchAfter: String, $since: GitTimestamp) {
+  repository(owner: $owner, name: $repo) {
+    refs(refPrefix: "refs/heads/", first: 100, after: $branchAfter) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        name
         target {
           ... on Commit {
-            history(first: 100, after: $after, since: $since) {
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
+            history(first: 100, since: $since) {
+              pageInfo { hasNextPage endCursor }
               nodes {
                 oid
                 message
                 author {
                   name
                   email
-                  user {
-                    login
-                  }
+                  user { login }
                 }
                 committedDate
                 changedFilesIfAvailable
@@ -144,6 +142,7 @@ const COMMITS_QUERY = `
       }
     }
   }
+}
 `;
 
 export async function fetchCommits(
@@ -152,41 +151,53 @@ export async function fetchCommits(
   repo: string,
   since?: string,
 ): Promise<CommitData[]> {
-  const commits: CommitData[] = [];
-  let cursor: string | null = null;
-  let hasNextPage = true;
+  // Map keyed by SHA — a commit on main + the same commit on feature/foo
+  // collapses into one entry. Last write wins, but the data is identical.
+  const commitsBySha = new Map<string, CommitData>();
 
-  while (hasNextPage) {
-    // Build variables - only include `since` if doing incremental sync
-    const variables: Record<string, unknown> = { owner, repo, after: cursor };
+  let branchCursor: string | null = null;
+  let hasMoreBranches = true;
+
+  while (hasMoreBranches) {
+    const variables: Record<string, unknown> = {
+      owner,
+      repo,
+      branchAfter: branchCursor,
+    };
     if (since) variables.since = since;
 
     const data = await graphqlRequest(token, COMMITS_QUERY, variables);
+    const refs = data.repository.refs;
+    if (!refs) break;
 
-    // defaultBranchRef can be null if the repo is empty
-    const history = data.repository.defaultBranchRef?.target?.history;
-    if (!history) break;
+    for (const branch of refs.nodes) {
+      const history = branch.target?.history;
+      if (!history) continue;
 
-    // Map each GraphQL node to our CommitData shape
-    for (const node of history.nodes) {
-      commits.push({
-        sha: node.oid, // GraphQL calls it "oid", we store it as "sha"
-        message: node.message,
-        author: {
-          name: node.author.name || "",
-          email: node.author.email || "",
-          login: node.author.user?.login, // Can be null if commit author isn't a GitHub user
-        },
-        date: node.committedDate,
-        filesChanged: node.changedFilesIfAvailable ?? undefined,
-      });
+      for (const node of history.nodes) {
+        commitsBySha.set(node.oid, {
+          sha: node.oid,
+          message: node.message,
+          author: {
+            name: node.author.name || "",
+            email: node.author.email || "",
+            login: node.author.user?.login,
+          },
+          date: node.committedDate,
+          filesChanged: node.changedFilesIfAvailable ?? undefined,
+        });
+      }
+
+      // If a single branch has >100 commits in the window, we'd need to page
+      // its history too. For typical sprint lengths this is rare. If it ever
+      // happens, add a per-branch loop here.
     }
 
-    hasNextPage = history.pageInfo.hasNextPage;
-    cursor = history.pageInfo.endCursor;
+    hasMoreBranches = refs.pageInfo.hasNextPage;
+    branchCursor = refs.pageInfo.endCursor;
   }
 
-  return commits;
+  return Array.from(commitsBySha.values());
 }
 
 // Fetches all PRs (open, closed, merged) ordered by most recently updated.

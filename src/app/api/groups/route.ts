@@ -100,7 +100,6 @@ export async function POST(request: Request) {
       lastSyncAt: new Date(),
       syncStatus: "pending",
       syncError: null,
-      iterationFieldConfigured: false,
     });
 
     // Update user using githubId
@@ -122,11 +121,6 @@ export async function POST(request: Request) {
           inviteCode: group.inviteCode,
           repoOwner: group.repoOwner,
           repoName: group.repoName,
-          createdBy: group.createdBy,
-          lastSyncAt: group.lastSyncAt,
-          syncStatus: group.syncStatus,
-          syncError: group.syncError,
-          iterationFieldConfigured: group.iterationFieldConfigured,
         },
         message: "Group Successfully Created",
       },

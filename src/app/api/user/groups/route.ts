@@ -106,7 +106,6 @@ export async function GET(_request: NextRequest) {
         id: group._id.toString(),
         name: group.repoName,
         repoOwner: group.repoOwner,
-        active: group.active !== false,
       })),
 
       joinGroups: joinGroups.map((group) => ({

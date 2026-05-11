@@ -25,7 +25,7 @@ export default function LandingFeaturesSection({
         <LandingSectionHeading
           id="landing-features-heading"
           eyebrow="Features"
-          title="GitHub iterations, surfaced as sprints for your team"
+          title="Everything your team needs to run better sprints"
         />
 
         <ul
@@ -41,7 +41,6 @@ export default function LandingFeaturesSection({
                 accentColor={feature.accentColor}
                 title={feature.title}
                 description={feature.description}
-                usesAppHelpTrigger={feature.usesAppHelpTrigger}
               />
             </li>
           ))}

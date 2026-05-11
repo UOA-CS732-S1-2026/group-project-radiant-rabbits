@@ -15,11 +15,6 @@ const groupSchema = new Schema(
       trim: true,
       minlength: 1,
     },
-    active: {
-      type: Boolean,
-      required: true,
-      default: true,
-    },
     inviteCode: {
       type: String,
       required: true,
@@ -88,7 +83,6 @@ groupSchema.index(
 groupSchema.index({ members: 1 });
 groupSchema.index({ createdBy: 1 });
 groupSchema.index({ syncStatus: 1 });
-groupSchema.index({ active: 1 });
 
 export const Group =
   mongoose.models.Group || mongoose.model("Group", groupSchema);

@@ -99,11 +99,5 @@ export default async function PastSprintsPage() {
 
   // Load past sprints for the user's current group and display
   const pastSprints = await loadPastSprints(group._id);
-  return (
-    <PastSprint
-      status="ready"
-      sprints={pastSprints}
-      groupId={group._id.toString()}
-    />
-  );
+  return <PastSprint status="ready" sprints={pastSprints} />;
 }

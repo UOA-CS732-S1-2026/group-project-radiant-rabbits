@@ -8,6 +8,8 @@ type SprintForDashboard = {
 
 type SprintVelocityCardProps = {
   sprints?: SprintForDashboard[];
+  // null before first sync, false if no iteration field, true if set up.
+  iterationFieldConfigured?: boolean | null;
   // ISO date of the next iteration's start. Only set when iterations exist
   // but none cover today.
   nextSprintStart?: string | null;
@@ -143,6 +145,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
 // Component for the sprint velocity card (chart + heading + empty states)
 export default function SprintVelocityCard({
   sprints,
+  iterationFieldConfigured,
   nextSprintStart,
 }: SprintVelocityCardProps) {
   const velocitySeries: MiniSeriesPoint[] =
@@ -184,11 +187,29 @@ export default function SprintVelocityCard({
           ) : null}
         </div>
       ) : (
-        <div
-          role="img"
-          aria-label="No velocity chart yet"
-          className="flex min-h-68 items-center justify-center rounded-lg border border-dashed border-brand-dark/12 bg-brand-surface/50"
-        />
+        <div className="rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
+          {iterationFieldConfigured === false ? (
+            <p className="text-body-sm text-brand-dark/60">
+              This repo&apos;s GitHub Project doesn&apos;t have an iteration
+              field yet. Once you{" "}
+              <a
+                href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-brand-accent underline"
+              >
+                add an iteration field
+              </a>{" "}
+              to your Project (or create a Project for this repo) and assign
+              tickets to it, sprint metrics will appear here on the next sync.
+            </p>
+          ) : (
+            <p className="text-body-sm text-brand-dark/60">
+              Your iteration field is set up but has no iterations yet. Create
+              one in your GitHub Project, assign tickets to it, then refresh.
+            </p>
+          )}
+        </div>
       )}
     </Card>
   );

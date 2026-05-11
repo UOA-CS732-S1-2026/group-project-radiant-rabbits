@@ -170,36 +170,6 @@ describe("DashboardPage — auth + error branches", () => {
     expect(mockCalculateGithubMetricsLive).not.toHaveBeenCalled();
   });
 
-  it("should redirect to join/create page when current group is archived", async () => {
-    mockGetServerSession.mockResolvedValue(authedSession());
-
-    const userRef = normalizeUserRef(USER_ID);
-    const archivedGroup = await Group.create({
-      name: "Archived Group",
-      description: "Old project",
-      inviteCode: `ARCH-${Date.now()}`,
-      members: [userRef],
-      createdBy: userRef,
-      repoOwner: "radiant",
-      repoName: "rabbits",
-      syncStatus: "success",
-      active: false,
-    });
-
-    await User.create({
-      _id: userRef,
-      githubId: USER_ID,
-      login: USER_ID,
-      name: "Dashboard Tester",
-      email: `${USER_ID}@example.com`,
-      currentGroupId: archivedGroup._id,
-    });
-
-    await expect(DashboardPage()).rejects.toThrow("NEXT_REDIRECT");
-    expect(mockRedirect).toHaveBeenCalledWith("/join-create-switch-group");
-    expect(MockDashboard).not.toHaveBeenCalled();
-  });
-
   // Test 3: test case for missing group repo info
   it("should render status='error' when the selected group has no repository connected", async () => {
     mockGetServerSession.mockResolvedValue(authedSession());

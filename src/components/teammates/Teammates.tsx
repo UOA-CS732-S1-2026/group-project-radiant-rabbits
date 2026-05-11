@@ -1,6 +1,4 @@
-import DangerActionButton from "@/components/shared/DangerActionButton";
 import PageContainer from "@/components/shared/PageContainer";
-import LeaveGroupButton from "@/components/teammates/leaveGroupButton";
 import TeammateRow, {
   type TeammateRowData,
 } from "@/components/teammates/TeammateRow";
@@ -50,8 +48,13 @@ export default function Teammates({
                 </p>
               )}
             </div>
-            {/* Leave button */}
-            <DangerActionButton>Leave Group</DangerActionButton>
+            {/* Invite button */}
+            <button
+              type="button"
+              className="shrink-0 rounded-lg bg-brand-accent px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-brand-accent/90"
+            >
+              + Invite Member
+            </button>
           </div>
           {/* Teammate rows */}
           {memberList.length === 0 ? (
