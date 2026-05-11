@@ -34,7 +34,6 @@ jest.mock("@/app/lib/models", () => ({
   },
   User: {
     find: jest.fn(),
-    findOne: jest.fn(),
   },
 }));
 
@@ -54,13 +53,7 @@ const mockConnectMongoDB = connectMongoDB as unknown as jest.MockedFunction<
 
 const mockGroupFindOne = Group.findOne as unknown as jest.MockedFunction<
   (query: Record<string, unknown>) => {
-    lean: () => Promise<Record<string, unknown> | null>;
-  }
->;
-
-const mockUserFindOne = User.findOne as unknown as jest.MockedFunction<
-  () => {
-    select: () => {
+    sort: (sortQuery: Record<string, unknown>) => {
       lean: () => Promise<Record<string, unknown> | null>;
     };
   }
@@ -95,14 +88,10 @@ describe("GET /api/user/group-members", () => {
   it("returns empty state when user has no group", async () => {
     mockGetServerSession.mockResolvedValue({ user: { id: "123" } });
 
-    mockUserFindOne.mockReturnValue({
-      select: () => ({
-        lean: async () => ({ currentGroupId: null }),
-      }),
-    });
-
     mockGroupFindOne.mockReturnValue({
-      lean: async () => null,
+      sort: () => ({
+        lean: async () => null,
+      }),
     });
 
     const request = new Request("http://localhost:3000/api/user/group-members");
@@ -121,25 +110,17 @@ describe("GET /api/user/group-members", () => {
       user: { id: "507f191e810c19729de860ea" },
     });
 
-    mockUserFindOne.mockReturnValue({
-      select: () => ({
-        lean: async () => ({ currentGroupId: "group-1" }),
-      }),
-    });
-
     mockGroupFindOne.mockReturnValue({
-      lean: async () => ({
-        _id: "group-1",
-        name: "Repo Team",
-        description: "Group description",
-        inviteCode: "ABCD1234",
-        repoOwner: "radiant-rabbits",
-        repoName: "group-project",
-        members: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
-        createdBy: "507f191e810c19729de860ea",
-        lastSyncAt: new Date(),
-        syncStatus: "success",
-        syncError: null,
+      sort: () => ({
+        lean: async () => ({
+          _id: "group-1",
+          name: "Repo Team",
+          description: "Group description",
+          inviteCode: "ABCD1234",
+          repoOwner: "radiant-rabbits",
+          repoName: "group-project",
+          members: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
+        }),
       }),
     });
 

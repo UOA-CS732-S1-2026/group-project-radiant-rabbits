@@ -12,7 +12,6 @@ import {
   User,
 } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -62,7 +61,6 @@ type ResolvedSprint = {
   id: string;
   number: number;
   name: string;
-  goal?: string;
   startDate: Date;
   endDate: Date;
   status: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -98,8 +96,6 @@ export type CurrentSprintBody = {
   selectionReason?: "current-flag" | "active" | "latest";
   metrics?: CurrentSprintMetrics;
   message?: string;
-  /** When there is no synced sprint, matches dashboard sprint-velocity guidance. */
-  iterationGuidanceVariant?: GitHubIterationGuidanceVariant;
   error?: string;
 };
 
@@ -210,7 +206,6 @@ async function loadCurrentSprintAndPosition(
       Array<{
         _id: mongoose.Types.ObjectId;
         name: string;
-        goal?: string;
         startDate: Date;
         endDate: Date;
         isCurrent: boolean;
@@ -229,7 +224,6 @@ async function loadCurrentSprintAndPosition(
       id: String(doc._id),
       number: idx + 1,
       name: doc.name,
-      goal: doc.goal,
       startDate: doc.startDate,
       endDate: doc.endDate,
       status: computeStatus(now, doc.startDate, doc.endDate),
@@ -552,8 +546,6 @@ export async function getCurrentSprintData(): Promise<{
     // exists so the user gets an actionable hint.
     const resolved = await loadCurrentSprintAndPosition(group._id);
     if (!resolved) {
-      const iterationGuidanceVariant: GitHubIterationGuidanceVariant =
-        group.iterationFieldConfigured === false ? "no-field" : "no-iterations";
       const message =
         group.iterationFieldConfigured === false
           ? "This repo's GitHub Project doesn't have an iteration field yet. Add one and assign tickets to it, then refresh."
@@ -569,7 +561,6 @@ export async function getCurrentSprintData(): Promise<{
           },
           sprint: null,
           message,
-          iterationGuidanceVariant,
         },
       };
     }

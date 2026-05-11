@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { getCurrentSprintData } from "@/app/lib/currentSprintService";
 import CurrentSprint from "@/components/current-sprint/CurrentSprint";
-import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 type CurrentSprintStatus = "ready" | "empty" | "error";
 
@@ -19,7 +18,6 @@ export default async function CurrentSprintPage() {
 
   let status: CurrentSprintStatus = "ready";
   let statusMessage: string | undefined;
-  let iterationGuidanceVariant: GitHubIterationGuidanceVariant | undefined;
 
   // Determine status and message based on the errors
   if (body.error) {
@@ -28,7 +26,6 @@ export default async function CurrentSprintPage() {
   } else if (!body.sprint) {
     status = "empty";
     statusMessage = body.message;
-    iterationGuidanceVariant = body.iterationGuidanceVariant;
   }
 
   // Display the current sprint page with the fetched metrics
@@ -36,7 +33,6 @@ export default async function CurrentSprintPage() {
     <CurrentSprint
       status={status}
       statusMessage={statusMessage}
-      iterationGuidanceVariant={iterationGuidanceVariant}
       groupId={body.group?.id}
       sprint={body.sprint ?? undefined}
       metrics={body.metrics}

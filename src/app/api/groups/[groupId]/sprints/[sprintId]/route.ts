@@ -82,7 +82,7 @@ export async function PUT(
 
     const { groupId, sprintId } = await params;
     const body = await request.json();
-    const { name, startDate, endDate, goal } = body ?? {};
+    const { name, startDate, endDate } = body ?? {};
 
     await connectMongoDB();
 
@@ -145,7 +145,6 @@ export async function PUT(
     sprint.name = name ?? sprint.name;
     sprint.startDate = start;
     sprint.endDate = end;
-    sprint.goal = goal ?? sprint.goal;
 
     await sprint.save();
 

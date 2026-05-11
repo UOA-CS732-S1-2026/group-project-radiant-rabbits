@@ -35,11 +35,9 @@ export default function LandingHeroSection({
       />
       <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col items-center gap-5 rounded-2xl border border-slate-200/90 bg-slate-100 px-5 py-5 sm:gap-6 sm:px-7 sm:py-6">
         <p className={`text-pretty ${LANDING_HERO_LEAD_TEXT_CLASS}`}>
-          SprintHub connects to GitHub and syncs your repository. Your{" "}
-          <span className="font-semibold text-brand-dark">GitHub Project</span>{" "}
-          <span className="font-semibold text-brand-dark">iteration field</span>{" "}
-          sets each sprint so board items, commits, and PRs all share the same
-          windows. Sprint views make progress easy to read with less guesswork.
+          SprintHub connects to your GitHub repository and automatically
+          generates data-driven sprint review reports, so your team can stop
+          guessing and start improving.
         </p>
         <SignInButton className={LANDING_SIGN_IN_BUTTON_PRIMARY_CLASS}>
           Get started with GitHub

@@ -1,21 +1,16 @@
-import LandingTipsHelpTriggerSlot from "@/components/landing-page/LandingTipsHelpTriggerSlot";
-
 type LandingFeatureCardProps = {
   title: string;
   description: string;
   /** Fill for the top accent bar (e.g. `#99D1C1`). */
   accentColor: string;
-  /** When true, shows the same blue ? help control as in the app before the description. */
-  usesAppHelpTrigger?: boolean;
   className?: string;
 };
 
-/** Dark feature tile for marketing / auth; brand navy surface, white type. */
+/** Dark feature tile for marketing / auth — brand navy surface, white type. */
 export default function LandingFeatureCard({
   title,
   description,
   accentColor,
-  usesAppHelpTrigger = false,
   className = "",
 }: LandingFeatureCardProps) {
   return (
@@ -30,18 +25,9 @@ export default function LandingFeatureCard({
       <h3 className="mt-3 text-body-lg font-bold leading-snug text-white sm:mt-3.5 sm:text-h3">
         {title}
       </h3>
-      <div
-        className={`mt-2 text-body-md leading-snug text-white sm:mt-2.5 sm:text-body-lg sm:leading-snug ${usesAppHelpTrigger ? "flex flex-wrap items-center gap-x-2 gap-y-2" : ""}`}
-      >
-        {usesAppHelpTrigger ? (
-          <>
-            <LandingTipsHelpTriggerSlot />
-            <span className="min-w-0 flex-1 text-left">{description}</span>
-          </>
-        ) : (
-          description
-        )}
-      </div>
+      <p className="mt-2 text-body-md leading-snug text-white sm:mt-2.5 sm:text-body-lg sm:leading-snug">
+        {description}
+      </p>
     </article>
   );
 }
