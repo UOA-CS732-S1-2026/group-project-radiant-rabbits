@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "jest",
+    "test": "npm run test:web && npm run test:api",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "dev": "next dev",
@@ -12,7 +12,9 @@
     "lint": "biome check",
     "format": "biome format --write",
     "typegen": "payload generate:types",
-    "postinstall": "lefthook install"
+    "postinstall": "lefthook install",
+    "test:web": "jest --config jest.config.js",
+    "test:api": "jest --config jest.config.ts"
   },
   "dependencies": {
     "@types/ioredis": "^4.28.10",
