@@ -3,5 +3,5 @@ export default function GroupChangeLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+  return <main className="min-h-screen">{children}</main>;
 }

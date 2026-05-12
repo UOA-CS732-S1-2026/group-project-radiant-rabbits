@@ -3,5 +3,5 @@ type PageContainerProps = {
 };
 
 export default function PageContainer({ children }: PageContainerProps) {
-  return <main className="p-lg lg:p-xl">{children}</main>;
+  return <div className="p-lg lg:p-xl">{children}</div>;
 }
