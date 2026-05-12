@@ -206,23 +206,45 @@ async function loadCurrentSprintAndPosition(
 } | null> {
   const sprints = await Sprint.find({ group: groupId })
     .sort({ startDate: 1 })
-    .lean<
-      Array<{
-        _id: mongoose.Types.ObjectId;
-        name: string;
-        goal?: string;
-        startDate: Date;
-        endDate: Date;
-        isCurrent: boolean;
-      }>
-    >();
+    .lean<any[]>();
 
   if (sprints.length === 0) return null;
 
-  const currentIdx = sprints.findIndex((s) => s.isCurrent);
-  const idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
-  const doc = sprints[idx];
   const now = new Date();
+
+  let idx = sprints.findIndex((s) => s.status === "ACTIVE");
+  if (idx === -1) {
+    const currentIdx = sprints.findIndex((s) => s.isCurrent);
+    idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
+  }
+
+  // Auto-sprint completion
+  if (idx !== -1 && idx < sprints.length - 1) {
+    const currentDoc = sprints[idx];
+    const expiryDate = new Date(currentDoc.endDate);
+
+    if (now > expiryDate && currentDoc.status !== "COMPLETED") {
+      await Sprint.updateOne(
+        { _id: currentDoc._id },
+        { $set: { status: "COMPLETED", isCurrent: false } },
+      );
+
+      const nextSprint = sprints[idx + 1];
+      await Sprint.updateOne(
+        { _id: nextSprint._id },
+        { $set: { status: "ACTIVE", isCurrent: true } },
+      );
+
+      idx = idx + 1;
+    }
+  }
+
+  if (idx === -1) {
+    idx = sprints.findIndex((s) => now >= s.startDate && now <= s.endDate);
+    if (idx === -1) idx = sprints.length - 1;
+  }
+
+  const doc = sprints[idx];
 
   return {
     sprint: {
@@ -232,7 +254,11 @@ async function loadCurrentSprintAndPosition(
       goal: doc.goal,
       startDate: doc.startDate,
       endDate: doc.endDate,
-      status: computeStatus(now, doc.startDate, doc.endDate),
+      status:
+        doc.status ||
+        (doc.isCurrent
+          ? "ACTIVE"
+          : computeStatus(now, doc.startDate, doc.endDate)),
       progress: computeProgress(now, doc.startDate, doc.endDate),
     },
     sprintObjectId: doc._id,

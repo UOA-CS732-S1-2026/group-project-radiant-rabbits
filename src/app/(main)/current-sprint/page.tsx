@@ -48,6 +48,7 @@ export default async function CurrentSprintPage() {
       statusMessage={statusMessage}
       iterationGuidanceVariant={iterationGuidanceVariant}
       groupId={body.group?.id}
+      groupName={body.group?.name}
       sprint={body.sprint ?? undefined}
       metrics={body.metrics}
     />

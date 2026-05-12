@@ -10,24 +10,28 @@ export type SprintReviewPreviewOverlayProps = {
   open: boolean;
   onContinue: () => void;
   onDismiss: () => void;
+  reviewText?: string;
+  sprintName?: string;
+  dateRange?: string;
+  isLoading?: boolean;
+  groupName?: string;
 };
 
 /** Placeholder sprint review body until generation/API exists. */
 export default function SprintReviewPreviewOverlay({
   open,
   onContinue,
-  onDismiss,
+  reviewText,
+  sprintName,
+  groupName,
+  dateRange,
+  isLoading,
 }: SprintReviewPreviewOverlayProps) {
   const headingId = useId();
 
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismiss();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onDismiss]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -38,6 +42,32 @@ export default function SprintReviewPreviewOverlay({
     };
   }, [open]);
 
+  const handleExport = () => {
+    if (!reviewText) return;
+
+    const fileContent = `# ${sprintName || "Sprint Review"}\n${dateRange || ""}\n\n${reviewText}`;
+
+    const rawFileName = `${groupName || "group"}-${sprintName || "sprint"}-review`;
+
+    const safeFileName = rawFileName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const blob = new Blob([fileContent], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${safeFileName}.md`;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const overlay =
     open && typeof document !== "undefined"
       ? createPortal(
@@ -46,7 +76,6 @@ export default function SprintReviewPreviewOverlay({
               type="button"
               aria-label="Close preview"
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity"
-              onClick={onDismiss}
             />
             <div className="pointer-events-none absolute inset-0 grid place-items-center p-3 sm:p-4 md:p-5">
               <div className="pointer-events-auto w-full max-w-[min(96vw,72rem)] min-w-[min(100%,18rem)]">
@@ -70,7 +99,8 @@ export default function SprintReviewPreviewOverlay({
                         size="sm"
                         className="gap-1.5 !border-brand-dark/15 shadow-none transition-colors hover:!bg-slate-100 active:!bg-slate-200"
                         aria-label="Export sprint review"
-                        onClick={() => {}}
+                        onClick={handleExport}
+                        disabled={isLoading || !reviewText}
                       >
                         <Download
                           className="h-4 w-4 shrink-0 opacity-90"
@@ -83,34 +113,29 @@ export default function SprintReviewPreviewOverlay({
 
                   <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#E2E8F0] px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">
                     <div className="mx-auto min-h-[min(65vh,44rem)] w-full max-w-[68rem] rounded-lg border border-brand-dark/15 bg-brand-surface px-6 py-8 shadow-sm sm:px-10 sm:py-10 md:px-14 md:py-12">
-                      <p className="text-body-md font-medium text-brand-dark/85">
-                        Sprint · placeholder name
-                      </p>
-                      <p className="mt-1 text-(length:--text-body-md) text-brand-dark/60">
-                        1 Mar – 14 Mar 2026 (hardcoded)
-                      </p>
+                      {isLoading ? (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-brand-dark/50">
+                            Generating review content...
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-body-md font-medium text-brand-dark/85">
+                            {sprintName || "Sprint Review"}
+                          </p>
+                          <p className="mt-1 text-body-md text-brand-dark/60">
+                            {dateRange}
+                          </p>
 
-                      <h3 className="mt-8 text-(length:--text-body-lg) font-semibold text-brand-dark">
-                        Highlights
-                      </h3>
-                      <ul className="mt-3 list-outside list-disc space-y-2 pl-5 text-(length:--text-body-md) leading-relaxed text-brand-dark/90 sm:pl-6">
-                        <li>Shipped GitHub sync improvements (placeholder).</li>
-                        <li>Closed 12 issues on the board (placeholder).</li>
-                        <li>3 contributors above 10 commits (placeholder).</li>
-                      </ul>
-
-                      <h3 className="mt-8 text-(length:--text-body-lg) font-semibold text-brand-dark">
-                        Risks & next sprint
-                      </h3>
-                      <p className="mt-3 max-w-[52rem] text-(length:--text-body-md) leading-relaxed text-brand-dark/90">
-                        Plan auth hardening and milestone GraphQL follow-ups
-                        (placeholder copy until generation runs for real).
-                      </p>
-
-                      <p className="mt-10 text-(length:--text-body-sm) italic text-brand-dark/45">
-                        Preview only — replace with API output when sprint
-                        review generation is implemented.
-                      </p>
+                          <div className="mt-8 border-t border-brand-dark/5 pt-6">
+                            {/* Use whitespace-pre-wrap to preserve formatting from the AI */}
+                            <pre className="whitespace-pre-wrap font-sans text-body-md leading-relaxed text-brand-dark/90">
+                              {reviewText || "No review content available."}
+                            </pre>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 

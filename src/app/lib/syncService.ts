@@ -333,6 +333,15 @@ async function upsertSprintTasks(
   tasks: Awaited<ReturnType<typeof fetchProjectTasks>>,
   iterationMap: IterationMap,
 ) {
+  const existingSprints = await Sprint.find({ group: groupId })
+    .select("_id iterationId")
+    .lean();
+
+  const dbIterationMap = new Map(
+    existingSprints
+      .filter((s) => s.iterationId)
+      .map((s) => [s.iterationId, s._id]),
+  );
   // Sprint tasks from GitHub Projects are upserted by issueNumber + group.
   // Tasks without an issueNumber (draft issues) are matched by title + group
   const operations = tasks.map((task) => {
@@ -343,7 +352,9 @@ async function upsertSprintTasks(
     // Resolve the local Sprint _id for the task's iteration, if any.
     // null means the task is not assigned to any iteration (i.e. backlog).
     const sprintId = task.iterationId
-      ? (iterationMap.get(task.iterationId) ?? null)
+      ? iterationMap.get(task.iterationId) ||
+        dbIterationMap.get(task.iterationId) ||
+        null
       : null;
 
     return {
@@ -367,14 +378,62 @@ async function upsertSprintTasks(
   if (operations.length > 0) {
     await SprintTask.bulkWrite(operations);
   }
+
+  // Clear stale sprint links for tasks no longer returned from GitHub Project items.
+  // This handles cases where a task is removed from an iteration/project:
+  // keep the task record for history, but detach it from the sprint so it no longer
+  // appears in sprint task lists.
+  const syncedIssueNumbers = new Set(
+    tasks
+      .map((task) => task.issueNumber)
+      .filter((num): num is number => typeof num === "number"),
+  );
+  const syncedDraftTitles = new Set(
+    tasks
+      .filter((task) => task.issueNumber === null)
+      .map((task) => task.title.trim().toLowerCase())
+      .filter((title) => title.length > 0),
+  );
+
+  const existingLinkedTasks = await SprintTask.find({
+    group: groupId,
+    sprint: { $ne: null },
+  })
+    .select("_id issueNumber title")
+    .lean<
+      Array<{
+        _id: mongoose.Types.ObjectId;
+        issueNumber: number | null;
+        title: string;
+      }>
+    >();
+
+  const staleTaskIds = existingLinkedTasks
+    .filter((task) => {
+      if (typeof task.issueNumber === "number") {
+        return !syncedIssueNumbers.has(task.issueNumber);
+      }
+      return !syncedDraftTitles.has((task.title || "").trim().toLowerCase());
+    })
+    .map((task) => task._id);
+
+  if (staleTaskIds.length > 0) {
+    await SprintTask.updateMany(
+      { _id: { $in: staleTaskIds } },
+      { $set: { sprint: null } },
+    );
+  }
 }
 
 // Upsert sprints from GitHub iterations. Returns a map of iterationId -> Sprint._id
 // so callers can link related records (e.g. SprintTask.sprint).
 //
 // Sprint dates: each iteration has a startDate and a duration (in days).
-// We store endDate as the last millisecond of the final day so range queries
-// using $lte include activity from any time on the last day of the sprint.
+// GitHub duration counts calendar days inclusively, so:
+//   - duration 1 => start and end on the same date
+//   - duration 2 => end on the next date
+// We still store endDate as the last millisecond of the final day so range
+// queries using $lte include activity from any time on that day.
 //
 // Sprints that exist locally but no longer appear in GitHub iterations are left
 // untouched so historical data is preserved when an iteration gets deleted.
@@ -386,16 +445,49 @@ async function upsertSprints(
     return new Map();
   }
 
+  const existingSprints = await Sprint.find({
+    group: groupId,
+    iterationId: { $in: iterations.map((iter) => iter.id) },
+  })
+    .select("iterationId status isCurrent")
+    .lean<
+      Array<{
+        iterationId?: string | null;
+        status?: "PLANNING" | "ACTIVE" | "COMPLETED";
+        isCurrent?: boolean;
+      }>
+    >();
+  const existingByIterationId = new Map(
+    existingSprints
+      .filter((s) => typeof s.iterationId === "string" && s.iterationId)
+      .map((s) => [s.iterationId as string, s]),
+  );
+
   const now = Date.now();
   const operations = iterations.map((iter) => {
     const startDate = new Date(`${iter.startDate}T00:00:00.000Z`);
     const endDate = new Date(
-      startDate.getTime() + iter.duration * 24 * 60 * 60 * 1000 - 1,
+      startDate.getTime() + (iter.duration - 1) * 24 * 60 * 60 * 1000,
     );
+    endDate.setUTCHours(23, 59, 59, 999);
 
+    const existing = existingByIterationId.get(iter.id);
     let status: "PLANNING" | "ACTIVE" | "COMPLETED";
     let isCurrent: boolean;
-    if (now < startDate.getTime()) {
+    // Preserve manual "finish sprint" transitions across sync:
+    // - keep explicitly completed sprints completed
+    // - keep the manually activated current sprint active while within its window
+    if (existing?.status === "COMPLETED") {
+      status = "COMPLETED";
+      isCurrent = false;
+    } else if (
+      existing?.status === "ACTIVE" &&
+      existing?.isCurrent &&
+      now <= endDate.getTime()
+    ) {
+      status = "ACTIVE";
+      isCurrent = true;
+    } else if (now < startDate.getTime()) {
       status = "PLANNING";
       isCurrent = false;
     } else if (now <= endDate.getTime()) {
@@ -406,12 +498,14 @@ async function upsertSprints(
       isCurrent = false;
     }
 
+    const name = iter.title.replace(/\s+/g, " ").trim();
+
     return {
       updateOne: {
         filter: { iterationId: iter.id, group: groupId },
         update: {
           $set: {
-            name: iter.title,
+            name: name,
             startDate,
             endDate,
             status,
@@ -430,10 +524,9 @@ async function upsertSprints(
   // Look up the Sprint _ids we just upserted so we can return the iteration map
   const upsertedSprints = await Sprint.find({
     group: groupId,
-    iterationId: { $in: iterations.map((i) => i.id) },
   })
     .select("_id iterationId")
-    .lean<Array<{ _id: mongoose.Types.ObjectId; iterationId: string }>>();
+    .lean();
 
   const map: IterationMap = new Map();
   for (const sprint of upsertedSprints) {

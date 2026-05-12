@@ -15,6 +15,7 @@ import {
   User,
 } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { syncGroup } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
 
@@ -334,7 +335,7 @@ export default async function DashboardPage() {
     }
   }
 
-  const group = selectedGroup;
+  let group = selectedGroup;
 
   // If user is not part of any group, show error message
   if (!group) {
@@ -344,6 +345,59 @@ export default async function DashboardPage() {
         statusMessage="No group selected yet. Create or join a group to see dashboard metrics."
       />
     );
+  }
+
+  // If a background sync (e.g. triggered right after group creation) is already
+  // running and there is no existing sprint data to show, return a loading state
+  // that auto-refreshes every few seconds until the sync completes.
+  if (
+    group.syncStatus === "in_progress" &&
+    group.repoOwner &&
+    group.repoName &&
+    accessToken
+  ) {
+    const hasAnySyncedSprint = Boolean(
+      await Sprint.findOne({ group: group._id }).select("_id").lean(),
+    );
+    if (!hasAnySyncedSprint) {
+      return (
+        <Dashboard
+          status="loading"
+          statusMessage="Syncing your repository data for the first time — this usually takes a few seconds."
+          groupId={group._id.toString()}
+        />
+      );
+    }
+    // Sprints already exist from a previous sync — fall through and render
+    // the dashboard with current data while the background sync runs.
+  }
+
+  // Ensure iteration-backed sprint data is fresh when arriving on dashboard,
+  // especially right after switching groups.
+  if (
+    group.repoOwner &&
+    group.repoName &&
+    accessToken &&
+    group.syncStatus !== "in_progress"
+  ) {
+    const hasAnySyncedSprint = Boolean(
+      await Sprint.findOne({ group: group._id }).select("_id").lean(),
+    );
+    const syncedRecently =
+      group.lastSyncAt instanceof Date &&
+      Date.now() - group.lastSyncAt.getTime() < 2 * 60 * 1000;
+
+    if (!hasAnySyncedSprint || !syncedRecently) {
+      try {
+        await syncGroup(group._id.toString(), accessToken);
+        const refreshedGroup = await Group.findById(group._id).lean();
+        if (refreshedGroup) {
+          group = refreshedGroup;
+        }
+      } catch (error) {
+        console.error("Dashboard entry sync failed:", error);
+      }
+    }
   }
 
   if (!group.active) {

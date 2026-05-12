@@ -1,5 +1,6 @@
 import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
+import AutoRefresh from "./AutoRefresh";
 import ContributionBreakdownCard from "./ContributionBreakdownCard";
 import EndProjectButton from "./EndProjectButton";
 import ProjectMetricsGrid from "./ProjectMetricsGrid";
@@ -54,7 +55,13 @@ type DashboardProps = {
 };
 
 // Reusable status/error block so every failure surfaces in the dashboard UI
-function StatusBlock({ message }: { message: string }) {
+function StatusBlock({
+  message,
+  autoRefresh = false,
+}: {
+  message: string;
+  autoRefresh?: boolean;
+}) {
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
@@ -67,6 +74,7 @@ function StatusBlock({ message }: { message: string }) {
           </p>
         </div>
       </PageContainer>
+      {autoRefresh && <AutoRefresh />}
     </div>
   );
 }
@@ -92,6 +100,7 @@ export default function Dashboard({
             ? "Loading dashboard metrics..."
             : "Dashboard metrics are not available right now.")
         }
+        autoRefresh={status === "loading"}
       />
     );
   }

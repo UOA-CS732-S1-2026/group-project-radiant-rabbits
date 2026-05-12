@@ -1,10 +1,12 @@
 "use client";
 
+import { group } from "console";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -16,13 +18,25 @@ import SprintFocus from "@/components/current-sprint/SprintFocus";
 import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
 import Button from "@/components/shared/Button";
+import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
 import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
+import SprintGitHubTicketsOverlay from "@/components/shared/SprintGitHubTicketsOverlay";
+import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewOverlay";
+import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
+import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
 import { getInitials } from "@/lib/formatters";
 import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 // Fetch all required data to display the current sprint metrics
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+type NextSprintTaskRow = {
+  id: string;
+  ref: string;
+  title: string;
+  status: TaskStatus;
+};
 
 type Assignee = {
   name: string;
@@ -110,6 +124,7 @@ type CurrentSprintProps = {
   statusMessage?: string;
   iterationGuidanceVariant?: GitHubIterationGuidanceVariant;
   groupId?: string;
+  groupName?: string;
   sprint?: SprintInfo;
   metrics?: SprintMetrics;
 };
@@ -121,6 +136,16 @@ function formatShortDate(value: string | Date) {
   return date.toLocaleDateString("en-NZ", {
     day: "numeric",
     month: "short",
+  });
+}
+
+function formatSprintDate(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-NZ", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
   });
 }
 
@@ -143,17 +168,44 @@ export default function CurrentSprint({
   statusMessage,
   iterationGuidanceVariant,
   groupId,
+  groupName,
   sprint,
   metrics,
 }: CurrentSprintProps) {
   const router = useRouter();
   const [isRefreshing, startRefresh] = useTransition();
   const [refreshError, setRefreshError] = useState("");
-  const [sprintFocus, setSprintFocus] = useState(sprint?.goal || "");
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [sprintReviewPromptOpen, setSprintReviewPromptOpen] = useState(false);
+  const [sprintReviewPreviewOpen, setSprintReviewPreviewOpen] = useState(false);
+  const [nextSprintWelcomeOpen, setNextSprintWelcomeOpen] = useState(false);
+  const [githubTicketsOverlayOpen, setGithubTicketsOverlayOpen] =
+    useState(false);
+  const pendingSprintFocusRef = useRef("");
+  const [isFinishingSprint, setIsFinishingSprint] = useState(false);
+  const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
+    useState(false);
+  const [nextSprintTasks, setNextSprintTasks] = useState<NextSprintTaskRow[]>(
+    [],
+  );
+  const [reviewText, setReviewText] = useState("");
+  const [isGeneratingReview, setIsGeneratingReview] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [transitionErrorOpen, setTransitionErrorOpen] = useState(false);
+  const [transitionErrorMessage, setTransitionErrorMessage] = useState("");
+  const [handoffErrorOpen, setHandoffErrorOpen] = useState(false);
+  const [handoffErrorMessage, setHandoffErrorMessage] = useState("");
+  const [isArchivingGroup, setIsArchivingGroup] = useState(false);
 
   useEffect(() => {
-    setSprintFocus(sprint?.goal || "");
-  }, [sprint?.goal]);
+    if (status !== "ready") {
+      setFinishConfirmOpen(false);
+      setSprintReviewPromptOpen(false);
+      setSprintReviewPreviewOpen(false);
+      setNextSprintWelcomeOpen(false);
+      setGithubTicketsOverlayOpen(false);
+    }
+  }, [status]);
 
   const handleSaveSprintFocus = async (newFocus: string) => {
     if (!groupId || !sprint?.id) return;
@@ -170,13 +222,44 @@ export default function CurrentSprint({
 
       if (!response.ok) throw new Error("Failed to update focus");
 
-      setSprintFocus(newFocus);
       router.refresh();
     } catch (err) {
       console.error(err);
       alert("Failed to save sprint focus.");
     }
   };
+
+  const handleGenerateReview = useCallback(async () => {
+    if (!groupId || !sprint?.id) return;
+
+    setReviewError("");
+    setIsGeneratingReview(true);
+
+    setSprintReviewPromptOpen(false);
+    setSprintReviewPreviewOpen(true);
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/sprints/${sprint.id}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ regenerate: false }),
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to generate review");
+
+      setReviewText(data.review);
+    } catch (err) {
+      console.error(err);
+      setReviewError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setIsGeneratingReview(false);
+    }
+  }, [groupId, sprint?.id]);
 
   const handleRefresh = useCallback(() => {
     if (!groupId) return;
@@ -207,6 +290,239 @@ export default function CurrentSprint({
       }
     });
   }, [groupId, router]);
+
+  const openFinishSprintConfirm = useCallback(() => {
+    if (!groupId || !sprint) return;
+    setFinishConfirmOpen(true);
+  }, [groupId, sprint]);
+
+  const confirmFinishSprint = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsFinishingSprint(true);
+    try {
+      setFinishConfirmOpen(false);
+      setSprintReviewPromptOpen(true);
+    } finally {
+      setIsFinishingSprint(false);
+    }
+  }, [groupId, sprint]);
+
+  const proceedFromWelcomeToGithubTickets = useCallback(
+    async (sprintFocus: string) => {
+      if (!groupId || !sprint) return;
+      let shouldOpenTicketsOverlay = false;
+
+      try {
+        setIsSprintHandoffSubmitting(true);
+
+        // Fetch all sprints for the group
+        const sprintsResponse = await fetch(`/api/groups/${groupId}/sprints`);
+        if (!sprintsResponse.ok) {
+          throw new Error("Failed to load sprints");
+        }
+
+        const sprintList = await sprintsResponse.json();
+        const sprints = Array.isArray(sprintList) ? sprintList : [];
+
+        // Find the next planning sprint by startDate instead of name matching.
+        // GitHub iteration titles are user-defined and not guaranteed to be
+        // "Sprint N".
+        const currentStartMs = new Date(sprint.startDate).getTime();
+        const nextSprint = sprints
+          .filter(
+            (s: {
+              _id?: string;
+              startDate?: string;
+              status?: "PLANNING" | "ACTIVE" | "COMPLETED";
+            }) =>
+              Boolean(s._id) &&
+              s.status === "PLANNING" &&
+              typeof s.startDate === "string" &&
+              new Date(s.startDate).getTime() > currentStartMs,
+          )
+          .sort(
+            (a: { startDate: string }, b: { startDate: string }) =>
+              new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          )[0];
+
+        if (!nextSprint || !nextSprint._id) {
+          setNextSprintWelcomeOpen(false);
+          setNextSprintTasks([]);
+          setHandoffErrorMessage(
+            "No next planning sprint was found. Please ensure the next iteration exists in your GitHub Project and sync your group.",
+          );
+          setHandoffErrorOpen(true);
+          return;
+        } else {
+          // Update next sprint's goal with the sprint focus
+          const updateResponse = await fetch(
+            `/api/groups/${groupId}/sprints/${nextSprint._id}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ goal: sprintFocus?.trim() || "" }),
+            },
+          );
+
+          if (!updateResponse.ok) {
+            console.error("Failed to update next sprint goal");
+          }
+
+          // Fetch tasks for the next sprint
+          const tasksResponse = await fetch(
+            `/api/groups/${groupId}/sprints/${nextSprint._id}/tasks`,
+          );
+
+          if (tasksResponse.ok) {
+            const taskData = await tasksResponse.json();
+            const mappedTasks = (taskData.tasks || []).map(
+              (t: {
+                id: string;
+                issueNumber?: number | null;
+                title: string;
+                status: TaskStatus;
+              }) => ({
+                id: t.id,
+                ref: t.issueNumber ? `#${t.issueNumber}` : "",
+                title: t.title,
+                status: t.status,
+              }),
+            );
+            setNextSprintTasks(mappedTasks);
+          } else {
+            console.error("Failed to fetch next sprint tasks");
+            setNextSprintTasks([]);
+          }
+          shouldOpenTicketsOverlay = true;
+        }
+      } catch (err) {
+        setNextSprintWelcomeOpen(false);
+        setNextSprintTasks([]);
+        setHandoffErrorMessage(
+          "Failed to prepare the next sprint. Please check your connection and try again.",
+        );
+        setHandoffErrorOpen(true);
+      } finally {
+        setIsSprintHandoffSubmitting(false);
+        setNextSprintWelcomeOpen(false);
+        if (shouldOpenTicketsOverlay) {
+          setGithubTicketsOverlayOpen(true);
+        }
+      }
+    },
+    [groupId, sprint],
+  );
+
+  const finalizeSprintHandoffFromTicketsOverlay = useCallback(async () => {
+    if (!groupId || !sprint) return;
+    setIsSprintHandoffSubmitting(true);
+
+    const attemptTransition = async () => {
+      const res = await fetch(`/api/groups/${groupId}/sprints/transition`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentSprintId: sprint.id,
+        }),
+      });
+      return res;
+    };
+
+    try {
+      let response = await attemptTransition();
+
+      // If 404 (Sprint not found), try to sync and retry once
+      if (response.status === 404) {
+        console.log("Next sprint not found. Attempting a background sync...");
+
+        const syncRes = await fetch(`/api/groups/${groupId}/sync`, {
+          method: "POST",
+        });
+
+        if (syncRes.ok || syncRes.status === 409) {
+          response = await attemptTransition();
+        }
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(
+            `Next planning sprint not found after sync. Please check that the next iteration exists in your GitHub Projects and is in the 'Planning' status.
+            If this project has ended, you may archive the group.`,
+          );
+        } else {
+          throw new Error("Transition failed");
+        }
+      }
+
+      setGithubTicketsOverlayOpen(false);
+      router.refresh();
+    } catch (err) {
+      setGithubTicketsOverlayOpen(false);
+      setHandoffErrorMessage(
+        err instanceof Error ? err.message : "The sprint transition failed.",
+      );
+      setHandoffErrorOpen(true);
+      setTransitionErrorOpen(true);
+    } finally {
+      setIsSprintHandoffSubmitting(false);
+    }
+  }, [groupId, sprint, router]);
+
+  const handleArchiveGroupFromHandoffError = useCallback(async () => {
+    if (!groupId) {
+      setHandoffErrorOpen(false);
+      router.push("/join-create-switch-group");
+      return;
+    }
+
+    setIsArchivingGroup(true);
+    try {
+      const response = await fetch(`/api/groups/${groupId}/archive`, {
+        method: "POST",
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Failed to archive group");
+      }
+
+      setHandoffErrorOpen(false);
+      router.push("/join-create-switch-group");
+      router.refresh();
+    } catch (error) {
+      setHandoffErrorMessage(
+        error instanceof Error ? error.message : "Failed to archive group.",
+      );
+    } finally {
+      setIsArchivingGroup(false);
+    }
+  }, [groupId, router]);
+
+  const isFinishDisabled = useMemo(() => {
+    if (!sprint?.endDate) return true;
+
+    const now = new Date();
+    const end = new Date(sprint.endDate);
+    const nowUtcDay = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+    );
+    const endUtcDay = Date.UTC(
+      end.getUTCFullYear(),
+      end.getUTCMonth(),
+      end.getUTCDate(),
+    );
+    const eligibleFromUtcDay = endUtcDay - 24 * 60 * 60 * 1000;
+
+    return nowUtcDay < eligibleFromUtcDay || isFinishingSprint || isRefreshing;
+  }, [sprint?.endDate, isFinishingSprint, isRefreshing]);
 
   const sprintTasks: SprintTaskRow[] = useMemo(
     () =>
@@ -272,108 +588,182 @@ export default function CurrentSprint({
 
   // Display the current sprint page with the fetched metrics
   return (
-    <div className="min-h-full bg-brand-background">
-      <PageContainer>
-        <div className="space-y-lg">
-          {refreshError ? (
-            <p className="text-(length:--text-body-md) text-brand-todo">
-              {refreshError}
-            </p>
-          ) : null}
-
-          {/* Header: sprint title + help + refresh */}
-          <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
-            <div>
-              <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
-                {sprint.name}
-              </h1>
-              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
-                {formatShortDate(sprint.startDate)} —{" "}
-                {formatShortDate(sprint.endDate)} ·{" "}
-                {sprint.progress.remainingDays} days remaining
+    <>
+      <div className="min-h-full bg-brand-background">
+        <PageContainer>
+          <div className="space-y-lg">
+            {refreshError ? (
+              <p className="text-(length:--text-body-md) text-brand-todo">
+                {refreshError}
               </p>
+            ) : null}
+
+            {/* Header: sprint title + help + refresh */}
+            <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
+              <div>
+                <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
+                  {sprint.name}
+                </h1>
+                <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                  {formatSprintDate(sprint.startDate)} —{" "}
+                  {formatSprintDate(sprint.endDate)} ·{" "}
+                  {sprint.progress.remainingDays} days remaining
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-sm">
+                <HelpOverlayTrigger
+                  label="Help: current sprint and GitHub"
+                  title="How this page maps to GitHub"
+                  className="self-start pt-0.5"
+                >
+                  <div className="space-y-3 text-left">
+                    <p>
+                      The sprint name and dates match the{" "}
+                      <span className="font-semibold">current iteration</span>{" "}
+                      on your GitHub Project (via the project&apos;s iteration{" "}
+                      field).
+                    </p>
+                    <p>
+                      <span className="font-semibold">Sprint tasks</span> are
+                      issues assigned to that iteration. Use{" "}
+                      <span className="font-semibold">Refresh</span> after you
+                      change issues or iterations on GitHub to pull the latest
+                      data.
+                    </p>
+                    <p>
+                      <span className="font-semibold">Sprint focus</span> is
+                      stored for your team in this app; edit it here anytime.
+                    </p>
+                  </div>
+                </HelpOverlayTrigger>
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={openFinishSprintConfirm}
+                  disabled={isFinishDisabled}
+                  aria-label={
+                    isFinishDisabled
+                      ? "Sprints can only be finished on the day before the end date or later."
+                      : ""
+                  }
+                >
+                  Finish Sprint
+                </Button>
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </Button>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-sm">
-              <HelpOverlayTrigger
-                label="Help: current sprint and GitHub"
-                title="How this page maps to GitHub"
-                className="self-start pt-0.5"
-              >
-                <div className="space-y-3 text-left">
-                  <p>
-                    The sprint name and dates match the{" "}
-                    <span className="font-semibold">current iteration</span> on
-                    your GitHub Project (via the project&apos;s iteration{" "}
-                    field).
-                  </p>
-                  <p>
-                    <span className="font-semibold">Sprint tasks</span> are
-                    issues assigned to that iteration. Use{" "}
-                    <span className="font-semibold">Refresh</span> after you
-                    change issues or iterations on GitHub to pull the latest
-                    data.
-                  </p>
-                  <p>
-                    <span className="font-semibold">Sprint focus</span> is
-                    stored for your team in this app; edit it here anytime.
-                  </p>
-                </div>
-              </HelpOverlayTrigger>
-              <Button
-                variant="purple"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? "Refreshing..." : "Refresh"}
-              </Button>
+            {/* Sprint Focus */}
+            <SprintFocus
+              focus={sprint?.goal || ""}
+              onUpdate={handleSaveSprintFocus}
+              editable
+            />
+
+            {/* Sprint Timeline */}
+            <SprintTimeline
+              sprint={{
+                startDate: sprint.startDate,
+                endDate: sprint.endDate,
+                progressPercent: sprint.progress.progressPercent,
+                elapsedDays: sprint.progress.elapsedDays,
+                remainingDays: sprint.progress.remainingDays,
+                totalDays: sprint.progress.totalDays,
+              }}
+            />
+
+            {/* Breakdown cards */}
+            <BreakdownCard
+              todoCount={todoCount}
+              inProgressCount={inProgressCount}
+              doneCount={doneCount}
+            />
+            {/* Tasks and Contributions */}
+            <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
+              <div className="min-w-0 h-full">
+                <SprintTaskSection tasks={sprintTasks} />
+              </div>
+              <div className="min-w-0 h-full">
+                <ContributionCard
+                  contributors={contributors}
+                  groupId={groupId}
+                  sprintId={sprint.id}
+                />
+              </div>
             </div>
+
+            {/* Activity Timeline */}
+            <ActivityTimeline items={timeline} />
           </div>
+        </PageContainer>
+      </div>
 
-          {/* Sprint Focus */}
-          <SprintFocus
-            focus={sprintFocus}
-            onUpdate={handleSaveSprintFocus}
-            editable
-          />
+      <ConfirmOverlay
+        open={finishConfirmOpen}
+        title="Finish Sprint?"
+        description={`Are you ready to wrap up ${sprint.name}? This will lead you to create a Sprint Review.`}
+        onConfirm={confirmFinishSprint}
+        onClose={() => setFinishConfirmOpen(false)}
+        confirmLabel="Finish Sprint"
+      />
 
-          {/* Sprint Timeline */}
-          <SprintTimeline
-            sprint={{
-              startDate: sprint.startDate,
-              endDate: sprint.endDate,
-              progressPercent: sprint.progress.progressPercent,
-              elapsedDays: sprint.progress.elapsedDays,
-              remainingDays: sprint.progress.remainingDays,
-              totalDays: sprint.progress.totalDays,
-            }}
-          />
+      <SprintReviewPromptOverlay
+        open={sprintReviewPromptOpen}
+        onGenerateSprintReview={handleGenerateReview}
+        onSkip={() => {
+          setSprintReviewPromptOpen(false);
+          setNextSprintWelcomeOpen(true);
+        }}
+        onClose={() => setSprintReviewPromptOpen(false)}
+      />
 
-          {/* Breakdown cards */}
-          <BreakdownCard
-            todoCount={todoCount}
-            inProgressCount={inProgressCount}
-            doneCount={doneCount}
-          />
+      <SprintReviewPreviewOverlay
+        open={sprintReviewPreviewOpen}
+        reviewText={reviewText}
+        sprintName={sprint?.name}
+        groupName={groupName}
+        isLoading={isGeneratingReview}
+        onContinue={() => {
+          setSprintReviewPreviewOpen(false);
+          setNextSprintWelcomeOpen(true);
+        }}
+        onDismiss={() => setSprintReviewPreviewOpen(false)}
+      />
 
-          {/* Tasks and Contributions */}
-          <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
-            <div className="min-w-0 h-full">
-              <SprintTaskSection tasks={sprintTasks} />
-            </div>
-            <div className="min-w-0 h-full">
-              <ContributionCard
-                contributors={contributors}
-                groupId={groupId}
-                sprintId={sprint.id}
-              />
-            </div>
-          </div>
+      <SprintWelcomeOverlay
+        open={nextSprintWelcomeOpen}
+        sprintNumber={sprint.number + 1}
+        onContinue={proceedFromWelcomeToGithubTickets}
+        onClose={() => setNextSprintWelcomeOpen(false)}
+        isContinuing={isSprintHandoffSubmitting}
+      />
 
-          {/* Activity Timeline */}
-          <ActivityTimeline items={timeline} />
-        </div>
-      </PageContainer>
-    </div>
+      <SprintGitHubTicketsOverlay
+        open={githubTicketsOverlayOpen}
+        tasks={nextSprintTasks}
+        onContinue={finalizeSprintHandoffFromTicketsOverlay}
+        onDismiss={() => setGithubTicketsOverlayOpen(false)}
+        isContinuing={isSprintHandoffSubmitting}
+      />
+      <ConfirmOverlay
+        open={handoffErrorOpen}
+        title="Sprint Transition Failed"
+        description={handoffErrorMessage}
+        confirmLabel="Archive Group"
+        cancelLabel="Back to Group Settings"
+        onConfirm={handleArchiveGroupFromHandoffError}
+        onClose={() => {
+          setHandoffErrorOpen(false);
+          router.push("/join-create-switch-group");
+        }}
+        isConfirming={isArchivingGroup}
+      />
+    </>
   );
 }

@@ -40,7 +40,13 @@ async function loadPastSprints(
 ): Promise<PastSprintRow[]> {
   const sprints = await Sprint.find({
     group: groupId,
-    status: "COMPLETED",
+    $or: [
+      { status: "COMPLETED" },
+      {
+        status: "ACTIVE",
+        "aiReview.text": { $exists: true, $nin: [null, ""] },
+      },
+    ],
   })
     .sort({ endDate: -1 })
     .lean<

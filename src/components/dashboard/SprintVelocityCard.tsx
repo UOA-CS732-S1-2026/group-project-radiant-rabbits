@@ -30,6 +30,7 @@ function formatDateLabel(value: string) {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -188,7 +189,11 @@ export default function SprintVelocityCard({
         </div>
       ) : (
         <div className="rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
-          {iterationFieldConfigured === false ? (
+          {iterationFieldConfigured === null ? (
+            <p className="text-(length:--text-body-sm) text-brand-dark/60">
+              Sprint data will appear here after your first sync completes.
+            </p>
+          ) : iterationFieldConfigured === false ? (
             <p className="text-(length:--text-body-sm) text-brand-dark/60">
               This repo&apos;s GitHub Project doesn&apos;t have an iteration
               field yet. Once you{" "}

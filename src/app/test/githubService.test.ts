@@ -421,7 +421,9 @@ describe("fetchProjectTasks", () => {
                     },
                     {
                       status: { name: "Done" },
-                      iteration: { iterationId: "iter_3" },
+                      fieldValues: {
+                        nodes: [{ iterationId: "iter_3" }],
+                      },
                       content: {
                         number: 3,
                         title: "Write docs",
