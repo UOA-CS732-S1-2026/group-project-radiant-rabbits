@@ -1,26 +1,204 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
+  /* Brand colors */
+  --color-brand-primary: #7bbcfe;
+  --color-brand-dark: #0d1f4a;
+  --color-brand-background: #ffffff;
+  --color-brand-accent: #b8a9fe;
+  --color-brand-surface: #ffffff;
+  --color-brand-border: #e5e7eb;
+  --color-brand-todo: #ff0000;
+  --color-brand-in-progress: #ff9900;
+  --color-brand-completed: #00cc66;
+  --color-brand-open: #0099ff;
+
+  /* Component Colors */
+  --color-segmented-bg:#f1f5f9;
+  --color-button-grey: #7a7a7a;
+  --color-status-unassigned-bg: #dde7f4;
+  --color-status-unassigned-fg: #34527a;
+  --color-status-todo-bg: #f6dee2;
+  --color-status-todo-fg: #8a3848;
+  --color-status-in-progress-bg: #fbf1d9;
+  --color-status-in-progress-fg: #8a5e10;
+  --color-status-completed-bg: #e3f0e7;
+  --color-status-completed-fg: #2e6440;
+
+  /* App colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Spacing — matches `dev`; powers `p-md`, `px-xl`, `gap-lg`, etc. */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-md: 0 4px 12px rgba(9, 22, 54, 0.08);
+  --shadow-lg: 0 10px 24px rgba(9, 22, 54, 0.12);
+
+  /* Container widths */
+  --container-container: 80rem;
+  --container-form: 42rem;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Default background colours and text sizing (for smaller screens) */
+:root {
+  --background: #ffffff;
+  --foreground: #0d1f4a;
+
+  --text-display: 3rem;
+  --text-hero: 2.25rem;
+  --text-title-lg: 1.5rem;
+  --text-title-md: 1.25rem;
+  --text-title-sm: 1rem;
+
+  --text-h1: 2rem;
+  --text-h1--line-height: 2.5rem;
+
+  --text-h2: 1.625rem;
+  --text-h2--line-height: 2.125rem;
+
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.875rem;
+
+  --text-3xl: 1.625rem;
+  --text-3xl--line-height: 1.875rem;
+
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.875rem;
+
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.625rem;
+
+  --text-body-md: 0.9375rem;
+  --text-body-md--line-height: 1.375rem;
+
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.125rem;
+
+  --text-body-xs: 0.6875rem;
+  --text-body-xs--line-height: 0.9375rem;
+}
+
+/* Text sizing for laptop screens */
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --text-display: 4rem;
+    --text-hero: 3.25rem;
+    --text-title-lg: 2rem;
+    --text-title-md: 1.625rem;
+    --text-title-sm: 1.25rem;
+
+    --text-h1: 2rem;
+    --text-h1--line-height: 2.5rem;
+
+    --text-h2: 1.625rem;
+    --text-h2--line-height: 2.125rem;
+
+    --text-h3: 1.25rem;
+    --text-h3--line-height: 1.875rem;
+
+    --text-3xl: 1.625rem;
+    --text-3xl--line-height: 1.875rem;
+
+    --text-2xl: 1.375rem;
+    --text-2xl--line-height: 1.875rem;
+
+    --text-xl: 1.125rem;
+    --text-xl--line-height: 1.625rem;
+
+    --text-body-lg: 1.0625rem;
+    --text-body-lg--line-height: 1.625rem;
+
+    --text-body-md: 0.9375rem;
+    --text-body-md--line-height: 1.375rem;
+
+    --text-body-sm: 0.8125rem;
+    --text-body-sm--line-height: 1.125rem;
+
+    --text-body-xs: 0.6875rem;
+    --text-body-xs--line-height: 0.9375rem;
   }
 }
 
+/* Text sizing for desktop screens */
+@media (min-width: 1024px) {
+  :root {
+    --text-display: 4.5rem;
+    --text-hero: 3.75rem;
+    --text-title-lg: 2.25rem;
+    --text-title-md: 1.5rem;
+    --text-title-sm: 1.25rem;
+
+    --text-h1: 2.25rem;
+    --text-h1--line-height: 2.75rem;
+
+    --text-h2: 1.875rem;
+    --text-h2--line-height: 2.25rem;
+
+    --text-h3: 1.5rem;
+    --text-h3--line-height: 2rem;
+
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: 1.2rem;
+
+    --text-2xl: 1.5rem;
+    --text-2xl--line-height: 1.333rem;
+
+    --text-xl: 1.25rem;
+    --text-xl--line-height: 1.4rem;
+
+    --text-body-lg: 1.125rem;
+    --text-body-lg--line-height: 1.75rem;
+
+    --text-body-md: 1rem;
+    --text-body-md--line-height: 1.5rem;
+
+    --text-body-sm: 0.875rem;
+    --text-body-sm--line-height: 1.25rem;
+
+    --text-body-xs: 0.75rem;
+    --text-body-xs--line-height: 1rem;
+  }
+}
+
+html {
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth; }
+
+/* Scrollable regions: accent thumb (#B8A9FE), light track — Firefox + WebKit */
+/* Make it global so that it applies to all scrollable regions in the app */
+html { scrollbar-width: thin; scrollbar-color: #b8a9fe #f1f5f9; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #b8a9fe; border-radius: 9999px; }
+
+html,
 body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

@@ -1,7 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["127.0.0.1"],
+  async redirects() {
+    return [{ source: "/landing-page", destination: "/", permanent: true }];
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
