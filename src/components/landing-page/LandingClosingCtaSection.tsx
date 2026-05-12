@@ -5,7 +5,7 @@ type LandingClosingCtaSectionProps = {
   className?: string;
 };
 
-/** Final sign-in prompt after features + how-it-works — compact solid navy card. */
+/** Final sign-in prompt after features + how-it-works; compact solid navy card. */
 export default function LandingClosingCtaSection({
   className = "",
 }: LandingClosingCtaSectionProps) {
@@ -24,7 +24,7 @@ export default function LandingClosingCtaSection({
             id="landing-closing-cta-heading"
             className="mt-3 w-full min-w-0 text-balance text-(length:--text-body-lg) font-bold leading-snug text-black sm:mt-3.5 sm:text-h3"
           >
-            Ready for a retrospective that writes itself?
+            Ready for sprint reviews tied to GitHub iterations?
           </h2>
           <p className="mt-2 w-full min-w-0 text-pretty text-(length:--text-body-md) font-normal leading-snug text-black sm:mt-2.5 sm:leading-snug">
             Sign in with GitHub, connect a repo, and pull your sprint story

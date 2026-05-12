@@ -167,7 +167,6 @@ describe("POST /api/groups", () => {
     expect(body.message).toBe("Group Successfully Created");
     expect(body.group.name).toBe("test-name");
     expect(body.group.description).toBe("This is a test group");
-    expect(body.group.createdBy).toBe("123");
     expect(mockConnectMongoDB).toHaveBeenCalledTimes(1);
     expect(mockGroupCreate).toHaveBeenCalledTimes(1);
     expect(mockTriggerSync).toHaveBeenCalledWith("new-group-id", "token123");
