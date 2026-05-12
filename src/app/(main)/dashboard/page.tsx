@@ -15,6 +15,7 @@ import {
   User,
 } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import { syncGroup } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import Dashboard from "@/components/dashboard/Dashboard";
 
@@ -295,7 +296,7 @@ export default async function DashboardPage() {
     }
   }
 
-  const group = selectedGroup;
+  let group = selectedGroup;
 
   // If user is not part of any group, show error message
   if (!group) {
@@ -305,6 +306,34 @@ export default async function DashboardPage() {
         statusMessage="No group selected yet. Create or join a group to see dashboard metrics."
       />
     );
+  }
+
+  // Ensure iteration-backed sprint data is fresh when arriving on dashboard,
+  // especially right after switching groups.
+  if (
+    group.repoOwner &&
+    group.repoName &&
+    accessToken &&
+    group.syncStatus !== "in_progress"
+  ) {
+    const hasAnySyncedSprint = Boolean(
+      await Sprint.findOne({ group: group._id }).select("_id").lean(),
+    );
+    const syncedRecently =
+      group.lastSyncAt instanceof Date &&
+      Date.now() - group.lastSyncAt.getTime() < 2 * 60 * 1000;
+
+    if (!hasAnySyncedSprint || !syncedRecently) {
+      try {
+        await syncGroup(group._id.toString(), accessToken);
+        const refreshedGroup = await Group.findById(group._id).lean();
+        if (refreshedGroup) {
+          group = refreshedGroup;
+        }
+      } catch (error) {
+        console.error("Dashboard entry sync failed:", error);
+      }
+    }
   }
 
   let status: DashboardStatus = "ready";
