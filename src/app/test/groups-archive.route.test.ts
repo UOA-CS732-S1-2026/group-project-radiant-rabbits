@@ -106,25 +106,28 @@ describe("POST /api/groups/[groupId]/archive", () => {
     );
   });
 
-  it("returns 403 when user is not group creator", async () => {
+  it("allows a member who is not the group creator to archive the group", async () => {
     mockGetServerSession.mockResolvedValue({
       user: { id: "507f191e810c19729de860ea" },
     });
     mockConnectMongoDB.mockResolvedValue(undefined);
+    const save = jest.fn().mockResolvedValue(undefined);
     mockGroupFindById.mockResolvedValue({
       _id: "group-1",
       members: ["507f191e810c19729de860ea"],
       createdBy: "507f191e810c19729de860ff",
       active: true,
-      save: jest.fn().mockResolvedValue(undefined),
+      save,
     });
+    mockUserUpdateMany.mockResolvedValue({});
 
     const response = await POST(new Request("http://localhost"), {
       params: Promise.resolve({ groupId: "507f191e810c19729de860eb" }),
     });
     const body = await response.json();
 
-    expect(response.status).toBe(403);
-    expect(body.error).toBe("Only the group creator can end this project");
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ message: "Group archived successfully" });
+    expect(save).toHaveBeenCalledTimes(1);
   });
 });

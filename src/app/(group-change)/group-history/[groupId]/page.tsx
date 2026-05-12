@@ -16,6 +16,7 @@ type PastSprintRow = {
   name: string;
   startDate: Date;
   endDate: Date;
+  hasReview: boolean;
 };
 
 type Teammate = {
@@ -48,19 +49,19 @@ async function loadPastSprints(
         name: string;
         startDate: Date;
         endDate: Date;
+        aiReview?: {
+          text?: string | null;
+        } | null;
       }>
     >();
 
-  return Promise.all(
-    sprints.map(async (sprint) => {
-      return {
-        id: String(sprint._id),
-        name: sprint.name,
-        startDate: sprint.startDate,
-        endDate: sprint.endDate,
-      };
-    }),
-  );
+  return sprints.map((sprint) => ({
+    id: String(sprint._id),
+    name: sprint.name,
+    startDate: sprint.startDate,
+    endDate: sprint.endDate,
+    hasReview: Boolean(sprint.aiReview?.text?.trim()),
+  }));
 }
 
 function getInitials(name: string) {
@@ -186,10 +187,20 @@ export default async function GroupHistoryPage({
                     {formatDate(sprint.startDate)} -{" "}
                     {formatDate(sprint.endDate)}
                   </p>
-                  <div className="mt-sm">
-                    <Button size="sm" variant="white">
-                      Open Sprint Review
-                    </Button>
+                  <div className="mt-sm flex flex-wrap gap-sm">
+                    {sprint.hasReview ? (
+                      <Button
+                        size="sm"
+                        variant="white"
+                        href={`/api/groups/${group._id.toString()}/sprints/${sprint.id}/review`}
+                      >
+                        Download Review
+                      </Button>
+                    ) : (
+                      <p className="self-center text-body-sm text-brand-dark/60">
+                        No generated review yet
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}

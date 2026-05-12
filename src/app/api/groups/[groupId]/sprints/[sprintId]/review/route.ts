@@ -15,6 +15,77 @@ type SprintReviewRequestBody = {
   regenerate?: boolean;
 };
 
+export async function GET(
+  _request: Request,
+  {
+    params,
+  }: {
+    params: Promise<{ groupId: string; sprintId: string }>;
+  },
+) {
+  try {
+    const session = await getServerSession(options);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    const { groupId, sprintId } = await params;
+
+    await connectMongoDB();
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    if (!isUserInGroup(group.members, session.user.id)) {
+      return NextResponse.json(
+        { error: "You are not a member of this group" },
+        { status: 403 },
+      );
+    }
+
+    const sprint = await Sprint.findOne({ _id: sprintId, group: group._id });
+    if (!sprint) {
+      return NextResponse.json({ error: "Sprint not found" }, { status: 404 });
+    }
+
+    const reviewText = sprint.aiReview?.text?.trim();
+    if (!reviewText) {
+      return NextResponse.json(
+        { error: "No sprint review has been generated yet" },
+        { status: 404 },
+      );
+    }
+
+    const sprintName = (sprint.name || "sprint")
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const fileName = `${sprintName || "sprint"}-review.txt`;
+
+    return new NextResponse(reviewText, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${fileName}"`,
+      },
+    });
+  } catch (error) {
+    console.error("Error downloading sprint review:", error);
+    return NextResponse.json(
+      { error: "Failed to download sprint review" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(
   request: Request,
   {
