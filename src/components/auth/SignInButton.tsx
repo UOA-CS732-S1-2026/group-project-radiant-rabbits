@@ -14,10 +14,13 @@ export default function SignInButton({
   children = "Sign in with GitHub",
 }: SignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === "true";
 
   const handleClick = async () => {
     setIsLoading(true);
-    await signIn("github", { callbackUrl: "/join-create-switch-group" });
+    await signIn(isTestMode ? "test-login" : "github", {
+      callbackUrl: isTestMode ? "/dashboard" : "/join-create-switch-group",
+    });
   };
 
   return (

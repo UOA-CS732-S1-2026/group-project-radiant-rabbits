@@ -80,6 +80,7 @@ Main development and test dependencies:
 - TypeScript
 - Biome
 - Jest
+- Playwright
 - ts-jest
 - Testing Library
 - mongodb-memory-server
@@ -103,6 +104,11 @@ Required environment variables:
 - `OPENAI_API_KEY` or `GEMINI_API_KEY`
 - Optional model overrides such as `OPENAI_MODEL` or `GEMINI_MODEL`
 
+Playwright test-mode variables:
+- `TEST_MODE=true`
+- `NEXT_PUBLIC_TEST_MODE=true`
+- Optional identity overrides: `TEST_USER_ID`, `TEST_USER_NAME`, `TEST_USER_EMAIL`
+
 ## How To Run
 Install dependencies:
 
@@ -117,6 +123,13 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:3000`.
+
+Run tests:
+
+```bash
+npm test
+npm run test:e2e
+```
 
 
 ## Still To Be Implemented (DELETE LATER; FOR OUR REFERENCE)

@@ -1,5 +1,6 @@
 import type { NextAuthOptions, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import { User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
@@ -7,27 +8,60 @@ import { normalizeUserRef } from "@/app/lib/userRef";
 
 const githubId = process.env.AUTH_GITHUB_ID;
 const githubSecret = process.env.AUTH_GITHUB_SECRET;
+const isTestMode = process.env.TEST_MODE === "true";
+const testUserId = process.env.TEST_USER_ID ?? "test-user";
+const testUserName = process.env.TEST_USER_NAME ?? "Playwright Test User";
+const testUserEmail = process.env.TEST_USER_EMAIL ?? "playwright@test.local";
 
-if (!githubId || !githubSecret) {
+if (!isTestMode && (!githubId || !githubSecret)) {
   throw new Error("Missing AUTH_GITHUB_ID or AUTH_GITHUB_SECRET");
 }
 
 export const options: NextAuthOptions = {
   providers: [
-    GitHubProvider({
-      clientId: githubId,
-      clientSecret: githubSecret,
-      authorization: {
-        params: {
-          // 1. Request 'repo' and 'read:project' scopes so we can read GitHub Projects
-          scope: "read:user user:email repo read:project",
-        },
-      },
-    }),
+    ...(isTestMode
+      ? [
+          CredentialsProvider({
+            id: "test-login",
+            name: "Test Login",
+            credentials: {},
+            async authorize() {
+              return {
+                id: testUserId,
+                name: testUserName,
+                email: testUserEmail,
+                image: null,
+              };
+            },
+          }),
+        ]
+      : []),
+    ...(!isTestMode && githubId && githubSecret
+      ? [
+          GitHubProvider({
+            clientId: githubId,
+            clientSecret: githubSecret,
+            authorization: {
+              params: {
+                // 1. Request 'repo' and 'read:project' scopes so we can read GitHub Projects
+                scope: "read:user user:email repo read:project",
+              },
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     // 2. Capture the token from the account when the user signs in
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
+      if (account?.provider === "test-login") {
+        token.id = (user?.id as string | undefined) ?? testUserId;
+        token.name = user?.name ?? testUserName;
+        token.email = user?.email ?? testUserEmail;
+        delete token.accessToken;
+        return token;
+      }
+
       if (account) {
         // Keep token values used by server routes.
         token.accessToken = account.access_token;

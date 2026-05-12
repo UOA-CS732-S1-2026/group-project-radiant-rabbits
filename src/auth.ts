@@ -3,19 +3,24 @@ import GitHub from "next-auth/providers/github";
 
 const githubId = process.env.AUTH_GITHUB_ID;
 const githubSecret = process.env.AUTH_GITHUB_SECRET;
+const isTestMode = process.env.TEST_MODE === "true";
 
 // Validate OAuth credentials at startup.
-if (!githubId || !githubSecret) {
+if (!isTestMode && (!githubId || !githubSecret)) {
   throw new Error("Missing AUTH_GITHUB_ID or AUTH_GITHUB_SECRET");
 }
 
 export const { handlers, auth } = NextAuth({
   providers: [
     // GitHub OAuth provider credentials come from local env vars.
-    GitHub({
-      clientId: githubId,
-      clientSecret: githubSecret,
-    }),
+    ...(githubId && githubSecret
+      ? [
+          GitHub({
+            clientId: githubId,
+            clientSecret: githubSecret,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: "/",

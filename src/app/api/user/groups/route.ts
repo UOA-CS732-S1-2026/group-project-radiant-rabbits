@@ -7,6 +7,40 @@ import { normalizeUserRefString } from "@/app/lib/userRef";
 
 export async function GET(_request: NextRequest) {
   try {
+    if (process.env.TEST_MODE === "true") {
+      return NextResponse.json({
+        currentGroups: [
+          {
+            id: "group-current-active",
+            name: "sprint-hub-repo",
+            repoOwner: "radiant-rabbits",
+            active: true,
+          },
+          {
+            id: "group-current-archived",
+            name: "legacy-repo",
+            repoOwner: "radiant-rabbits",
+            active: false,
+          },
+        ],
+        joinGroups: [
+          {
+            id: "group-joinable",
+            name: "joinable-repo",
+            repoOwner: "radiant-rabbits",
+            inviteCode: "ABCD1234",
+          },
+        ],
+        createGroups: [
+          {
+            id: "repo-creatable",
+            name: "new-team-repo",
+            repoOwner: "radiant-rabbits",
+          },
+        ],
+      });
+    }
+
     const session = await getServerSession(options);
     const sessionWithToken = session as {
       accessToken?: string;
