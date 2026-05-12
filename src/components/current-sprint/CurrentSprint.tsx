@@ -598,6 +598,32 @@ export default function CurrentSprint({
               </div>
             </div>
 
+            {/* Sprint Focus */}
+            <SprintFocus
+              focus={sprint?.goal || ""}
+              onUpdate={handleSaveSprintFocus}
+              editable
+            />
+
+            {/* Sprint Timeline */}
+            <SprintTimeline
+              sprint={{
+                startDate: sprint.startDate,
+                endDate: sprint.endDate,
+                progressPercent: sprint.progress.progressPercent,
+                elapsedDays: sprint.progress.elapsedDays,
+                remainingDays: sprint.progress.remainingDays,
+                totalDays: sprint.progress.totalDays,
+              }}
+            />
+
+            {/* Breakdown cards */}
+            <BreakdownCard
+              todoCount={todoCount}
+              inProgressCount={inProgressCount}
+              doneCount={doneCount}
+            />
+
             {/* Tasks and Contributions */}
             <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
               <div className="min-w-0 h-full">
@@ -611,6 +637,9 @@ export default function CurrentSprint({
                 />
               </div>
             </div>
+
+            {/* Activity Timeline */}
+            <ActivityTimeline items={timeline} />
           </div>
         </PageContainer>
       </div>
