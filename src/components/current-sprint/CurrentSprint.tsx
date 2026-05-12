@@ -13,6 +13,7 @@ import {
 import ActivityTimeline from "@/components/current-sprint/ActivityTimeline";
 import BreakdownCard from "@/components/current-sprint/BreakdownCard";
 import ContributionCard from "@/components/current-sprint/ContributionCard";
+import CurrentSprintStatusWithHelp from "@/components/current-sprint/CurrentSprintStatusWithHelp";
 import SprintFocus from "@/components/current-sprint/SprintFocus";
 import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
@@ -25,6 +26,7 @@ import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewO
 import SprintReviewPromptOverlay from "@/components/shared/SprintReviewPromptOverlay";
 import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
 import { getInitials } from "@/lib/formatters";
+import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 // Fetch all required data to display the current sprint metrics
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
@@ -120,6 +122,7 @@ type SprintMetrics = {
 type CurrentSprintProps = {
   status: "ready" | "empty" | "error";
   statusMessage?: string;
+  iterationGuidanceVariant?: GitHubIterationGuidanceVariant;
   groupId?: string;
   groupName?: string;
   sprint?: SprintInfo;
@@ -163,6 +166,7 @@ function StatusBlock({ message }: { message: string }) {
 export default function CurrentSprint({
   status,
   statusMessage,
+  iterationGuidanceVariant,
   groupId,
   groupName,
   sprint,
@@ -529,7 +533,7 @@ export default function CurrentSprint({
 
   if (status === "error") {
     return (
-      <StatusBlock
+      <CurrentSprintStatusWithHelp
         message={statusMessage ?? "Failed to load current sprint."}
       />
     );
@@ -537,7 +541,10 @@ export default function CurrentSprint({
 
   if (status === "empty" || !sprint) {
     return (
-      <StatusBlock message={statusMessage ?? "No current sprint available."} />
+      <CurrentSprintStatusWithHelp
+        message={statusMessage ?? "No current sprint available."}
+        iterationGuidanceVariant={iterationGuidanceVariant}
+      />
     );
   }
 
@@ -657,33 +664,6 @@ export default function CurrentSprint({
               inProgressCount={inProgressCount}
               doneCount={doneCount}
             />
-
-            {/* Sprint Focus */}
-            <SprintFocus
-              focus={sprint?.goal || ""}
-              onUpdate={handleSaveSprintFocus}
-              editable
-            />
-
-            {/* Sprint Timeline */}
-            <SprintTimeline
-              sprint={{
-                startDate: sprint.startDate,
-                endDate: sprint.endDate,
-                progressPercent: sprint.progress.progressPercent,
-                elapsedDays: sprint.progress.elapsedDays,
-                remainingDays: sprint.progress.remainingDays,
-                totalDays: sprint.progress.totalDays,
-              }}
-            />
-
-            {/* Breakdown cards */}
-            <BreakdownCard
-              todoCount={todoCount}
-              inProgressCount={inProgressCount}
-              doneCount={doneCount}
-            />
-
             {/* Tasks and Contributions */}
             <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
               <div className="min-w-0 h-full">

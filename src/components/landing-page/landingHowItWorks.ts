@@ -1,20 +1,22 @@
 export const LANDING_HOW_IT_WORKS_STEPS = [
   {
     title: "Sign in",
-    description: "Authenticate with GitHub. Create or join your project group.",
+    description:
+      "Sign in with GitHub, then create or join a group for your project.",
   },
   {
     title: "Connect repo",
-    description: "Link your repository. Commits, PRs, and issues are fetched.",
+    description:
+      "Link the repository. SprintHub syncs commits, PRs, issues, Project items, and iterations.",
   },
   {
-    title: "Set sprint dates",
+    title: "Plan in GitHub",
     description:
-      "Define your sprint window. Activity is filtered to that period.",
+      "Use a GitHub Project with an iteration field so each sprint in SprintHub matches GitHub.",
   },
   {
     title: "Review & reflect",
     description:
-      "Generate your sprint summary and run a meaningful retrospective.",
+      "Open dashboard and current sprint from synced data. When the iteration ends, run Generate Sprint Review.",
   },
 ] as const;

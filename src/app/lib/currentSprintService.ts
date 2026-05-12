@@ -12,6 +12,7 @@ import {
   User,
 } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
+import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -97,6 +98,8 @@ export type CurrentSprintBody = {
   selectionReason?: "current-flag" | "active" | "latest";
   metrics?: CurrentSprintMetrics;
   message?: string;
+  /** When there is no synced sprint, matches dashboard sprint-velocity guidance. */
+  iterationGuidanceVariant?: GitHubIterationGuidanceVariant;
   error?: string;
 };
 
@@ -575,6 +578,8 @@ export async function getCurrentSprintData(): Promise<{
     // exists so the user gets an actionable hint.
     const resolved = await loadCurrentSprintAndPosition(group._id);
     if (!resolved) {
+      const iterationGuidanceVariant: GitHubIterationGuidanceVariant =
+        group.iterationFieldConfigured === false ? "no-field" : "no-iterations";
       const message =
         group.iterationFieldConfigured === false
           ? "This repo's GitHub Project doesn't have an iteration field yet. Add one and assign tickets to it, then refresh."
@@ -590,6 +595,7 @@ export async function getCurrentSprintData(): Promise<{
           },
           sprint: null,
           message,
+          iterationGuidanceVariant,
         },
       };
     }

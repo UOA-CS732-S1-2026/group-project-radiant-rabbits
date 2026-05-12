@@ -280,6 +280,7 @@ export default async function DashboardPage() {
   if (!selectedGroup && normalizedUserId) {
     const candidateGroups = await Group.find({
       $or: [{ createdBy: normalizedUserId }, { members: normalizedUserId }],
+      active: true,
     })
       .sort({ lastSyncAt: -1, updatedAt: -1 })
       .lean();
@@ -334,6 +335,10 @@ export default async function DashboardPage() {
         console.error("Dashboard entry sync failed:", error);
       }
     }
+  }
+
+  if (!group.active) {
+    redirect("/join-create-switch-group");
   }
 
   let status: DashboardStatus = "ready";
@@ -407,6 +412,7 @@ export default async function DashboardPage() {
       nextSprintStart={
         nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
       }
+      groupId={group._id.toString()}
     />
   );
 }
