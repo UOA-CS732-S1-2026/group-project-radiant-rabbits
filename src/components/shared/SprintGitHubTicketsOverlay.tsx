@@ -39,7 +39,7 @@ function StatusBadge({ status }: { status: TaskStatus }) {
   };
   return (
     <span
-      className={`inline-flex min-w-16 shrink-0 justify-center rounded-lg px-sm py-xs text-body-xs font-medium ${styles[status]}`}
+      className={`inline-flex min-w-16 shrink-0 justify-center rounded-lg px-sm py-xs text-(length:--text-body-xs) font-medium ${styles[status]}`}
     >
       {labels[status]}
     </span>
@@ -95,7 +95,7 @@ export default function SprintGitHubTicketsOverlay({
                     >
                       GitHub tickets for this sprint
                     </h2>
-                    <p className="mx-auto mt-2 max-w-[32rem] text-body-md leading-relaxed text-brand-dark/85">
+                    <p className="mx-auto mt-2 max-w-[32rem] text-(length:--text-body-md) leading-relaxed text-brand-dark/85">
                       {hasTickets
                         ? "These issues are synced from your GitHub project. You can edit them anytime on GitHub."
                         : "We are not seeing any issues on this sprint yet. Add issues in GitHub, assign them to your project (and iteration field if you use one), then use Refresh on the current sprint page."}
@@ -111,7 +111,7 @@ export default function SprintGitHubTicketsOverlay({
                         {tasks.map((task) => (
                           <li
                             key={task.id}
-                            className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-body-md"
+                            className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-(length:--text-body-md)"
                           >
                             <span className="text-brand-dark/60">
                               {task.ref || "—"}
@@ -126,7 +126,7 @@ export default function SprintGitHubTicketsOverlay({
                         ))}
                       </ul>
                     ) : (
-                      <p className="rounded-xl border border-dashed border-brand-dark/20 bg-brand-surface/80 px-4 py-6 text-center text-body-md leading-relaxed text-brand-dark/75">
+                      <p className="rounded-xl border border-dashed border-brand-dark/20 bg-brand-surface/80 px-4 py-6 text-center text-(length:--text-body-md) leading-relaxed text-brand-dark/75">
                         No tickets yet — open your repo on GitHub, create or
                         move issues onto the linked project board, then refresh
                         here.

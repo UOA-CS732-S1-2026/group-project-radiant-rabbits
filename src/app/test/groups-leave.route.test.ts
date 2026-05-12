@@ -31,6 +31,7 @@ jest.mock(
   "@/app/lib/userRef",
   () => ({
     isUserInGroup: jest.fn(),
+    normalizeUserRef: jest.fn((id) => id),
   }),
   { virtual: true },
 );
@@ -42,6 +43,7 @@ jest.mock("@/app/lib/models", () => ({
     findByIdAndDelete: jest.fn(),
   },
   User: {
+    findOne: jest.fn(),
     findById: jest.fn(),
     findByIdAndUpdate: jest.fn(),
   },
@@ -77,6 +79,10 @@ const mockGroupFindById = Group.findById as jest.MockedFunction<
   typeof Group.findById
 >;
 
+const mockUserFindOne = User.findOne as jest.MockedFunction<
+  typeof User.findOne
+>;
+
 const mockUserFindById = User.findById as jest.MockedFunction<
   typeof User.findById
 >;
@@ -88,6 +94,9 @@ const mockUserFindByIdAndUpdate = User.findByIdAndUpdate as jest.MockedFunction<
 const mockIsUserInGroup = isUserInGroup as jest.MockedFunction<
   typeof isUserInGroup
 >;
+
+const mockNormalizeUserRef = require("@/app/lib/userRef")
+  .normalizeUserRef as jest.Mock;
 
 describe("PUT /api/groups/leave", () => {
   beforeEach(() => {
@@ -141,7 +150,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockConnectMongoDB.mockResolvedValue(undefined);
 
-    mockUserFindById.mockResolvedValue(null);
+    mockUserFindOne.mockResolvedValue(null);
 
     const request = new Request("http://localhost:3000/api/groups/leave", {
       method: "PUT",
@@ -164,7 +173,7 @@ describe("PUT /api/groups/leave", () => {
     });
 
     mockConnectMongoDB.mockResolvedValue(undefined);
-    mockUserFindById.mockResolvedValue({
+    mockUserFindOne.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
     });
@@ -190,7 +199,7 @@ describe("PUT /api/groups/leave", () => {
     });
 
     mockConnectMongoDB.mockResolvedValue(undefined);
-    mockUserFindById.mockResolvedValue({
+    mockUserFindOne.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
@@ -250,7 +259,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockConnectMongoDB.mockResolvedValue(undefined);
 
-    mockUserFindById.mockResolvedValue({
+    mockUserFindOne.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",
@@ -329,7 +338,7 @@ describe("PUT /api/groups/leave", () => {
 
     mockConnectMongoDB.mockResolvedValue(undefined);
 
-    mockUserFindById.mockResolvedValue({
+    mockUserFindOne.mockResolvedValue({
       _id: "mongo-user-id-123",
       githubId: "123",
       currentGroupId: "group-1",

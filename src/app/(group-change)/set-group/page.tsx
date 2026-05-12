@@ -67,13 +67,13 @@ function SetGroupContent() {
       <div className="flex flex-col justify-start px-0 pt-0 sm:px-lg">
         <div className="flex w-full max-w-full min-w-0 flex-col items-stretch gap-4 sm:mx-auto sm:w-fit sm:gap-5">
           {errorMessage && (
-            <div className="rounded-md bg-red-100 p-3 text-center text-sm text-red-700">
+            <div className="rounded-md bg-red-100 p-3 text-center text-(length:--text-body-sm) text-red-700">
               {errorMessage}
             </div>
           )}
 
           <GroupCard>
-            <div className="flex w-full min-w-0 flex-col gap-md text-body-md text-brand-dark sm:gap-lg sm:text-body-lg">
+            <div className="flex w-full min-w-0 flex-col gap-md text-(length:--text-body-md) text-brand-dark sm:gap-lg">
               <p>
                 You&apos;re about to create a group for{" "}
                 <span className="font-semibold">
@@ -94,12 +94,12 @@ function SetGroupContent() {
             </div>
           </GroupCard>
 
-          <div className="flex w-full flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-md">
+          <div className="flex w-full flex-row flex-wrap items-center justify-between gap-3 sm:gap-md">
             <Button
               variant="grey"
               size="lg"
               href={joinPickerHref}
-              className="min-h-11 w-full justify-center py-2.5 font-semibold sm:w-auto sm:px-7"
+              className="min-h-11 shrink-0 justify-center py-2.5 font-semibold sm:px-7"
             >
               Back
             </Button>
@@ -108,7 +108,7 @@ function SetGroupContent() {
               size="lg"
               onClick={handleCreateGroup}
               disabled={isSubmitting}
-              className="min-h-11 w-full justify-center py-2.5 font-semibold sm:w-auto sm:px-7 disabled:opacity-50"
+              className="min-h-11 shrink-0 justify-center py-2.5 font-semibold sm:px-7 disabled:opacity-50"
             >
               {isSubmitting ? "Creating..." : "Create Group"}
             </Button>
@@ -129,32 +129,33 @@ export default function SetGroupPage() {
 
         <div className="mb-4 flex shrink-0 justify-center sm:mb-5">
           <HelpOverlayTrigger
-            label="Help for finishing group setup"
-            title="Creating your group"
+            label="Help: GitHub project and sprints"
+            title="Sprints and your GitHub Project"
             size="comfortable"
           >
             <div className="space-y-4 text-left">
               <p>
-                Sprint dates and ticket assignments are pulled directly from
-                your GitHub Project, so there&apos;s nothing to fill in here.
+                Sprint dates and which issues belong to each sprint come from
+                your linked{" "}
+                <span className="font-semibold">GitHub Project</span>— there are
+                no sprint dates to type in here.
               </p>
               <p>
-                Make sure your Project has an{" "}
+                Configure an{" "}
                 <span className="font-semibold text-brand-dark">
                   iteration field
                 </span>{" "}
-                (default name &ldquo;Sprint&rdquo;) and that tickets are
-                assigned to the right iteration. Click{" "}
+                on the project (often named &ldquo;Sprint&rdquo;), assign issues
+                to the right iteration, then click{" "}
                 <span className="font-semibold text-brand-dark">
                   Create Group
                 </span>{" "}
-                to finish setup and trigger the first sync.
+                to create the group and run the first sync.
               </p>
             </div>
           </HelpOverlayTrigger>
         </div>
 
-        {/* Suspense is required by Next.js when using useSearchParams */}
         <Suspense fallback={<div className="text-center">Loading...</div>}>
           <SetGroupContent />
         </Suspense>

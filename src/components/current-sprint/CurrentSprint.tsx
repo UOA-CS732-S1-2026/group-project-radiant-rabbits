@@ -18,6 +18,7 @@ import SprintTaskSection from "@/components/current-sprint/SprintTaskSection";
 import SprintTimeline from "@/components/current-sprint/SprintTimeline";
 import Button from "@/components/shared/Button";
 import ConfirmOverlay from "@/components/shared/ConfirmOverlay";
+import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 import SprintGitHubTicketsOverlay from "@/components/shared/SprintGitHubTicketsOverlay";
 import SprintReviewPreviewOverlay from "@/components/shared/SprintReviewPreviewOverlay";
@@ -140,7 +141,9 @@ function StatusBlock({ message }: { message: string }) {
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
-        <p className="text-body-md text-brand-dark/70">{message}</p>
+        <p className="text-(length:--text-body-md) text-brand-dark/70">
+          {message}
+        </p>
       </PageContainer>
     </div>
   );
@@ -519,97 +522,96 @@ export default function CurrentSprint({
         <PageContainer>
           <div className="space-y-lg">
             {refreshError ? (
-              <p className="text-body-md text-brand-todo">{refreshError}</p>
+              <p className="text-(length:--text-body-md) text-brand-todo">
+                {refreshError}
+              </p>
             ) : null}
 
-            {/* Header: sprint title + refresh button */}
+            {/* Header: sprint title + help + refresh */}
             <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
               <div>
-                <h1 className="text-h2 font-bold text-brand-dark">
+                <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                   {sprint.name}
                 </h1>
-                <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
                   {formatShortDate(sprint.startDate)} —{" "}
                   {formatShortDate(sprint.endDate)} ·{" "}
                   {sprint.progress.remainingDays} days remaining
                 </p>
               </div>
-              <div className="flex flex-col items-end gap-xs">
-                <div className="flex gap-md">
-                  <Button
-                    variant="purple"
-                    size="sm"
-                    onClick={openFinishSprintConfirm}
-                    disabled={isFinishDisabled}
-                    aria-label={
-                      isFinishDisabled
-                        ? "Sprints can only be finished within 24 hours of the end date."
-                        : ""
-                    }
-                  >
-                    Finish Sprint
-                  </Button>
-                  <Button
-                    variant="purple"
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                  >
-                    {isRefreshing ? "Refreshing..." : "Refresh"}
-                  </Button>
-                </div>
-                {isFinishDisabled && !isFinishingSprint && !isRefreshing && (
-                  <p className="text-body-xs mt-xs tracking-[0.14em]">
-                    Finish available{" "}
-                    {formatShortDate(
-                      new Date(
-                        new Date(sprint.endDate).getTime() -
-                          24 * 60 * 60 * 1000,
-                      ),
-                    )}
-                  </p>
-                )}
+              <div className="flex shrink-0 items-center gap-sm">
+                <HelpOverlayTrigger
+                  label="Help: current sprint and GitHub"
+                  title="How this page maps to GitHub"
+                  className="self-start pt-0.5"
+                >
+                  <div className="space-y-3 text-left">
+                    <p>
+                      The sprint name and dates match the{" "}
+                      <span className="font-semibold">current iteration</span>{" "}
+                      on your GitHub Project (via the project&apos;s iteration{" "}
+                      field).
+                    </p>
+                    <p>
+                      <span className="font-semibold">Sprint tasks</span> are
+                      issues assigned to that iteration. Use{" "}
+                      <span className="font-semibold">Refresh</span> after you
+                      change issues or iterations on GitHub to pull the latest
+                      data.
+                    </p>
+                    <p>
+                      <span className="font-semibold">Sprint focus</span> is
+                      stored for your team in this app; edit it here anytime.
+                    </p>
+                  </div>
+                </HelpOverlayTrigger>
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={openFinishSprintConfirm}
+                  disabled={isFinishDisabled}
+                  aria-label={
+                    isFinishDisabled
+                      ? "Sprints can only be finished within 24 hours of the end date."
+                      : ""
+                  }
+                >
+                  Finish Sprint
+                </Button>
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </Button>
               </div>
+              {isFinishDisabled && !isFinishingSprint && !isRefreshing && (
+                <p className="text-body-xs mt-xs tracking-[0.14em]">
+                  Finish available{" "}
+                  {formatShortDate(
+                    new Date(
+                      new Date(sprint.endDate).getTime() - 24 * 60 * 60 * 1000,
+                    ),
+                  )}
+                </p>
+              )}
             </div>
-
-            {/* Sprint Focus */}
-            <SprintFocus
-              focus={sprint?.goal || ""}
-              onUpdate={handleSaveSprintFocus}
-              editable
-            />
-
-            {/* Sprint Timeline */}
-            <SprintTimeline
-              sprint={{
-                startDate: sprint.startDate,
-                endDate: sprint.endDate,
-                progressPercent: sprint.progress.progressPercent,
-                elapsedDays: sprint.progress.elapsedDays,
-                remainingDays: sprint.progress.remainingDays,
-                totalDays: sprint.progress.totalDays,
-              }}
-            />
-
-            {/* Breakdown cards */}
-            <BreakdownCard
-              todoCount={todoCount}
-              inProgressCount={inProgressCount}
-              doneCount={doneCount}
-            />
 
             {/* Tasks and Contributions */}
-            <div className="grid min-w-0 gap-lg lg:grid-cols-[1.4fr_1fr]">
-              <div className="min-w-0">
+            <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
+              <div className="min-w-0 h-full">
                 <SprintTaskSection tasks={sprintTasks} />
               </div>
-              <div className="min-w-0">
-                <ContributionCard contributors={contributors} />
+              <div className="min-w-0 h-full">
+                <ContributionCard
+                  contributors={contributors}
+                  groupId={groupId}
+                  sprintId={sprint.id}
+                />
               </div>
             </div>
-
-            {/* Activity Timeline */}
-            <ActivityTimeline items={timeline} />
           </div>
         </PageContainer>
       </div>

@@ -19,7 +19,7 @@ export default function LandingHeroSection({
       aria-labelledby="landing-hero-heading"
     >
       <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent px-3 py-1.5 text-body-xs font-semibold uppercase tracking-widest text-brand-dark">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent px-3 py-1.5 text-(length:--text-body-xs) font-semibold uppercase tracking-widest text-black">
           <span aria-hidden className="text-brand-dark/50">
             •
           </span>
@@ -30,10 +30,10 @@ export default function LandingHeroSection({
         id="landing-hero-heading"
         as="h1"
         size="display"
-        variant="gradient"
+        variant="purple"
         className="text-center"
       />
-      <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col items-center gap-5 rounded-2xl border border-slate-200/90 bg-slate-100 px-5 py-5 sm:gap-6 sm:px-7 sm:py-6">
+      <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col items-center gap-5 rounded-2xl border border-brand-border bg-brand-border/15 px-5 py-5 sm:gap-6 sm:px-7 sm:py-6">
         <p className={`text-pretty ${LANDING_HERO_LEAD_TEXT_CLASS}`}>
           SprintHub connects to your GitHub repository and automatically
           generates data-driven sprint review reports, so your team can stop

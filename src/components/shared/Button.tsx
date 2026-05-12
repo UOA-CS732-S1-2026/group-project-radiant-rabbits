@@ -30,13 +30,14 @@ export default function Button({
   const hasExplicitTextSize =
     /text-body-(?:xs|sm|md|lg)/.test(className) ||
     /\btext-(?:xs|sm|md|lg|xl|2xl|3xl)\b/.test(className) ||
+    /text-\(length:--text/.test(className) ||
     /text-\[/.test(className);
 
   const defaultTextSize = hasExplicitTextSize
     ? ""
     : size === "lg"
-      ? "text-body-sm sm:text-body-md"
-      : "text-body-sm sm:text-body-md";
+      ? "text-(length:--text-body-sm) sm:text-(length:--text-body-md)"
+      : "text-(length:--text-body-sm) sm:text-(length:--text-body-md)";
 
   const layoutDefault =
     size === "lg"

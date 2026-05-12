@@ -2,19 +2,18 @@ import type { ReactNode } from "react";
 
 export type SprintHubTitleSize = "display" | "hero" | "lg" | "md" | "sm";
 
-export type SprintHubTitleVariant = "gradient" | "white";
+export type SprintHubTitleVariant = "purple" | "white";
 
 const sizeClasses: Record<SprintHubTitleSize, string> = {
-  display: "text-5xl leading-[1.06] sm:text-6xl md:text-7xl lg:text-8xl",
-  hero: "text-4xl leading-[1.08] sm:text-5xl md:text-6xl",
-  lg: "text-2xl leading-tight sm:text-3xl",
-  md: "text-xl leading-tight sm:text-2xl",
-  sm: "text-base leading-tight sm:text-lg",
+  display: "text-(length:--text-display) leading-[1.06]",
+  hero: "text-(length:--text-hero) leading-[1.08]",
+  lg: "text-(length:--text-title-lg) leading-tight",
+  md: "text-(length:--text-title-md) leading-tight",
+  sm: "text-(length:--text-title-sm) leading-tight",
 };
 
 const variantClasses: Record<SprintHubTitleVariant, string> = {
-  gradient:
-    "bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent",
+  purple: "text-brand-accent",
   white: "text-white drop-shadow-sm",
 };
 
@@ -24,7 +23,6 @@ type SprintHubTitleProps = {
   id?: string;
   as?: "h1" | "h2" | "p" | "span";
   size?: SprintHubTitleSize;
-  /** `gradient` matches main nav; `white` for use on ombre / colored bars. */
   variant?: SprintHubTitleVariant;
 };
 
@@ -34,7 +32,7 @@ export default function SprintHubTitle({
   id,
   as: Tag = "h1",
   size = "hero",
-  variant = "gradient",
+  variant = "purple",
 }: SprintHubTitleProps) {
   return (
     <Tag

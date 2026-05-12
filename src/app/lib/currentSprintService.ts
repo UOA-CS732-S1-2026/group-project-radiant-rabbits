@@ -3,11 +3,6 @@ import type mongoose from "mongoose";
 import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import {
-  fetchCommits,
-  fetchIssues,
-  fetchPullRequests,
-} from "@/app/lib/githubService";
-import {
   Commit,
   Group,
   Issue,
@@ -308,193 +303,19 @@ async function loadSprintTasks(
   return { tasks, breakdown };
 }
 
-// Helper function to check if a given date value falls within the sprint period
-function isInWindow(
-  dateValue: string | Date | null | undefined,
-  start: Date,
-  end: Date,
-) {
-  if (!dateValue) return false;
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return false;
-  return date >= start && date <= end;
-}
-
-// Fetch live data from GitHub API for the current sprint period
-async function getLivePeriodActivity(
-  accessToken: string,
-  repoOwner: string,
-  repoName: string,
-  sprintStartDate: Date,
-  sprintEndDate: Date,
-): Promise<PeriodActivity> {
-  const [commits, githubIssues, pullRequests] = await Promise.all([
-    fetchCommits(accessToken, repoOwner, repoName),
-    fetchIssues(accessToken, repoOwner, repoName),
-    fetchPullRequests(accessToken, repoOwner, repoName),
-  ]);
-
-  const issuesInPeriodRaw = githubIssues
-    .filter((issue) =>
-      isInWindow(issue.createdAt, sprintStartDate, sprintEndDate),
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-
-  const commitsInPeriod = commits.filter((commit) =>
-    isInWindow(commit.date, sprintStartDate, sprintEndDate),
-  );
-
-  // Merge commits, PRs, and issues per author into one row.
-  // Commits use author.name
-  // PRs/issues use login
-  type ContributorEntry = {
-    displayName: string;
-    login: string | null;
-    commitCount: number;
-    prCount: number;
-    issueCount: number;
-  };
-  const contributorMap = new Map<string, ContributorEntry>();
-  const bumpContributor = (
-    rawName: string,
-    field: "commitCount" | "prCount" | "issueCount",
-    login: string | null,
-  ) => {
-    const trimmed = rawName.trim();
-    if (!trimmed) return;
-    const key = trimmed.toLowerCase();
-    const entry = contributorMap.get(key) ?? {
-      displayName: trimmed,
-      login: null,
-      commitCount: 0,
-      prCount: 0,
-      issueCount: 0,
-    };
-    entry[field] += 1;
-    // First non-empty login wins so the avatar persists across rows.
-    if (!entry.login && login) entry.login = login;
-    contributorMap.set(key, entry);
-  };
-
-  for (const commit of commitsInPeriod) {
-    const name =
-      commit.author.login ||
-      commit.author.name ||
-      commit.author.email ||
-      "Unknown";
-    bumpContributor(name, "commitCount", commit.author.login ?? null);
-  }
-
-  const prsInPeriod = pullRequests.filter((pr) =>
-    isInWindow(pr.createdAt, sprintStartDate, sprintEndDate),
-  );
-  for (const pr of prsInPeriod) {
-    const author = pr.author || "Unknown";
-    bumpContributor(author, "prCount", pr.author || null);
-  }
-  for (const issue of issuesInPeriodRaw) {
-    const author = issue.author || "Unknown";
-    bumpContributor(author, "issueCount", issue.author || null);
-  }
-
-  const contributors = Array.from(contributorMap.values())
-    .map((entry) => ({
-      name: entry.displayName,
-      commitCount: entry.commitCount,
-      prCount: entry.prCount,
-      issueCount: entry.issueCount,
-      avatarUrl: avatarUrlForLogin(entry.login),
-    }))
-    .sort(
-      (a, b) =>
-        b.commitCount +
-        b.prCount +
-        b.issueCount -
-        (a.commitCount + a.prCount + a.issueCount),
-    )
-    .slice(0, 10);
-
-  const pullRequestsOpened = prsInPeriod.length;
-
-  const pullRequestsMerged = pullRequests.filter(
-    (pr) =>
-      pr.state === "MERGED" &&
-      isInWindow(pr.mergedAt, sprintStartDate, sprintEndDate),
-  ).length;
-
-  const timelineFromCommits: SprintActivity[] = commitsInPeriod
-    .slice(0, 6)
-    .map((commit) => {
-      const authorName =
-        commit.author.login ||
-        commit.author.name ||
-        commit.author.email ||
-        "Unknown";
-      return {
-        date: new Date(commit.date),
-        text: `${authorName} pushed a commit`,
-        initials: authorName.slice(0, 1).toUpperCase(),
-        avatarUrl: avatarUrlForLogin(commit.author.login),
-      };
-    });
-
-  const timelineFromIssues: SprintActivity[] = issuesInPeriodRaw
-    .slice(0, 6)
-    .map((issue) => ({
-      date: new Date(issue.createdAt),
-      text:
-        issue.state === "CLOSED"
-          ? `Closed Issue #${issue.number}`
-          : `Created Issue #${issue.number}`,
-      initials: "I",
-      avatarUrl: avatarUrlForLogin(issue.author),
-    }));
-
-  const timelineFromPRs: SprintActivity[] = pullRequests
-    .filter(
-      (pr) =>
-        pr.state === "MERGED" &&
-        isInWindow(pr.mergedAt, sprintStartDate, sprintEndDate),
-    )
-    .slice(0, 6)
-    .map((pr) => ({
-      date: new Date(pr.mergedAt || pr.createdAt),
-      text: `Merged PR #${pr.number}`,
-      initials: (pr.author || "P").slice(0, 1).toUpperCase(),
-      avatarUrl: avatarUrlForLogin(pr.author),
-    }));
-
-  const timeline = [
-    ...timelineFromPRs,
-    ...timelineFromIssues,
-    ...timelineFromCommits,
-  ]
-    .filter(
-      (item) => item.date instanceof Date && !Number.isNaN(item.date.getTime()),
-    )
-    .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, 8);
-
-  return {
-    issuesCreated: issuesInPeriodRaw.length,
-    commitsCount: commitsInPeriod.length,
-    pullRequestsOpened,
-    pullRequestsMerged,
-    activeContributors: contributors.length,
-    contributors,
-    timeline,
-  };
-}
-
-// Fallback function to fetch data from MongoDB if live GitHub API call fails or access token is not available
+// Period metrics + timeline for the active sprint window. Reads only from
+// MongoDB; sync is responsible for keeping the data fresh from GitHub.
 async function getPeriodActivityFromDb(
   groupId: unknown,
   sprintStartDate: Date,
   sprintEndDate: Date,
 ): Promise<PeriodActivity> {
+  const inWindow = { $gte: sprintStartDate, $lte: sprintEndDate };
+
+  // Per-author bucket aggregations key on the same identifier across sources
+  // so commit / PR / issue counts can merge cleanly downstream.
+  const authorBucketProjection = { _id: 0, name: "$_id", count: 1 } as const;
+
   const [
     issuesCreated,
     commitsCount,
@@ -504,89 +325,83 @@ async function getPeriodActivityFromDb(
     prAuthorBuckets,
     issueAuthorBuckets,
     recentCommits,
-    recentIssues,
+    issuesCreatedInWindow,
+    issuesClosedInWindow,
     recentMergedPRs,
   ] = await Promise.all([
-    Issue.countDocuments({
-      group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
-    }),
-    Commit.countDocuments({
-      group: groupId,
-      date: { $gte: sprintStartDate, $lte: sprintEndDate },
-    }),
-    PullRequest.countDocuments({
-      group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
-    }),
+    Issue.countDocuments({ group: groupId, createdAt: inWindow }),
+    Commit.countDocuments({ group: groupId, date: inWindow }),
+    PullRequest.countDocuments({ group: groupId, createdAt: inWindow }),
     PullRequest.countDocuments({
       group: groupId,
       state: "MERGED",
-      mergedAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+      mergedAt: inWindow,
     }),
-    // Per-author counts. Commits group by author.name; PRs/issues by author
-    // (login). Merged below — mismatches between name and login still split.
     Commit.aggregate<{ name: string; login: string | null; count: number }>([
       {
         $match: {
           group: groupId,
-          date: { $gte: sprintStartDate, $lte: sprintEndDate },
-          "author.name": { $nin: [null, ""] },
+          date: inWindow,
+          "author.login": { $nin: [null, ""] },
         },
       },
       {
         $group: {
-          _id: "$author.name",
-          // Pick any login we've stored for this name.
-          // Older docs without login show no avatar.
-          login: { $first: "$author.login" },
+          _id: { $ifNull: ["$author.login", "$author.name"] },
           count: { $sum: 1 },
         },
       },
-      { $project: { _id: 0, name: "$_id", login: 1, count: 1 } },
+      { $project: { _id: 0, name: "$_id", login: "$_id", count: 1 } },
     ]),
     PullRequest.aggregate<{ name: string; count: number }>([
       {
         $match: {
           group: groupId,
-          createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+          createdAt: inWindow,
           author: { $nin: [null, ""] },
         },
       },
       { $group: { _id: "$author", count: { $sum: 1 } } },
-      { $project: { _id: 0, name: "$_id", count: 1 } },
+      { $project: authorBucketProjection },
     ]),
     Issue.aggregate<{ name: string; count: number }>([
       {
         $match: {
           group: groupId,
-          createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+          createdAt: inWindow,
           author: { $nin: [null, ""] },
         },
       },
       { $group: { _id: "$author", count: { $sum: 1 } } },
-      { $project: { _id: 0, name: "$_id", count: 1 } },
+      { $project: authorBucketProjection },
     ]),
-    Commit.find({
-      group: groupId,
-      date: { $gte: sprintStartDate, $lte: sprintEndDate },
-    })
+    Commit.find({ group: groupId, date: inWindow })
       .select("author message date")
       .sort({ date: -1 })
       .limit(6)
       .lean(),
+    // Issues created and issues closed in the window are queried separately
+    // so a single issue can produce two timeline entries (one Created, one
+    // Closed) at their respective timestamps. Querying only by createdAt
+    // would drop the close event for issues opened before the sprint.
+    Issue.find({ group: groupId, createdAt: inWindow })
+      .select("number createdAt author")
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean(),
     Issue.find({
       group: groupId,
-      createdAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+      state: "CLOSED",
+      closedAt: { ...inWindow, $ne: null },
     })
-      .select("number state title createdAt author")
-      .sort({ createdAt: -1 })
+      .select("number closedAt author")
+      .sort({ closedAt: -1 })
       .limit(6)
       .lean(),
     PullRequest.find({
       group: groupId,
       state: "MERGED",
-      mergedAt: { $gte: sprintStartDate, $lte: sprintEndDate },
+      mergedAt: inWindow,
     })
       .select("number title mergedAt author")
       .sort({ mergedAt: -1 })
@@ -595,7 +410,8 @@ async function getPeriodActivityFromDb(
   ]);
 
   const timelineFromCommits: SprintActivity[] = recentCommits.map((commit) => {
-    const authorName = commit.author?.name?.trim() || "Unknown";
+    const authorName =
+      commit.author?.login?.trim() || commit.author?.name?.trim() || "Unknown";
     return {
       date: commit.date,
       text: `${authorName} pushed a commit`,
@@ -604,36 +420,45 @@ async function getPeriodActivityFromDb(
     };
   });
 
-  const timelineFromIssues: SprintActivity[] = recentIssues.map((issue) => ({
-    date: issue.createdAt,
-    text:
-      issue.state === "CLOSED"
-        ? `Closed Issue #${issue.number}`
-        : `Created Issue #${issue.number}`,
-    initials: "I",
-    avatarUrl: avatarUrlForLogin(issue.author),
-  }));
+  const timelineFromIssuesCreated: SprintActivity[] = issuesCreatedInWindow.map(
+    (issue) => ({
+      date: issue.createdAt,
+      text: `${issue.author || "Unknown"} created Issue #${issue.number}`,
+      initials: (issue.author || "U").slice(0, 1).toUpperCase(),
+      avatarUrl: avatarUrlForLogin(issue.author),
+    }),
+  );
+
+  const timelineFromIssuesClosed: SprintActivity[] = issuesClosedInWindow.map(
+    (issue) => ({
+      date: issue.closedAt,
+      text: `${issue.author || "Unknown"} closed Issue #${issue.number}`,
+      initials: (issue.author || "U").slice(0, 1).toUpperCase(),
+      avatarUrl: avatarUrlForLogin(issue.author),
+    }),
+  );
 
   const timelineFromPRs: SprintActivity[] = recentMergedPRs.map((pr) => ({
     date: pr.mergedAt,
-    text: `Merged PR #${pr.number}`,
-    initials: (pr.author || "P").slice(0, 1).toUpperCase(),
+    text: `${pr.author || "Unknown"} merged PR #${pr.number}`,
+    initials: (pr.author || "U").slice(0, 1).toUpperCase(),
     avatarUrl: avatarUrlForLogin(pr.author),
   }));
 
   const timeline = [
     ...timelineFromPRs,
-    ...timelineFromIssues,
+    ...timelineFromIssuesClosed,
+    ...timelineFromIssuesCreated,
     ...timelineFromCommits,
   ]
     .filter(
       (item) => item.date instanceof Date && !Number.isNaN(item.date.getTime()),
     )
     .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, 8);
+    .slice(0, 18);
 
   // Merge the three per-author buckets into one row using a case-insensitive
-  // key, so "Anna" (commit name) and "anna" (login) merge.
+  // GitHub login key whenever available.
   type DbContributorEntry = {
     name: string;
     login: string | null;
@@ -662,8 +487,8 @@ async function getPeriodActivityFromDb(
     if (!entry.login && login) entry.login = login;
     contributorMap.set(key, entry);
   };
-  // Commits carry author.login from sync; for PR/issue rows the bucket key
-  // is itself the login.
+  // Commits carry author.login from sync; for PR/issue rows the bucket key is
+  // already the GitHub login string.
   for (const b of commitAuthorBuckets)
     upsert(b.name, "commitCount", b.count, b.login ?? null);
   for (const b of prAuthorBuckets) upsert(b.name, "prCount", b.count, b.name);
@@ -770,35 +595,11 @@ export async function getCurrentSprintData(): Promise<{
     }
 
     const { sprint, sprintObjectId } = resolved;
-    const sessionWithToken = session as { accessToken?: string };
 
-    // Activity metrics are date-bucketed against the sprint window. Tasks come
-    // from SprintTask docs linked to this sprint via the iteration map.
+    // Period metrics scan Commit/Issue/PR by sprint window in parallel with
+    // the SprintTask query that drives the task list and breakdown.
     const [periodActivity, taskData] = await Promise.all([
-      (async () => {
-        if (sessionWithToken.accessToken && group.repoOwner && group.repoName) {
-          try {
-            return await getLivePeriodActivity(
-              sessionWithToken.accessToken,
-              group.repoOwner,
-              group.repoName,
-              sprint.startDate,
-              sprint.endDate,
-            );
-          } catch {
-            return getPeriodActivityFromDb(
-              group._id,
-              sprint.startDate,
-              sprint.endDate,
-            );
-          }
-        }
-        return getPeriodActivityFromDb(
-          group._id,
-          sprint.startDate,
-          sprint.endDate,
-        );
-      })(),
+      getPeriodActivityFromDb(group._id, sprint.startDate, sprint.endDate),
       loadSprintTasks(group._id, sprintObjectId),
     ]);
 

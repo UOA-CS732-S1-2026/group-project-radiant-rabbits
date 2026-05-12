@@ -34,7 +34,7 @@ export default function LandingHowItWorksSection({
               className={`group min-w-0 w-full ${LANDING_STEP_INNER_STACK} items-center text-center`}
             >
               <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-accent text-body-lg font-bold text-brand-dark shadow-sm transition duration-200 ease-out group-hover:scale-110 group-hover:bg-brand-primary group-hover:shadow-md motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-accent text-(length:--text-body-lg) font-bold text-brand-dark shadow-sm transition duration-200 ease-out group-hover:scale-110 group-hover:bg-brand-primary group-hover:shadow-md motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                 aria-hidden
               >
                 {index + 1}
@@ -42,7 +42,7 @@ export default function LandingHowItWorksSection({
               <h3 className="text-body-lg font-extrabold text-brand-dark sm:text-h3 sm:leading-snug">
                 {step.title}
               </h3>
-              <p className="w-full min-w-0 text-pretty text-body-sm font-semibold leading-relaxed text-brand-dark/85 sm:text-body-md">
+              <p className="w-full min-w-0 text-pretty text-(length:--text-body-sm) font-semibold leading-relaxed text-brand-dark/85">
                 {step.description}
               </p>
             </li>

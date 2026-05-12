@@ -9,16 +9,14 @@ export default function AppLogoMark({
   className = "h-16 w-16",
 }: AppLogoMarkProps) {
   return (
-    <div
-      className={`relative shrink-0 overflow-hidden rounded-xl bg-brand-dark ${className}`}
-      aria-hidden
-    >
+    <div className={`relative shrink-0 bg-brand-dark ${className}`} aria-hidden>
       <Image
-        src="/logo-options/radiant-rabbits-mark.png"
+        src="/logo-options/final_logo.png"
         alt=""
         fill
         className="object-cover"
         sizes="64px"
+        unoptimized
       />
     </div>
   );

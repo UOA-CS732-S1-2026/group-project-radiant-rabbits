@@ -140,7 +140,7 @@ export default function SprintReviewPreviewOverlay({
                   </div>
 
                   <div className="shrink-0 border-t border-brand-dark/10 bg-[#F1F5F9] px-4 py-4 sm:px-6">
-                    <p className="mx-auto max-w-[36rem] text-center text-body-sm leading-relaxed text-brand-dark/75">
+                    <p className="mx-auto max-w-[36rem] text-center text-(length:--text-body-sm) leading-relaxed text-brand-dark/75">
                       This sprint review is saved—you can open it anytime from{" "}
                       <Link
                         href="/past-sprints"

@@ -16,8 +16,8 @@ export default function FilterChip({
       onClick={onClick}
       className={
         active
-          ? "rounded-md bg-brand-surface px-sm py-xs text-body-xs font-medium text-brand-dark shadow-sm"
-          : "rounded-md px-sm py-xs text-body-xs text-brand-dark/70 transition hover:text-brand-dark"
+          ? "rounded-md bg-brand-surface px-sm py-xs text-(length:--text-body-xs) font-medium text-brand-dark shadow-sm"
+          : "rounded-md px-sm py-xs text-(length:--text-body-xs) text-brand-dark/70 transition hover:text-brand-dark"
       }
     >
       {label}
