@@ -225,7 +225,7 @@ function JoinCreateSwitchGroupContent() {
             </p>
           )}
           {isActionLoading && (
-            <p className="text-center text-brand-accent">
+            <p className="mb-4 text-center text-brand-accent">
               Processing your request...
             </p>
           )}
