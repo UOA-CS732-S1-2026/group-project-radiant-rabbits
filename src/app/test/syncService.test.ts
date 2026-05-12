@@ -315,6 +315,71 @@ describe("Upsert logic", () => {
     expect(tasks.find((t) => t.issueNumber === 6)?.status).toBe("IN_PROGRESS");
   });
 
+  it("should detach sprint tasks that are no longer returned by GitHub project sync", async () => {
+    const group = await createTestGroup();
+
+    mockFetchIterations.mockResolvedValue({
+      iterations: [
+        {
+          id: "iter_1",
+          title: "Sprint 1",
+          startDate: "2026-01-01",
+          duration: 14,
+        },
+      ],
+      iterationFieldConfigured: true,
+    });
+
+    mockFetchProjectTasks.mockResolvedValue([
+      {
+        title: "Carry task",
+        status: "IN_PROGRESS",
+        assignees: ["alice"],
+        issueNumber: 11,
+        iterationId: "iter_1",
+      },
+      {
+        title: "Will be removed",
+        status: "TODO",
+        assignees: ["bob"],
+        issueNumber: 12,
+        iterationId: "iter_1",
+      },
+    ]);
+
+    await syncGroup(group._id.toString(), "fake-token");
+
+    const sprint = await Sprint.findOne({
+      group: group._id,
+      iterationId: "iter_1",
+    });
+    expect(sprint).not.toBeNull();
+
+    mockFetchProjectTasks.mockResolvedValue([
+      {
+        title: "Carry task",
+        status: "DONE",
+        assignees: ["alice"],
+        issueNumber: 11,
+        iterationId: "iter_1",
+      },
+    ]);
+
+    await syncGroup(group._id.toString(), "fake-token");
+
+    const keptTask = await SprintTask.findOne({
+      group: group._id,
+      issueNumber: 11,
+    });
+    const removedTask = await SprintTask.findOne({
+      group: group._id,
+      issueNumber: 12,
+    });
+
+    expect(keptTask?.sprint?.toString()).toBe(sprint?._id.toString());
+    expect(removedTask?.sprint).toBeNull();
+  });
+
   it("should upsert sprints from iterations and link tasks via iterationId", async () => {
     const group = await createTestGroup();
 

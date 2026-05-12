@@ -378,6 +378,51 @@ async function upsertSprintTasks(
   if (operations.length > 0) {
     await SprintTask.bulkWrite(operations);
   }
+
+  // Clear stale sprint links for tasks no longer returned from GitHub Project items.
+  // This handles cases where a task is removed from an iteration/project:
+  // keep the task record for history, but detach it from the sprint so it no longer
+  // appears in sprint task lists.
+  const syncedIssueNumbers = new Set(
+    tasks
+      .map((task) => task.issueNumber)
+      .filter((num): num is number => typeof num === "number"),
+  );
+  const syncedDraftTitles = new Set(
+    tasks
+      .filter((task) => task.issueNumber === null)
+      .map((task) => task.title.trim().toLowerCase())
+      .filter((title) => title.length > 0),
+  );
+
+  const existingLinkedTasks = await SprintTask.find({
+    group: groupId,
+    sprint: { $ne: null },
+  })
+    .select("_id issueNumber title")
+    .lean<
+      Array<{
+        _id: mongoose.Types.ObjectId;
+        issueNumber: number | null;
+        title: string;
+      }>
+    >();
+
+  const staleTaskIds = existingLinkedTasks
+    .filter((task) => {
+      if (typeof task.issueNumber === "number") {
+        return !syncedIssueNumbers.has(task.issueNumber);
+      }
+      return !syncedDraftTitles.has((task.title || "").trim().toLowerCase());
+    })
+    .map((task) => task._id);
+
+  if (staleTaskIds.length > 0) {
+    await SprintTask.updateMany(
+      { _id: { $in: staleTaskIds } },
+      { $set: { sprint: null } },
+    );
+  }
 }
 
 // Upsert sprints from GitHub iterations. Returns a map of iterationId -> Sprint._id

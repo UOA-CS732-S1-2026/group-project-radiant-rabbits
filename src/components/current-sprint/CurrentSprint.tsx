@@ -305,6 +305,7 @@ export default function CurrentSprint({
   const proceedFromWelcomeToGithubTickets = useCallback(
     async (sprintFocus: string) => {
       if (!groupId || !sprint) return;
+      let shouldOpenTicketsOverlay = false;
 
       try {
         setIsSprintHandoffSubmitting(true);
@@ -387,6 +388,7 @@ export default function CurrentSprint({
             console.error("Failed to fetch next sprint tasks");
             setNextSprintTasks([]);
           }
+          shouldOpenTicketsOverlay = true;
         }
       } catch (err) {
         setNextSprintWelcomeOpen(false);
@@ -398,7 +400,9 @@ export default function CurrentSprint({
       } finally {
         setIsSprintHandoffSubmitting(false);
         setNextSprintWelcomeOpen(false);
-        setGithubTicketsOverlayOpen(true);
+        if (shouldOpenTicketsOverlay) {
+          setGithubTicketsOverlayOpen(true);
+        }
       }
     },
     [groupId, sprint],
