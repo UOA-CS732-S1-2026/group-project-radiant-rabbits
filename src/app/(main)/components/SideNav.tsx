@@ -1,9 +1,18 @@
 "use client";
 
-import { Clock, History, Home, LogOut, Settings, Users } from "lucide-react";
+import {
+  Clock,
+  History,
+  Home,
+  Loader2,
+  LogOut,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useState } from "react";
 import AppLogoMark from "@/components/landing-page/AppLogoMark";
 import SprintHubTitle from "@/components/shared/SprintHubTitle";
 
@@ -24,6 +33,13 @@ const bottomItems = [
 
 export default function SideNav() {
   const pathname = usePathname();
+
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    await signOut({ callbackUrl: "/" });
+  };
 
   const dashboardReturnTarget =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/")
@@ -100,11 +116,17 @@ export default function SideNav() {
           {/* Logout */}
           <button
             type="button"
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-md) text-brand-dark transition hover:bg-brand-accent/10"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            aria-disabled={isSigningOut}
+            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10 disabled:opacity-60"
           >
-            <LogOut size={18} />
-            Log out
+            {isSigningOut ? (
+              <Loader2 size={18} className="animate-spin" aria-hidden />
+            ) : (
+              <LogOut size={18} aria-hidden />
+            )}
+            {isSigningOut ? "Signing out…" : "Log out"}
           </button>
         </div>
       </div>
