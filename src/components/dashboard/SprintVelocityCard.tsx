@@ -8,6 +8,8 @@ type SprintForDashboard = {
 
 type SprintVelocityCardProps = {
   sprints?: SprintForDashboard[];
+  // null before first sync, false if no iteration field, true if set up.
+  iterationFieldConfigured?: boolean | null;
   // ISO date of the next iteration's start. Only set when iterations exist
   // but none cover today.
   nextSprintStart?: string | null;
@@ -143,6 +145,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
 // Component for the sprint velocity card (chart + heading + empty states)
 export default function SprintVelocityCard({
   sprints,
+  iterationFieldConfigured,
   nextSprintStart,
 }: SprintVelocityCardProps) {
   const velocitySeries: MiniSeriesPoint[] =

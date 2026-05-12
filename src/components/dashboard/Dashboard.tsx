@@ -155,6 +155,7 @@ export default function Dashboard({
           <div className="grid gap-lg lg:grid-cols-[6fr_4fr]">
             <SprintVelocityCard
               sprints={sprints}
+              iterationFieldConfigured={iterationFieldConfigured}
               nextSprintStart={nextSprintStart}
             />
             <ContributionBreakdownCard contributors={repoContributors ?? []} />
