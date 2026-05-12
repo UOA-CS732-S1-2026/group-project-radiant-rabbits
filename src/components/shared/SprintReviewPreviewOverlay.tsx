@@ -86,28 +86,28 @@ export default function SprintReviewPreviewOverlay({
                       <p className="text-body-md font-medium text-brand-dark/85">
                         Sprint · placeholder name
                       </p>
-                      <p className="mt-1 text-body-md text-brand-dark/60">
+                      <p className="mt-1 text-(length:--text-body-md) text-brand-dark/60">
                         1 Mar – 14 Mar 2026 (hardcoded)
                       </p>
 
-                      <h3 className="mt-8 text-body-lg font-semibold text-brand-dark">
+                      <h3 className="mt-8 text-(length:--text-body-lg) font-semibold text-brand-dark">
                         Highlights
                       </h3>
-                      <ul className="mt-3 list-outside list-disc space-y-2 pl-5 text-body-md leading-relaxed text-brand-dark/90 sm:pl-6">
+                      <ul className="mt-3 list-outside list-disc space-y-2 pl-5 text-(length:--text-body-md) leading-relaxed text-brand-dark/90 sm:pl-6">
                         <li>Shipped GitHub sync improvements (placeholder).</li>
                         <li>Closed 12 issues on the board (placeholder).</li>
                         <li>3 contributors above 10 commits (placeholder).</li>
                       </ul>
 
-                      <h3 className="mt-8 text-body-lg font-semibold text-brand-dark">
+                      <h3 className="mt-8 text-(length:--text-body-lg) font-semibold text-brand-dark">
                         Risks & next sprint
                       </h3>
-                      <p className="mt-3 max-w-[52rem] text-body-md leading-relaxed text-brand-dark/90">
+                      <p className="mt-3 max-w-[52rem] text-(length:--text-body-md) leading-relaxed text-brand-dark/90">
                         Plan auth hardening and milestone GraphQL follow-ups
                         (placeholder copy until generation runs for real).
                       </p>
 
-                      <p className="mt-10 text-body-sm italic text-brand-dark/45">
+                      <p className="mt-10 text-(length:--text-body-sm) italic text-brand-dark/45">
                         Preview only — replace with API output when sprint
                         review generation is implemented.
                       </p>
@@ -115,7 +115,7 @@ export default function SprintReviewPreviewOverlay({
                   </div>
 
                   <div className="shrink-0 border-t border-brand-dark/10 bg-[#F1F5F9] px-4 py-4 sm:px-6">
-                    <p className="mx-auto max-w-[36rem] text-center text-body-sm leading-relaxed text-brand-dark/75">
+                    <p className="mx-auto max-w-[36rem] text-center text-(length:--text-body-sm) leading-relaxed text-brand-dark/75">
                       This sprint review is saved—you can open it anytime from{" "}
                       <Link
                         href="/past-sprints"

@@ -49,7 +49,7 @@ export default function Input({
         min={min}
         max={max}
         readOnly={readOnly}
-        className={`rounded-xl border border-brand-accent bg-brand-surface px-md py-md text-body-sm text-brand-dark outline-none focus:ring-2 focus:ring-brand-primary ${className}`}
+        className={`rounded-xl border border-brand-accent bg-brand-surface px-md py-md text-(length:--text-body-sm) text-brand-dark outline-none focus:ring-2 focus:ring-brand-primary ${className}`}
       />
     </div>
   );

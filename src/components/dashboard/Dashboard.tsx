@@ -59,10 +59,12 @@ function StatusBlock({ message }: { message: string }) {
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <h2 className="text-h3 font-bold text-brand-dark">
+          <h2 className="text-(length:--text-h3) font-bold text-brand-dark">
             Project Overview
           </h2>
-          <p className="mt-sm text-body-sm text-brand-dark/70">{message}</p>
+          <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
+            {message}
+          </p>
         </div>
       </PageContainer>
     </div>

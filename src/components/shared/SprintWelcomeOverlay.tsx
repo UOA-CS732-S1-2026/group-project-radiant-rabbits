@@ -76,7 +76,7 @@ export default function SprintWelcomeOverlay({
                   >
                     {title}
                   </h2>
-                  <p className="mx-auto mt-3 max-w-[22rem] text-body-md leading-relaxed text-brand-dark/90 md:max-w-none">
+                  <p className="mx-auto mt-3 max-w-[22rem] text-(length:--text-body-md) leading-relaxed text-brand-dark/90 md:max-w-none">
                     {description}
                   </p>
                   <div className="mx-auto mt-5 w-full max-w-[22rem] text-left md:max-w-none">
@@ -93,7 +93,7 @@ export default function SprintWelcomeOverlay({
                       onChange={(e) => setSprintFocus(e.target.value)}
                       placeholder="e.g. Ship the GitHub sync MVP and stabilize CI"
                       disabled={isContinuing}
-                      className="mt-1 min-h-[5.5rem] w-full resize-y rounded-xl border border-brand-accent bg-brand-surface px-md py-md text-body-sm text-brand-dark outline-none placeholder:text-brand-dark/40 focus:ring-2 focus:ring-brand-primary disabled:opacity-60"
+                      className="mt-1 min-h-[5.5rem] w-full resize-y rounded-xl border border-brand-accent bg-brand-surface px-md py-md text-(length:--text-body-sm) text-brand-dark outline-none placeholder:text-brand-dark/40 focus:ring-2 focus:ring-brand-primary disabled:opacity-60"
                     />
                   </div>
                   <div className="mt-6 flex justify-center">

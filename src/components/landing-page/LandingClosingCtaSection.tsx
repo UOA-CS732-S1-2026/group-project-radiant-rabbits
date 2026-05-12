@@ -15,17 +15,21 @@ export default function LandingClosingCtaSection({
       aria-labelledby="landing-closing-cta-heading"
     >
       <div className="mx-auto w-full min-w-0 max-w-6xl">
-        <article className="flex w-full min-w-0 flex-col rounded-xl border border-white/10 bg-brand-dark px-5 py-6 text-center shadow-md sm:rounded-2xl sm:px-6 sm:py-7">
+        <article className="flex w-full min-w-0 flex-col rounded-xl border border-brand-border bg-brand-border/15 px-5 py-6 text-center shadow-md sm:rounded-2xl sm:px-6 sm:py-7">
           <div
-            className="mx-auto h-2.5 w-14 shrink-0 rounded-md bg-brand-primary shadow-sm sm:h-3 sm:w-16"
+            className="mx-auto h-2.5 w-14 shrink-0 rounded-md bg-brand-accent shadow-sm sm:h-3 sm:w-16"
             aria-hidden
           />
           <h2
             id="landing-closing-cta-heading"
-            className="mt-3 w-full min-w-0 text-balance text-body-lg font-bold leading-snug text-white sm:mt-3.5 sm:text-h3"
+            className="mt-3 w-full min-w-0 text-balance text-(length:--text-body-lg) font-bold leading-snug text-black sm:mt-3.5 sm:text-h3"
           >
             Ready for sprint reviews tied to GitHub iterations?
           </h2>
+          <p className="mt-2 w-full min-w-0 text-pretty text-(length:--text-body-md) font-normal leading-snug text-black sm:mt-2.5 sm:leading-snug">
+            Sign in with GitHub, connect a repo, and pull your sprint story
+            together in minutes.
+          </p>
           <div className="mt-5 flex w-full min-w-0 justify-center sm:mt-6">
             <SignInButton
               className={LANDING_SIGN_IN_BUTTON_OUTLINE_ON_DARK_CLASS}

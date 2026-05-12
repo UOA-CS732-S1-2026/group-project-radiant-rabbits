@@ -285,10 +285,10 @@ function JoinCreateSwitchGroupContent() {
                       }`}
                     >
                       <div className="flex flex-col items-center gap-1 text-center sm:gap-1.5">
-                        <p className="text-body-md font-semibold leading-snug text-brand-dark sm:text-body-lg">
+                        <p className="text-(length:--text-body-md) font-semibold leading-snug text-brand-dark">
                           {card.name}
                         </p>
-                        <p className="text-body-sm leading-snug text-[#7A7A7A] sm:text-body-md">
+                        <p className="text-(length:--text-body-sm) leading-snug text-[#7A7A7A]">
                           {card.repoOwner}
                         </p>
                         {tab === "current" && card.active === false ? (
@@ -313,7 +313,7 @@ export default function JoinCreateSwitchGroupPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-dvh items-center justify-center bg-brand-background px-5 text-body-md text-brand-dark/70">
+        <div className="flex h-dvh items-center justify-center bg-brand-background px-5 text-(length:--text-body-md) text-brand-dark/70">
           Loading…
         </div>
       }

@@ -394,10 +394,10 @@ export default function SummaryPage() {
         <div className="space-y-lg">
           <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
             <div>
-              <h1 className="text-h2 font-bold text-brand-dark">
+              <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 Sprint Review Summary
               </h1>
-              <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
                 {selectedSprint?.name ?? "No sprint selected"}
               </p>
             </div>
@@ -419,11 +419,11 @@ export default function SummaryPage() {
 
           <section>
             <div className="flex flex-col gap-xs">
-              <h2 className="text-body-lg font-semibold text-brand-dark">
+              <h2 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
                 Generated Sprint Review
               </h2>
 
-              <p className="text-body-sm text-brand-dark/60">
+              <p className="text-(length:--text-body-sm) text-brand-dark/60">
                 {selectedGroup?.name ?? "No group selected"}
                 {selectedGroup?.repoOwner
                   ? ` (${selectedGroup.repoOwner})`
@@ -433,7 +433,7 @@ export default function SummaryPage() {
                   : ""}
               </p>
 
-              <p className="text-body-xs text-brand-dark/60">
+              <p className="text-(length:--text-body-xs) text-brand-dark/60">
                 Last generated: {formatGeneratedAt(reviewMeta.generatedAt)}
                 {reviewMeta.provider
                   ? ` • Provider: ${reviewMeta.provider}`
@@ -444,21 +444,23 @@ export default function SummaryPage() {
 
             <div className="mt-md border-t border-brand-dark/10 pt-md">
               {isLoadingGroups || isLoadingSprints || isLoadingReview ? (
-                <p className="text-body-md text-brand-dark/70">
+                <p className="text-(length:--text-body-md) text-brand-dark/70">
                   Loading review...
                 </p>
               ) : isGenerating ? (
-                <p className="text-body-md text-brand-dark/70">
+                <p className="text-(length:--text-body-md) text-brand-dark/70">
                   Generating sprint review...
                 </p>
               ) : errorMessage ? (
-                <p className="text-body-md text-red-700">{errorMessage}</p>
+                <p className="text-(length:--text-body-md) text-red-700">
+                  {errorMessage}
+                </p>
               ) : review ? (
-                <pre className="whitespace-pre-wrap font-sans text-body-sm text-brand-dark/70">
+                <pre className="whitespace-pre-wrap font-sans text-(length:--text-body-sm) text-brand-dark/70">
                   {review}
                 </pre>
               ) : (
-                <p className="text-body-md text-brand-dark/70">
+                <p className="text-(length:--text-body-md) text-brand-dark/70">
                   No sprint review has been generated yet for this sprint.
                 </p>
               )}

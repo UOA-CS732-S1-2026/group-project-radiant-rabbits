@@ -14,7 +14,9 @@ export default function GroupPage() {
 
       <section className="grid gap-lg md:grid-cols-2">
         <Card>
-          <h2 className="mb-md text-h3 text-brand-dark">Create Group</h2>
+          <h2 className="mb-md text-(length:--text-h3) text-brand-dark">
+            Create Group
+          </h2>
           <form className="space-y-md">
             <Input
               id="group-name"
@@ -31,7 +33,9 @@ export default function GroupPage() {
         </Card>
 
         <Card>
-          <h2 className="mb-md text-h3 text-brand-dark">Join Group</h2>
+          <h2 className="mb-md text-(length:--text-h3) text-brand-dark">
+            Join Group
+          </h2>
           <form className="space-y-md">
             <Input
               id="invite-code"

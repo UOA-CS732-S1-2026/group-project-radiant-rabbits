@@ -179,13 +179,15 @@ async function upsertPullRequests(
         $set: {
           title: pr.title,
           state: pr.state,
-          createdAt: new Date(pr.createdAt),
           closedAt: pr.closedAt ? new Date(pr.closedAt) : null,
           mergedAt: pr.mergedAt ? new Date(pr.mergedAt) : null,
           author: pr.author,
           group: groupId,
         },
-        $setOnInsert: { number: pr.number },
+        $setOnInsert: {
+          number: pr.number,
+          createdAt: new Date(pr.createdAt),
+        },
       },
       upsert: true,
     },
@@ -207,12 +209,14 @@ async function upsertIssues(
         $set: {
           title: issue.title,
           state: issue.state,
-          createdAt: new Date(issue.createdAt),
           closedAt: issue.closedAt ? new Date(issue.closedAt) : null,
           author: issue.author,
           group: groupId,
         },
-        $setOnInsert: { number: issue.number },
+        $setOnInsert: {
+          number: issue.number,
+          createdAt: new Date(issue.createdAt),
+        },
       },
       upsert: true,
     },
@@ -223,19 +227,83 @@ async function upsertIssues(
   }
 }
 
-// Extracts unique contributors from commit authors
+// Extracts unique contributors from commit authors.
+// Matches commit authors against group members to canonicalize identities:
+// if commit author.name/login matches a group member, use their githubId as the key
+// so commits from "emily", "Emily Chen", "emily.chen" (same person) are merged.
 async function upsertContributors(
   groupId: string,
   commits: Awaited<ReturnType<typeof fetchCommits>>,
 ) {
-  // Deduplicate by login or email - a person may have many commits
+  // Load group members to match commit authors against known identities
+  const group = await Group.findById(groupId)
+    .populate("members", "githubId login name email")
+    .lean<{
+      members?: Array<{
+        githubId: string;
+        login: string;
+        name: string;
+        email: string;
+      }>;
+    }>();
+
+  if (!group) {
+    console.warn(`Group ${groupId} not found for contributor sync`);
+    return;
+  }
+
+  // Build a map of (name, login, email) → User.githubId for case-insensitive matching
+  const membersByIdentifier = new Map<string, string>(); // identifier (lowercase) → githubId
+  for (const member of group.members || []) {
+    if (member.githubId) {
+      membersByIdentifier.set(member.githubId.toLowerCase(), member.githubId);
+    }
+    if (member.login) {
+      membersByIdentifier.set(member.login.toLowerCase(), member.githubId);
+    }
+    if (member.name) {
+      membersByIdentifier.set(member.name.toLowerCase(), member.githubId);
+    }
+    if (member.email) {
+      membersByIdentifier.set(member.email.toLowerCase(), member.githubId);
+    }
+  }
+
+  // Deduplicate by canonical key: match against group members first, then fall back to raw author fields
   const seen = new Map<string, (typeof commits)[0]>();
   for (const commit of commits) {
-    const key = commit.author.login || commit.author.email;
-    if (!key) continue;
+    let canonicalKey = "";
+
+    // Try to match commit author against group members (case-insensitive)
+    if (
+      commit.author.login &&
+      membersByIdentifier.has(commit.author.login.toLowerCase())
+    ) {
+      canonicalKey =
+        membersByIdentifier.get(commit.author.login.toLowerCase()) || "";
+    } else if (
+      commit.author.name &&
+      membersByIdentifier.has(commit.author.name.toLowerCase())
+    ) {
+      canonicalKey =
+        membersByIdentifier.get(commit.author.name.toLowerCase()) || "";
+    } else if (
+      commit.author.email &&
+      membersByIdentifier.has(commit.author.email.toLowerCase())
+    ) {
+      canonicalKey =
+        membersByIdentifier.get(commit.author.email.toLowerCase()) || "";
+    } else {
+      // Not a group member; use original fallback (prefer login, then name, then email)
+      canonicalKey =
+        commit.author.login || commit.author.name || commit.author.email;
+    }
+
+    if (!canonicalKey) continue;
+
     // Keep the most recent commit's author info (commits are newest-first)
-    if (!seen.has(key)) {
-      seen.set(key, commit);
+    if (!seen.has(canonicalKey)) {
+      seen.set(canonicalKey, commit);
     }
   }
 

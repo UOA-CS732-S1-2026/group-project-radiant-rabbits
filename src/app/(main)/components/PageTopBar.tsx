@@ -43,7 +43,7 @@ export default function PageTopBar({
     <header className="border-b border-brand-dark/10 bg-brand-surface">
       <div className="flex items-center justify-between px-lg py-sm">
         {/* Left: group name / current tab*/}
-        <h1 className="flex items-baseline gap-xs text-body-lg font-semibold">
+        <h1 className="flex items-baseline gap-xs text-(length:--text-body-lg) font-semibold">
           <span className="text-brand-dark/50">{repoName}</span>
           {pageLabel ? (
             <>
@@ -68,7 +68,7 @@ export default function PageTopBar({
               className="h-10 w-10 rounded-xl object-cover shadow-md"
             />
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-accent/60 text-body-sm font-medium text-brand-dark shadow-md">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-accent/60 text-(length:--text-body-sm) font-medium text-brand-dark shadow-md">
               {fallbackInitial}
             </div>
           )}

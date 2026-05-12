@@ -1,49 +1,44 @@
 import mongoose, { Schema } from "mongoose";
 
-const pullRequestSchema = new Schema(
-  {
-    number: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    state: {
-      type: String,
-      enum: ["OPEN", "CLOSED", "MERGED"],
-      required: true,
-    },
-    createdAt: {
-      type: Date,
-      required: true,
-    },
-    closedAt: {
-      type: Date,
-      default: null,
-    },
-    mergedAt: {
-      type: Date,
-      default: null,
-    },
-    author: {
-      type: String,
-      default: "unknown",
-      trim: true,
-    },
-    group: {
-      type: Schema.Types.ObjectId,
-      ref: "Group",
-      required: true,
-    },
+const pullRequestSchema = new Schema({
+  number: {
+    type: Number,
+    required: true,
+    min: 1,
   },
-  {
-    timestamps: true,
+  title: {
+    type: String,
+    required: true,
+    trim: true,
   },
-);
+  state: {
+    type: String,
+    enum: ["OPEN", "CLOSED", "MERGED"],
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    required: true,
+  },
+  closedAt: {
+    type: Date,
+    default: null,
+  },
+  mergedAt: {
+    type: Date,
+    default: null,
+  },
+  author: {
+    type: String,
+    default: "unknown",
+    trim: true,
+  },
+  group: {
+    type: Schema.Types.ObjectId,
+    ref: "Group",
+    required: true,
+  },
+});
 
 // Use a compound unique index so the same issue number can exist in different groups/repos without duplication
 pullRequestSchema.index({ number: 1, group: 1 }, { unique: true });

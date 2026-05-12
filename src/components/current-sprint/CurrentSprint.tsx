@@ -124,6 +124,19 @@ function formatShortDate(value: string | Date) {
   });
 }
 
+// Helper function to compute the status message for the sprint
+function StatusBlock({ message }: { message: string }) {
+  return (
+    <div className="min-h-full bg-brand-background">
+      <PageContainer>
+        <p className="text-(length:--text-body-md) text-brand-dark/70">
+          {message}
+        </p>
+      </PageContainer>
+    </div>
+  );
+}
+
 // Page component that shows when the current sprint is loading or if it has an error
 export default function CurrentSprint({
   status,
@@ -263,16 +276,18 @@ export default function CurrentSprint({
       <PageContainer>
         <div className="space-y-lg">
           {refreshError ? (
-            <p className="text-body-md text-brand-todo">{refreshError}</p>
+            <p className="text-(length:--text-body-md) text-brand-todo">
+              {refreshError}
+            </p>
           ) : null}
 
           {/* Header: sprint title + help + refresh */}
           <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
             <div>
-              <h1 className="text-h2 font-bold text-brand-dark">
+              <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 {sprint.name}
               </h1>
-              <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
                 {formatShortDate(sprint.startDate)} —{" "}
                 {formatShortDate(sprint.endDate)} ·{" "}
                 {sprint.progress.remainingDays} days remaining
@@ -342,12 +357,16 @@ export default function CurrentSprint({
           />
 
           {/* Tasks and Contributions */}
-          <div className="grid min-w-0 gap-lg lg:grid-cols-[1.4fr_1fr]">
-            <div className="min-w-0">
+          <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
+            <div className="min-w-0 h-full">
               <SprintTaskSection tasks={sprintTasks} />
             </div>
-            <div className="min-w-0">
-              <ContributionCard contributors={contributors} />
+            <div className="min-w-0 h-full">
+              <ContributionCard
+                contributors={contributors}
+                groupId={groupId}
+                sprintId={sprint.id}
+              />
             </div>
           </div>
 

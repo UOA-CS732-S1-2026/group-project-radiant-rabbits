@@ -41,7 +41,7 @@ const commitSchema = new Schema(
 // The sync path already matches on { sha, group }, so the index must use the same compound key
 commitSchema.index({ sha: 1, group: 1 }, { unique: true });
 commitSchema.index({ group: 1, date: 1 });
-commitSchema.index({ group: 1, "author.name": 1 });
+commitSchema.index({ group: 1, "author.login": 1 });
 
 export const Commit =
   mongoose.models.Commit || mongoose.model("Commit", commitSchema);

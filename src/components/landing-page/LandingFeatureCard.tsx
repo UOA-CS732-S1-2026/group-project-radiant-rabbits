@@ -27,7 +27,7 @@ export default function LandingFeatureCard({
         style={{ backgroundColor: accentColor }}
         aria-hidden
       />
-      <h3 className="mt-3 text-body-lg font-bold leading-snug text-white sm:mt-3.5 sm:text-h3">
+      <h3 className="mt-3 text-(length:--text-body-md) font-bold leading-snug text-white sm:mt-3.5 sm:text-h3">
         {title}
       </h3>
       <div
