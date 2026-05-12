@@ -424,8 +424,7 @@ export default function CurrentSprint({
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(
-            `Sprint ${sprint.number + 1} not found after sync. Please check that your project has future iterations in GitHub Projects and is in the 'Planning' status.
-             If this is the end of your project, you may archive the project here.`,
+            `Sprint ${sprint.number + 1} not found after sync. Please check that the iteration exists and is in the 'Planning' status.`,
           );
         } else {
           throw new Error("Transition failed");
@@ -664,10 +663,10 @@ export default function CurrentSprint({
       />
       <ConfirmOverlay
         open={handoffErrorOpen}
-        title="Sprint Transition Failed"
+        title="Handoff Failed"
         description={handoffErrorMessage}
-        confirmLabel="Archive Project"
-        cancelLabel="Back to Group Settings"
+        confirmLabel="Group Settings"
+        cancelLabel="Close"
         onConfirm={() => {
           setHandoffErrorOpen(false);
           router.push("/join-create-switch-group");
