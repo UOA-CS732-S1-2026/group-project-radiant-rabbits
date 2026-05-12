@@ -30,6 +30,7 @@ function formatDateLabel(value: string) {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

@@ -33,7 +33,7 @@ function formatDateRange(startDate: string, endDate: string): string {
     return "Unknown sprint dates";
   }
 
-  return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+  return `${start.toLocaleDateString(undefined, { timeZone: "UTC" })} - ${end.toLocaleDateString(undefined, { timeZone: "UTC" })}`;
 }
 
 function formatGeneratedAt(value: string | null): string {

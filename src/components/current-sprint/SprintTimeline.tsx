@@ -17,7 +17,11 @@ type SprintTimelineProps = {
 export default function SprintTimeline({ sprint }: SprintTimelineProps) {
   const formatDate = (date: string | Date) => {
     const d = new Date(date);
-    return d.toLocaleDateString("en-NZ", { month: "short", day: "numeric" });
+    return d.toLocaleDateString("en-NZ", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
   };
 
   return (

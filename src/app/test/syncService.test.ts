@@ -373,6 +373,8 @@ describe("Upsert logic", () => {
     expect(past?.status).toBe("COMPLETED");
     expect(past?.isCurrent).toBe(false);
     expect(past?.name).toBe("Sprint 1");
+    // GitHub iteration duration is inclusive: Jan 1 + 14 days => Jan 14 end date.
+    expect(past?.endDate?.toISOString()).toBe("2026-01-14T23:59:59.999Z");
 
     const future = sprints.find((s) => s.iterationId === "iter_future");
     expect(future?.status).toBe("PLANNING");

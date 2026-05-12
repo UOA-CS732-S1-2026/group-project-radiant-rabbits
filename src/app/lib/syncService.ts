@@ -384,8 +384,11 @@ async function upsertSprintTasks(
 // so callers can link related records (e.g. SprintTask.sprint).
 //
 // Sprint dates: each iteration has a startDate and a duration (in days).
-// We store endDate as the last millisecond of the final day so range queries
-// using $lte include activity from any time on the last day of the sprint.
+// GitHub duration counts calendar days inclusively, so:
+//   - duration 1 => start and end on the same date
+//   - duration 2 => end on the next date
+// We still store endDate as the last millisecond of the final day so range
+// queries using $lte include activity from any time on that day.
 //
 // Sprints that exist locally but no longer appear in GitHub iterations are left
 // untouched so historical data is preserved when an iteration gets deleted.
@@ -397,16 +400,49 @@ async function upsertSprints(
     return new Map();
   }
 
+  const existingSprints = await Sprint.find({
+    group: groupId,
+    iterationId: { $in: iterations.map((iter) => iter.id) },
+  })
+    .select("iterationId status isCurrent")
+    .lean<
+      Array<{
+        iterationId?: string | null;
+        status?: "PLANNING" | "ACTIVE" | "COMPLETED";
+        isCurrent?: boolean;
+      }>
+    >();
+  const existingByIterationId = new Map(
+    existingSprints
+      .filter((s) => typeof s.iterationId === "string" && s.iterationId)
+      .map((s) => [s.iterationId as string, s]),
+  );
+
   const now = Date.now();
   const operations = iterations.map((iter) => {
     const startDate = new Date(`${iter.startDate}T00:00:00.000Z`);
     const endDate = new Date(
-      startDate.getTime() + iter.duration * 24 * 60 * 60 * 1000 - 1,
+      startDate.getTime() + (iter.duration - 1) * 24 * 60 * 60 * 1000,
     );
+    endDate.setUTCHours(23, 59, 59, 999);
 
+    const existing = existingByIterationId.get(iter.id);
     let status: "PLANNING" | "ACTIVE" | "COMPLETED";
     let isCurrent: boolean;
-    if (now < startDate.getTime()) {
+    // Preserve manual "finish sprint" transitions across sync:
+    // - keep explicitly completed sprints completed
+    // - keep the manually activated current sprint active while within its window
+    if (existing?.status === "COMPLETED") {
+      status = "COMPLETED";
+      isCurrent = false;
+    } else if (
+      existing?.status === "ACTIVE" &&
+      existing?.isCurrent &&
+      now <= endDate.getTime()
+    ) {
+      status = "ACTIVE";
+      isCurrent = true;
+    } else if (now < startDate.getTime()) {
       status = "PLANNING";
       isCurrent = false;
     } else if (now <= endDate.getTime()) {

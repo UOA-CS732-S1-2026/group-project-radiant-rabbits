@@ -22,6 +22,7 @@ function formatDate(value: Date) {
   return value.toLocaleDateString("en-NZ", {
     day: "numeric",
     month: "short",
+    timeZone: "UTC",
   });
 }
 

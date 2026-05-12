@@ -360,9 +360,11 @@ const PROJECT_TASKS_QUERY = `
                   name
                 }
               }
-              iteration: fieldValueByName(name: "Sprint") {
-                ... on ProjectV2ItemFieldIterationValue {
-                  iterationId
+              fieldValues(first: 30) {
+                nodes {
+                  ... on ProjectV2ItemFieldIterationValue {
+                    iterationId
+                  }
                 }
               }
               content {
@@ -450,7 +452,9 @@ export async function fetchProjectTasks(
               assignees?: { nodes: Array<{ login: string }> };
             } | null;
             status: { name: string } | null;
-            iteration: { iterationId: string } | null;
+            fieldValues?: {
+              nodes?: Array<{ iterationId?: string | null } | null>;
+            } | null;
           }>;
           pageInfo: { hasNextPage: boolean; endCursor: string | null };
         };
@@ -482,7 +486,13 @@ export async function fetchProjectTasks(
 
           // Read the "Status" column value - defaults to "Todo" if not set
           const statusName = item.status?.name || "Todo";
-          const iterationId = item.iteration?.iterationId ?? null;
+          const iterationId =
+            item.fieldValues?.nodes?.find(
+              (value) =>
+                value &&
+                typeof value.iterationId === "string" &&
+                value.iterationId.length > 0,
+            )?.iterationId ?? null;
 
           tasks.push({
             title: content.title || "Untitled",

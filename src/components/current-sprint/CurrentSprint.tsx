@@ -136,6 +136,16 @@ function formatShortDate(value: string | Date) {
   });
 }
 
+function formatSprintDate(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-NZ", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+}
+
 // Helper function to compute the status message for the sprint
 function StatusBlock({ message }: { message: string }) {
   return (
@@ -308,25 +318,32 @@ export default function CurrentSprint({
         const sprintList = await sprintsResponse.json();
         const sprints = Array.isArray(sprintList) ? sprintList : [];
 
-        // Find the next sprint by name pattern
-        const nextSprintNumber = sprint.number + 1;
-        const targetName = `sprint${nextSprintNumber}`;
-
-        const nextSprint = sprints.find(
-          (s: { name?: string; _id?: string }) => {
-            if (!s.name) return false;
-
-            const normalizedDbName = s.name.replace(/\s/g, "").toLowerCase();
-
-            return normalizedDbName === targetName;
-          },
-        );
+        // Find the next planning sprint by startDate instead of name matching.
+        // GitHub iteration titles are user-defined and not guaranteed to be
+        // "Sprint N".
+        const currentStartMs = new Date(sprint.startDate).getTime();
+        const nextSprint = sprints
+          .filter(
+            (s: {
+              _id?: string;
+              startDate?: string;
+              status?: "PLANNING" | "ACTIVE" | "COMPLETED";
+            }) =>
+              Boolean(s._id) &&
+              s.status === "PLANNING" &&
+              typeof s.startDate === "string" &&
+              new Date(s.startDate).getTime() > currentStartMs,
+          )
+          .sort(
+            (a: { startDate: string }, b: { startDate: string }) =>
+              new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          )[0];
 
         if (!nextSprint || !nextSprint._id) {
           setNextSprintWelcomeOpen(false);
           setNextSprintTasks([]);
           setHandoffErrorMessage(
-            `Sprint ${nextSprintNumber} was not found. Please ensure it exists in your GitHub Project and sync your group.`,
+            "No next planning sprint was found. Please ensure the next iteration exists in your GitHub Project and sync your group.",
           );
           setHandoffErrorOpen(true);
           return;
@@ -397,7 +414,6 @@ export default function CurrentSprint({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currentSprintId: sprint.id,
-          nextSprintNumber: sprint.number + 1,
         }),
       });
       return res;
@@ -424,7 +440,7 @@ export default function CurrentSprint({
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(
-            `Sprint ${sprint.number + 1} not found after sync. Please check that the iteration exists in your GitHub Projects and is in the 'Planning' status.
+            `Next planning sprint not found after sync. Please check that the next iteration exists in your GitHub Projects and is in the 'Planning' status.
             If this project has ended, you may archive the group.`,
           );
         } else {
@@ -451,10 +467,19 @@ export default function CurrentSprint({
 
     const now = new Date();
     const end = new Date(sprint.endDate);
+    const nowUtcDay = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+    );
+    const endUtcDay = Date.UTC(
+      end.getUTCFullYear(),
+      end.getUTCMonth(),
+      end.getUTCDate(),
+    );
+    const eligibleFromUtcDay = endUtcDay - 24 * 60 * 60 * 1000;
 
-    const windowStart = new Date(end.getTime() - 24 * 60 * 60 * 1000);
-
-    return now < windowStart || isFinishingSprint || isRefreshing;
+    return nowUtcDay < eligibleFromUtcDay || isFinishingSprint || isRefreshing;
   }, [sprint?.endDate, isFinishingSprint, isRefreshing]);
 
   const sprintTasks: SprintTaskRow[] = useMemo(
@@ -535,8 +560,8 @@ export default function CurrentSprint({
                   {sprint.name}
                 </h1>
                 <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
-                  {formatShortDate(sprint.startDate)} —{" "}
-                  {formatShortDate(sprint.endDate)} ·{" "}
+                  {formatSprintDate(sprint.startDate)} —{" "}
+                  {formatSprintDate(sprint.endDate)} ·{" "}
                   {sprint.progress.remainingDays} days remaining
                 </p>
               </div>
@@ -573,7 +598,7 @@ export default function CurrentSprint({
                   disabled={isFinishDisabled}
                   aria-label={
                     isFinishDisabled
-                      ? "Sprints can only be finished within 24 hours of the end date."
+                      ? "Sprints can only be finished on the day before the end date or later."
                       : ""
                   }
                 >
@@ -591,9 +616,13 @@ export default function CurrentSprint({
               {isFinishDisabled && !isFinishingSprint && !isRefreshing && (
                 <p className="text-body-xs mt-xs tracking-[0.14em]">
                   Finish available{" "}
-                  {formatShortDate(
+                  {formatSprintDate(
                     new Date(
-                      new Date(sprint.endDate).getTime() - 24 * 60 * 60 * 1000,
+                      Date.UTC(
+                        new Date(sprint.endDate).getUTCFullYear(),
+                        new Date(sprint.endDate).getUTCMonth(),
+                        new Date(sprint.endDate).getUTCDate() - 1,
+                      ),
                     ),
                   )}
                 </p>
