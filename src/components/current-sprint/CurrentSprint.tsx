@@ -599,6 +599,31 @@ export default function CurrentSprint({
                 </p>
               )}
             </div>
+            {/* Sprint Focus */}
+            <SprintFocus
+              focus={sprint?.goal || ""}
+              onUpdate={handleSaveSprintFocus}
+              editable
+            />
+
+            {/* Sprint Timeline */}
+            <SprintTimeline
+              sprint={{
+                startDate: sprint.startDate,
+                endDate: sprint.endDate,
+                progressPercent: sprint.progress.progressPercent,
+                elapsedDays: sprint.progress.elapsedDays,
+                remainingDays: sprint.progress.remainingDays,
+                totalDays: sprint.progress.totalDays,
+              }}
+            />
+
+            {/* Breakdown cards */}
+            <BreakdownCard
+              todoCount={todoCount}
+              inProgressCount={inProgressCount}
+              doneCount={doneCount}
+            />
 
             {/* Sprint Focus */}
             <SprintFocus
