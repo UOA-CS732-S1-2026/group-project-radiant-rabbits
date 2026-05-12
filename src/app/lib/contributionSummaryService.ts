@@ -409,7 +409,7 @@ export async function buildContributorWorkloadProfile(
 // builds the prompt for generating a team-level summary.
 export function buildTeamSummaryPrompt(profile: TeamWorkloadProfile): string {
   return [
-    "You are summarising what a software team built during a sprint.",
+    "You are summarising what a software team built and developed during a sprint.",
     "Write a factual 2-3 sentence summary focused on the WORK, not rankings.",
     "Use the PR titles and closed-issue titles in 'highlights' to identify",
     "the main themes of the sprint (e.g. 'sync pipeline fixes', 'auth",
