@@ -5,10 +5,16 @@ import { Group, Sprint, SprintTask } from "@/app/lib/models";
 import { isUserInGroup } from "@/app/lib/userRef";
 
 // Mock dependencies
-jest.mock("next-auth/next");
+jest.mock("next-auth/next", () => ({
+  getServerSession: jest.fn(),
+}));
 jest.mock("@/app/api/auth/[...nextauth]/options", () => ({ options: {} }));
 jest.mock("@/app/lib/mongodbConnection", () => jest.fn());
-jest.mock("@/app/lib/models");
+jest.mock("@/app/lib/models", () => ({
+  Group: { findById: jest.fn() },
+  Sprint: { findOne: jest.fn() },
+  SprintTask: { find: jest.fn() },
+}));
 jest.mock("@/app/lib/userRef");
 jest.mock("@/app/lib/currentSprintService", () => ({
   avatarUrlForLogin: jest.fn((name) => `url-${name}`),
