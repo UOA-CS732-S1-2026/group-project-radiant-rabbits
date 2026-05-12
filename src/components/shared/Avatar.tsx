@@ -42,9 +42,11 @@ export default function Avatar({
         backgroundColor: bgColor,
       }}
       title={name}
+      aria-label={name}
+      role="img"
       className={`flex shrink-0 items-center justify-center rounded-full text-(length:--text-body-xs) font-bold text-brand-surface ${className}`}
     >
-      {initials}
+      <span aria-hidden="true">{initials}</span>
     </span>
   );
 }
