@@ -168,7 +168,6 @@ export default function CurrentSprint({
   const [githubTicketsOverlayOpen, setGithubTicketsOverlayOpen] =
     useState(false);
   const pendingSprintFocusRef = useRef("");
-  const nextSprintIdRef = useRef("");
   const [isFinishingSprint, setIsFinishingSprint] = useState(false);
   const [isSprintHandoffSubmitting, setIsSprintHandoffSubmitting] =
     useState(false);
@@ -309,39 +308,29 @@ export default function CurrentSprint({
         const sprintList = await sprintsResponse.json();
         const sprints = Array.isArray(sprintList) ? sprintList : [];
 
-        // Sort sprints by startDate to find current position, then get the next one
-        const sorted = sprints
-          .filter(
-            (s: { startDate?: string | Date; _id?: string }) =>
-              s.startDate && s._id,
-          )
-          .sort(
-            (
-              a: { startDate: string | Date },
-              b: { startDate: string | Date },
-            ) =>
-              new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-          );
+        // Find the next sprint by name pattern
+        const nextSprintNumber = sprint.number + 1;
+        const targetName = `sprint${nextSprintNumber}`;
 
-        const currentIdx = sorted.findIndex(
-          (s: { _id?: string }) => String(s._id) === sprint.id,
+        const nextSprint = sprints.find(
+          (s: { name?: string; _id?: string }) => {
+            if (!s.name) return false;
+
+            const normalizedDbName = s.name.replace(/\s/g, "").toLowerCase();
+
+            return normalizedDbName === targetName;
+          },
         );
-        const nextSprint =
-          currentIdx >= 0 && currentIdx < sorted.length - 1
-            ? sorted[currentIdx + 1]
-            : null;
 
         if (!nextSprint || !nextSprint._id) {
           setNextSprintWelcomeOpen(false);
           setNextSprintTasks([]);
           setHandoffErrorMessage(
-            "No next sprint found in planning. Please ensure a future sprint exists in your GitHub Project and sync your group.",
+            `Sprint ${nextSprintNumber} was not found. Please ensure it exists in your GitHub Project and sync your group.`,
           );
           setHandoffErrorOpen(true);
           return;
         } else {
-          nextSprintIdRef.current = nextSprint._id;
-
           // Update next sprint's goal with the sprint focus
           const updateResponse = await fetch(
             `/api/groups/${groupId}/sprints/${nextSprint._id}`,
@@ -408,7 +397,7 @@ export default function CurrentSprint({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currentSprintId: sprint.id,
-          nextSprintId: nextSprintIdRef.current,
+          nextSprintNumber: sprint.number + 1,
         }),
       });
       return res;
@@ -609,32 +598,6 @@ export default function CurrentSprint({
               </div>
             </div>
 
-            {/* Sprint Focus */}
-            <SprintFocus
-              focus={sprint?.goal || ""}
-              onUpdate={handleSaveSprintFocus}
-              editable
-            />
-
-            {/* Sprint Timeline */}
-            <SprintTimeline
-              sprint={{
-                startDate: sprint.startDate,
-                endDate: sprint.endDate,
-                progressPercent: sprint.progress.progressPercent,
-                elapsedDays: sprint.progress.elapsedDays,
-                remainingDays: sprint.progress.remainingDays,
-                totalDays: sprint.progress.totalDays,
-              }}
-            />
-
-            {/* Breakdown cards */}
-            <BreakdownCard
-              todoCount={todoCount}
-              inProgressCount={inProgressCount}
-              doneCount={doneCount}
-            />
-
             {/* Tasks and Contributions */}
             <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
               <div className="min-w-0 h-full">
@@ -648,9 +611,6 @@ export default function CurrentSprint({
                 />
               </div>
             </div>
-
-            {/* Activity Timeline */}
-            <ActivityTimeline items={timeline} />
           </div>
         </PageContainer>
       </div>
