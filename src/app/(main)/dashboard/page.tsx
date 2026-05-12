@@ -347,6 +347,31 @@ export default async function DashboardPage() {
     );
   }
 
+  // If a background sync (e.g. triggered right after group creation) is already
+  // running and there is no existing sprint data to show, return a loading state
+  // that auto-refreshes every few seconds until the sync completes.
+  if (
+    group.syncStatus === "in_progress" &&
+    group.repoOwner &&
+    group.repoName &&
+    accessToken
+  ) {
+    const hasAnySyncedSprint = Boolean(
+      await Sprint.findOne({ group: group._id }).select("_id").lean(),
+    );
+    if (!hasAnySyncedSprint) {
+      return (
+        <Dashboard
+          status="loading"
+          statusMessage="Syncing your repository data for the first time — this usually takes a few seconds."
+          groupId={group._id.toString()}
+        />
+      );
+    }
+    // Sprints already exist from a previous sync — fall through and render
+    // the dashboard with current data while the background sync runs.
+  }
+
   // Ensure iteration-backed sprint data is fresh when arriving on dashboard,
   // especially right after switching groups.
   if (
