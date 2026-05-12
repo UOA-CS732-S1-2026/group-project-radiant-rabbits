@@ -565,27 +565,19 @@ export default function CurrentSprint({
                     </p>
                   </div>
                 </HelpOverlayTrigger>
-                <span
-                  className="inline-block cursor-not-allowed"
-                  title={
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={openFinishSprintConfirm}
+                  disabled={isFinishDisabled}
+                  aria-label={
                     isFinishDisabled
-                      ? `Finish available ${formatShortDate(new Date(new Date(sprint.endDate).getTime() - 24 * 60 * 60 * 1000))}`
+                      ? "Sprints can only be finished within 24 hours of the end date."
                       : ""
                   }
                 >
-                  <div
-                    className={isFinishDisabled ? "pointer-events-none" : ""}
-                  >
-                    <Button
-                      variant="purple"
-                      size="sm"
-                      onClick={openFinishSprintConfirm}
-                      disabled={isFinishDisabled}
-                    >
-                      Finish Sprint
-                    </Button>
-                  </div>
-                </span>
+                  Finish Sprint
+                </Button>
                 <Button
                   variant="purple"
                   size="sm"
@@ -595,6 +587,16 @@ export default function CurrentSprint({
                   {isRefreshing ? "Refreshing..." : "Refresh"}
                 </Button>
               </div>
+              {isFinishDisabled && !isFinishingSprint && !isRefreshing && (
+                <p className="text-body-xs mt-xs tracking-[0.14em]">
+                  Finish available{" "}
+                  {formatShortDate(
+                    new Date(
+                      new Date(sprint.endDate).getTime() - 24 * 60 * 60 * 1000,
+                    ),
+                  )}
+                </p>
+              )}
             </div>
 
             {/* Tasks and Contributions */}
