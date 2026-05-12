@@ -424,7 +424,8 @@ export default function CurrentSprint({
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(
-            `Sprint ${sprint.number + 1} not found after sync. Please check that the iteration exists and is in the 'Planning' status.`,
+            `Sprint ${sprint.number + 1} not found after sync. Please check that the iteration exists in your GitHub Projects and is in the 'Planning' status.
+            If this project has ended, you may archive the group.`,
           );
         } else {
           throw new Error("Transition failed");
@@ -599,6 +600,32 @@ export default function CurrentSprint({
               )}
             </div>
 
+            {/* Sprint Focus */}
+            <SprintFocus
+              focus={sprint?.goal || ""}
+              onUpdate={handleSaveSprintFocus}
+              editable
+            />
+
+            {/* Sprint Timeline */}
+            <SprintTimeline
+              sprint={{
+                startDate: sprint.startDate,
+                endDate: sprint.endDate,
+                progressPercent: sprint.progress.progressPercent,
+                elapsedDays: sprint.progress.elapsedDays,
+                remainingDays: sprint.progress.remainingDays,
+                totalDays: sprint.progress.totalDays,
+              }}
+            />
+
+            {/* Breakdown cards */}
+            <BreakdownCard
+              todoCount={todoCount}
+              inProgressCount={inProgressCount}
+              doneCount={doneCount}
+            />
+
             {/* Tasks and Contributions */}
             <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
               <div className="min-w-0 h-full">
@@ -612,6 +639,9 @@ export default function CurrentSprint({
                 />
               </div>
             </div>
+
+            {/* Activity Timeline */}
+            <ActivityTimeline items={timeline} />
           </div>
         </PageContainer>
       </div>
@@ -665,10 +695,10 @@ export default function CurrentSprint({
       />
       <ConfirmOverlay
         open={handoffErrorOpen}
-        title="Handoff Failed"
+        title="Sprint Transition Failed"
         description={handoffErrorMessage}
-        confirmLabel="Group Settings"
-        cancelLabel="Close"
+        confirmLabel="Archive Group"
+        cancelLabel="Back to Group Settings"
         onConfirm={() => {
           setHandoffErrorOpen(false);
           router.push("/join-create-switch-group");
