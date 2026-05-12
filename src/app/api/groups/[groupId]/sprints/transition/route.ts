@@ -9,7 +9,7 @@ export async function POST(
   try {
     const { groupId } = await params;
 
-    const { currentSprintId, nextSprintNumber } = await req.json();
+    const { currentSprintId, nextSprintId } = await req.json();
     await connectMongoDB();
 
     await Sprint.updateOne(
@@ -19,8 +19,8 @@ export async function POST(
 
     const nextSprint = await Sprint.findOneAndUpdate(
       {
+        _id: nextSprintId,
         group: groupId,
-        name: new RegExp(`Sprint\\s*${nextSprintNumber}$`, "i"),
         status: "PLANNING",
       },
       { $set: { status: "ACTIVE", isCurrent: true } },
@@ -31,7 +31,7 @@ export async function POST(
 
     if (!nextSprint) {
       console.error(
-        `Next sprint not found for group ${groupId}, number ${nextSprintNumber}`,
+        `Next sprint not found with ID ${nextSprintId} for group ${groupId}`,
       );
       return NextResponse.json(
         { error: "Next planning sprint not found" },
