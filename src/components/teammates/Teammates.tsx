@@ -1,4 +1,3 @@
-import DangerActionButton from "@/components/shared/DangerActionButton";
 import PageContainer from "@/components/shared/PageContainer";
 import LeaveGroupButton from "@/components/teammates/leaveGroupButton";
 import TeammateRow, {
@@ -55,7 +54,7 @@ export default function Teammates({
               )}
             </div>
             {/* Leave button */}
-            <DangerActionButton>Leave Group</DangerActionButton>
+            <LeaveGroupButton />
           </div>
           {/* Teammate rows */}
           {memberList.length === 0 ? (
