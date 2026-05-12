@@ -27,7 +27,7 @@ export default function LandingSectionHeading({
       <p className={LANDING_SECTION_EYEBROW_TEXT_CLASS}>{eyebrow}</p>
       <Heading
         id={id}
-        className="text-balance text-[1.875rem] font-extrabold leading-[1.15] tracking-tight text-brand-dark sm:text-[2rem] md:text-[2.125rem]"
+        className="text-balance text-(length:--text-h1) font-extrabold leading-[var(--text-h1--line-height)] tracking-tight text-brand-dark"
       >
         {title}
       </Heading>

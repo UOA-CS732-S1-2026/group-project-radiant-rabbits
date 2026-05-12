@@ -59,10 +59,12 @@ function StatusBlock({ message }: { message: string }) {
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <h2 className="text-h3 font-bold text-brand-dark">
+          <h2 className="text-(length:--text-h3) font-bold text-brand-dark">
             Project Overview
           </h2>
-          <p className="mt-sm text-body-sm text-brand-dark/70">{message}</p>
+          <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
+            {message}
+          </p>
         </div>
       </PageContainer>
     </div>
@@ -119,26 +121,29 @@ export default function Dashboard({
                   Project metrics
                 </p>
               </div>
-              <HelpOverlayTrigger
-                label="Help: dashboard and sprints"
-                title="Sprints on the dashboard"
-                className="self-start sm:pt-1"
-              >
-                <div className="space-y-3 text-left">
-                  <p>
-                    High-level counts and charts reflect activity in your linked
-                    repository and GitHub Project.
-                  </p>
-                  <p>
-                    Sprint velocity uses{" "}
-                    <span className="font-semibold">completed iterations</span>{" "}
-                    synced from GitHub. If sprints look empty, confirm your
-                    project has an iteration field and that you&apos;ve run a
-                    sync from the app after connecting the repo.
-                  </p>
-                </div>
-              </HelpOverlayTrigger>
-              {groupId ? <EndProjectButton groupId={groupId} /> : null}
+              <div className="flex items-center gap-sm self-start sm:self-auto">
+                <HelpOverlayTrigger
+                  label="Help: dashboard and sprints"
+                  title="Sprints on the dashboard"
+                >
+                  <div className="space-y-3 text-left">
+                    <p>
+                      High-level counts and charts reflect activity in your
+                      linked repository and GitHub Project.
+                    </p>
+                    <p>
+                      Sprint velocity uses{" "}
+                      <span className="font-semibold">
+                        completed iterations
+                      </span>{" "}
+                      synced from GitHub. If sprints look empty, confirm your
+                      project has an iteration field and that you&apos;ve run a
+                      sync from the app after connecting the repo.
+                    </p>
+                  </div>
+                </HelpOverlayTrigger>
+                {groupId ? <EndProjectButton groupId={groupId} /> : null}
+              </div>
             </div>
             <ProjectMetricsGrid
               metrics={metrics}
@@ -153,6 +158,7 @@ export default function Dashboard({
           <div className="grid gap-lg lg:grid-cols-[6fr_4fr]">
             <SprintVelocityCard
               sprints={sprints}
+              iterationFieldConfigured={iterationFieldConfigured}
               nextSprintStart={nextSprintStart}
             />
             <ContributionBreakdownCard contributors={repoContributors ?? []} />

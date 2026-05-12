@@ -29,14 +29,16 @@ export default function TeammateRow({ person, isFirst }: TeammateRowProps) {
           size={40}
         />
         <div className="min-w-0">
-          <p className="text-body-lg font-semibold text-brand-dark">
+          <p className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             {person.name}
           </p>
         </div>
       </div>
 
       <div className="shrink-0 text-right">
-        <p className="text-body-sm text-brand-dark/70">{person.email ?? "—"}</p>
+        <p className="text-(length:--text-body-sm) text-brand-dark/70">
+          {person.email ?? "—"}
+        </p>
       </div>
     </div>
   );

@@ -67,13 +67,13 @@ function SetGroupContent() {
       <div className="flex flex-col justify-start px-0 pt-0 sm:px-lg">
         <div className="flex w-full max-w-full min-w-0 flex-col items-stretch gap-4 sm:mx-auto sm:w-fit sm:gap-5">
           {errorMessage && (
-            <div className="rounded-md bg-red-100 p-3 text-center text-sm text-red-700">
+            <div className="rounded-md bg-red-100 p-3 text-center text-(length:--text-body-sm) text-red-700">
               {errorMessage}
             </div>
           )}
 
           <GroupCard>
-            <div className="flex w-full min-w-0 flex-col gap-md text-body-md text-brand-dark sm:gap-lg sm:text-body-lg">
+            <div className="flex w-full min-w-0 flex-col gap-md text-(length:--text-body-md) text-brand-dark sm:gap-lg">
               <p>
                 You&apos;re about to create a group for{" "}
                 <span className="font-semibold">

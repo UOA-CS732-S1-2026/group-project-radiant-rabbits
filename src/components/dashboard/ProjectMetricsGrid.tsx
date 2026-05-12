@@ -66,13 +66,15 @@ export default function ProjectMetricsGrid({
           key={stat.label}
           className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md"
         >
-          <p className="text-h3 font-bold leading-none text-brand-dark">
+          <p className="text-(length:--text-h3) font-bold leading-none text-brand-dark">
             {stat.value}
           </p>
-          <p className="mt-xs text-body-sm font-medium text-brand-dark">
+          <p className="mt-xs text-(length:--text-body-sm) font-medium text-brand-dark">
             {stat.label}
           </p>
-          <p className="mt-sm text-body-xs text-brand-dark/60">{stat.detail}</p>
+          <p className="mt-sm text-(length:--text-body-xs) text-brand-dark/60">
+            {stat.detail}
+          </p>
         </div>
       ))}
     </div>

@@ -24,7 +24,7 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
     <BorderedPanel>
       <div className="space-y-md">
         {/* Date range display */}
-        <div className="grid gap-md text-body-sm text-brand-dark/70 md:grid-cols-3">
+        <div className="grid gap-md text-(length:--text-body-sm) text-brand-dark/70 md:grid-cols-3">
           <div>
             <div className="font-medium text-brand-dark/50">Start</div>
             <div className="font-semibold text-brand-dark">
@@ -47,7 +47,7 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
 
         {/* Progress bar */}
         <div className="space-y-sm">
-          <div className="flex items-center justify-between text-body-xs">
+          <div className="flex items-center justify-between text-(length:--text-body-xs)">
             <span className="font-medium text-brand-dark/60">Progress</span>
             <span className="font-semibold text-brand-dark">
               {sprint.progressPercent}%

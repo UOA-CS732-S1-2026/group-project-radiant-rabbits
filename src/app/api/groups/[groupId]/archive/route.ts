@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
+import { isUserInGroup } from "@/app/lib/userRef";
 
 export async function POST(
   _request: Request,
@@ -35,14 +35,6 @@ export async function POST(
     if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
-        { status: 403 },
-      );
-    }
-
-    const userRef = normalizeUserRef(session.user.id);
-    if (!userRef || String(group.createdBy) !== String(userRef)) {
-      return NextResponse.json(
-        { error: "Only the group creator can end this project" },
         { status: 403 },
       );
     }

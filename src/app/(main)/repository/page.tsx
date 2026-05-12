@@ -26,7 +26,7 @@ export default function RepositoryPage() {
                 Test Connection
               </Button>
             </div>
-            <p className="text-body-sm text-brand-dark/60">
+            <p className="text-(length:--text-body-sm) text-brand-dark/60">
               Show validation or inaccessible repository errors here.
             </p>
           </form>

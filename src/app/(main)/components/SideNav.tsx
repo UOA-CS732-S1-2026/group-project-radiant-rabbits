@@ -47,17 +47,17 @@ export default function SideNav() {
   const changeGroupHref = `/join-create-switch-group?returnTo=${encodeURIComponent(dashboardReturnTarget)}`;
 
   return (
-    <nav className="lg:w-70 flex h-full w-56 shrink-0 flex-col overflow-hidden border-r border-brand-dark/10 bg-brand-surface px-md py-xl">
+    <nav className="flex h-full w-56 shrink-0 flex-col overflow-hidden border-r border-brand-dark/10 bg-brand-surface px-md py-xl md:w-60 lg:w-64 xl:w-72">
       <div className="flex min-h-0 flex-1 flex-col">
         {/* Logo */}
-        <div className="mb-xl flex shrink-0 flex-col items-center gap-md px-sm pb-md pt-2">
+        <div className="mb-xl flex shrink-0 flex-col items-center px-sm pb-md pt-2">
           <div className="p-3">
-            <AppLogoMark />
+            <AppLogoMark className="h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24" />
           </div>
           <SprintHubTitle
             as="p"
             size="lg"
-            className="w-full text-center leading-tight lg:text-4xl"
+            className="text-(length:--text-h1) w-full text-center leading-tight"
           />
         </div>
 
@@ -74,8 +74,8 @@ export default function SideNav() {
                   href={item.href}
                   className={
                     isActive
-                      ? "flex items-center gap-sm rounded-md border-1-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-lg font-semibold text-brand-dark"
-                      : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-lg text-brand-dark transition hover:bg-brand-accent/10"
+                      ? "flex items-center gap-sm rounded-md border-1-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-(length:--text-body-lg) font-semibold text-brand-dark"
+                      : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-lg) text-brand-dark transition hover:bg-brand-accent/10"
                   }
                 >
                   <Icon size={18} className="shrink-0" />
@@ -102,8 +102,8 @@ export default function SideNav() {
                 href={href}
                 className={
                   isActive
-                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-body-md font-semibold text-brand-dark"
-                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10"
+                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-(length:--text-body-md) font-semibold text-brand-dark"
+                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-md) text-brand-dark transition hover:bg-brand-accent/10"
                 }
               >
                 <Icon size={18} />

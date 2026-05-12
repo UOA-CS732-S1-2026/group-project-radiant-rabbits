@@ -1,6 +1,5 @@
 "use client";
 
-import { set } from "mongoose";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ConfirmOverlay from "../shared/ConfirmOverlay";
@@ -37,7 +36,7 @@ export default function LeaveGroupButton() {
         type="button"
         onClick={setShowConfirm.bind(null, true)}
         disabled={isLeaving}
-        className="shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-status-todo-fg/90 disabled:opacity-50"
+        className="shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-(length:--text-body-sm) font-medium text-brand-surface hover:bg-status-todo-fg/90 disabled:opacity-50"
       >
         {isLeaving ? "Leaving..." : "Leave Group"}
       </button>

@@ -8,6 +8,8 @@ type SprintForDashboard = {
 
 type SprintVelocityCardProps = {
   sprints?: SprintForDashboard[];
+  // null before first sync, false if no iteration field, true if set up.
+  iterationFieldConfigured?: boolean | null;
   // ISO date of the next iteration's start. Only set when iterations exist
   // but none cover today.
   nextSprintStart?: string | null;
@@ -35,7 +37,7 @@ function formatDateLabel(value: string) {
 function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   const w = 760;
   const h = 240;
-  const pad = { l: 26, r: 40, t: 12, b: 32 };
+  const pad = { l: 26, r: 26, t: 12, b: 32 };
   const safeData = data.length > 0 ? data : [{ label: "S1", value: 0 }];
   const max = Math.max(...safeData.map((point) => point.value), 10);
   const xs = (index: number) =>
@@ -54,7 +56,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
     <svg
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="none"
-      className="h-full w-full flex-1"
+      className="items-center block h-full w-full"
       role="img"
       aria-label="Sprint velocity chart"
     >
@@ -143,6 +145,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
 // Component for the sprint velocity card (chart + heading + empty states)
 export default function SprintVelocityCard({
   sprints,
+  iterationFieldConfigured,
   nextSprintStart,
 }: SprintVelocityCardProps) {
   const velocitySeries: MiniSeriesPoint[] =
@@ -154,27 +157,27 @@ export default function SprintVelocityCard({
     })) ?? [];
 
   return (
-    <Card className="flex flex-col p-md">
+    <Card className="flex h-full flex-col p-md">
       <div className="mb-md flex items-start justify-between gap-md">
         <div>
-          <h3 className="text-body-lg font-semibold text-brand-dark">
+          <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Sprint velocity
           </h3>
-          <p className="text-body-xs text-brand-dark/50">
+          <p className="text-(length:--text-body-xs) text-brand-dark/50">
             Total number of issues closed per sprint
           </p>
         </div>
-        <span className="rounded-md bg-brand-accent/10 px-sm py-xs text-body-xs font-medium text-brand-accent">
+        <span className="rounded-md bg-brand-accent/10 px-sm py-xs text-(length:--text-body-xs) font-medium text-brand-accent">
           {sprints?.length ?? 0} iterations
         </span>
       </div>
       {velocitySeries.length > 0 ? (
-        <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
-          <div className="flex h-68 items-stretch">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
+          <div className="flex min-h-0 flex-1 items-stretch">
             <MiniVelocityChart data={velocitySeries} />
           </div>
           {sprints && !sprints.some((s) => s.isCurrent) && nextSprintStart ? (
-            <p className="mt-md text-body-sm text-brand-dark/60">
+            <p className="mt-md text-(length:--text-body-sm) text-brand-dark/60">
               No iteration is active right now. The next iteration starts on{" "}
               <span className="font-semibold text-brand-dark">
                 {formatDateLabel(nextSprintStart)}
@@ -184,11 +187,29 @@ export default function SprintVelocityCard({
           ) : null}
         </div>
       ) : (
-        <div
-          role="img"
-          aria-label="No velocity chart yet"
-          className="flex min-h-68 items-center justify-center rounded-lg border border-dashed border-brand-dark/12 bg-brand-surface/50"
-        />
+        <div className="rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
+          {iterationFieldConfigured === false ? (
+            <p className="text-(length:--text-body-sm) text-brand-dark/60">
+              This repo&apos;s GitHub Project doesn&apos;t have an iteration
+              field yet. Once you{" "}
+              <a
+                href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-brand-accent underline"
+              >
+                add an iteration field
+              </a>{" "}
+              to your Project (or create a Project for this repo) and assign
+              tickets to it, sprint metrics will appear here on the next sync.
+            </p>
+          ) : (
+            <p className="text-(length:--text-body-sm) text-brand-dark/60">
+              Your iteration field is set up but has no iterations yet. Create
+              one in your GitHub Project, assign tickets to it, then refresh.
+            </p>
+          )}
+        </div>
       )}
     </Card>
   );
