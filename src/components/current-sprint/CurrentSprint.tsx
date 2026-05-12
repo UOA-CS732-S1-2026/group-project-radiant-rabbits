@@ -624,20 +624,6 @@ export default function CurrentSprint({
                   {isRefreshing ? "Refreshing..." : "Refresh"}
                 </Button>
               </div>
-              {isFinishDisabled && !isFinishingSprint && !isRefreshing && (
-                <p className="text-body-xs mt-xs tracking-[0.14em]">
-                  Finish available{" "}
-                  {formatSprintDate(
-                    new Date(
-                      Date.UTC(
-                        new Date(sprint.endDate).getUTCFullYear(),
-                        new Date(sprint.endDate).getUTCMonth(),
-                        new Date(sprint.endDate).getUTCDate() - 1,
-                      ),
-                    ),
-                  )}
-                </p>
-              )}
             </div>
             {/* Sprint Focus */}
             <SprintFocus
