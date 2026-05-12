@@ -345,16 +345,16 @@ async function getPeriodActivityFromDb(
         $match: {
           group: groupId,
           date: inWindow,
-          "author.login": { $nin: [null, ""] },
         },
       },
       {
         $group: {
           _id: { $ifNull: ["$author.login", "$author.name"] },
+          login: { $first: "$author.login" },
           count: { $sum: 1 },
         },
       },
-      { $project: { _id: 0, name: "$_id", login: "$_id", count: 1 } },
+      { $project: { _id: 0, name: "$_id", login: 1, count: 1 } },
     ]),
     PullRequest.aggregate<{ name: string; count: number }>([
       {

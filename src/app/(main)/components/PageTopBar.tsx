@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import Button from "@/components/shared/Button";
 
 type PageTopBarProps = {
   repoName: string;
@@ -53,11 +52,8 @@ export default function PageTopBar({
           ) : null}
         </h1>
 
-        {/* Right: button + avatar */}
+        {/* Right: avatar */}
         <div className="flex items-center gap-md">
-          {/* Button for generating spint review */}
-          <Button size="lg">Generate Sprint Review</Button>
-
           {/* Avatar with fallback to initial */}
           {profileImageUrl ? (
             <Image

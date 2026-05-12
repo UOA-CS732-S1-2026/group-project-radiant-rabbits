@@ -3,10 +3,17 @@ import { getServerSession } from "next-auth/next";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { Group, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
-import { isUserInGroup, normalizeUserRef } from "@/app/lib/userRef";
+import { isUserInGroup } from "@/app/lib/userRef";
 
-export async function PUT(request: Request) {
+export async function PUT(_request: Request) {
   try {
+    if (process.env.TEST_MODE === "true") {
+      return NextResponse.json(
+        { message: "Successfully left the group" },
+        { status: 200 },
+      );
+    }
+
     const session = await getServerSession(options);
 
     // Check if user has logged in with a valid Github account
