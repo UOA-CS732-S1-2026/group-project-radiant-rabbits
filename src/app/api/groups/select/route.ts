@@ -9,6 +9,30 @@ import { isUserInGroup } from "@/app/lib/userRef";
 
 export async function POST(request: Request) {
   try {
+    if (process.env.TEST_MODE === "true") {
+      const payload = (await request.json().catch(() => ({}))) as {
+        groupId?: string;
+      };
+      if (!payload.groupId) {
+        return NextResponse.json(
+          { error: "Group ID is required" },
+          { status: 400 },
+        );
+      }
+      return NextResponse.json(
+        {
+          message: "Current group updated successfully",
+          group: {
+            id: payload.groupId,
+            name: "test-group",
+            repoOwner: "radiant-rabbits",
+            repoName: "sprint-hub-repo",
+          },
+        },
+        { status: 200 },
+      );
+    }
+
     const session = await getServerSession(options);
 
     if (!session?.user?.id) {

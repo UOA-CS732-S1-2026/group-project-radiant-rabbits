@@ -254,9 +254,47 @@ async function loadRepositoryContributors(
 // Could take a while as it may involve multiple calls for githubCalculator
 export default async function DashboardPage() {
   const session = await getServerSession(options);
+  const isTestMode = process.env.TEST_MODE === "true";
 
   if (!session?.user) {
     redirect("/");
+  }
+
+  if (isTestMode) {
+    return (
+      <Dashboard
+        status="ready"
+        groupId="test-group"
+        metrics={{
+          totalCommits: 24,
+          commitsLastSprint: 8,
+          totalPullRequests: 10,
+          pullRequestsMergedLastSprint: 4,
+          totalIssuesClosed: 18,
+          issuesClosedLastSprint: 6,
+          activeContributors: 3,
+        }}
+        sprints={[
+          {
+            name: "Sprint 1",
+            velocity: 6,
+            isCurrent: false,
+          },
+        ]}
+        repoContributors={[
+          {
+            name: "Playwright Test User",
+            initials: "PT",
+            avatarUrl: null,
+            commits: 8,
+            prs: 4,
+            issues: 6,
+            colour: "var(--color-brand-accent)",
+          },
+        ]}
+        statusMessage="Test mode is enabled."
+      />
+    );
   }
 
   const accessToken = (session as { accessToken?: string }).accessToken;

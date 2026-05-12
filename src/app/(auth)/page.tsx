@@ -8,9 +8,10 @@ import LandingHowItWorksSection from "@/components/landing-page/LandingHowItWork
 
 export default async function LoginPage() {
   const session = await getServerSession(options);
+  const isTestMode = process.env.TEST_MODE === "true";
 
   if (session) {
-    redirect("/join-create-switch-group");
+    redirect(isTestMode ? "/dashboard" : "/join-create-switch-group");
   }
 
   return (

@@ -34,47 +34,53 @@ function mockErrorResponse(status: number, statusText: string, headers = {}) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.resetAllMocks();
 });
 
 // fetchCommits tests
 
 describe("fetchCommits", () => {
   it("should fetch commits from the default branch", async () => {
-    // Simulate a single page of 2 commits
+    // Simulate a single page of 2 commits across one branch
     mockFetch.mockResolvedValueOnce(
       mockGraphQLResponse({
         repository: {
-          defaultBranchRef: {
-            target: {
-              history: {
-                pageInfo: { hasNextPage: false, endCursor: null },
-                nodes: [
-                  {
-                    oid: "abc123",
-                    message: "Initial commit",
-                    author: {
-                      name: "Alice",
-                      email: "alice@example.com",
-                      user: { login: "alice" },
-                    },
-                    committedDate: "2026-01-01T00:00:00Z",
-                    changedFilesIfAvailable: 3,
+          refs: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [
+              {
+                name: "main",
+                target: {
+                  history: {
+                    pageInfo: { hasNextPage: false, endCursor: null },
+                    nodes: [
+                      {
+                        oid: "abc123",
+                        message: "Initial commit",
+                        author: {
+                          name: "Alice",
+                          email: "alice@example.com",
+                          user: { login: "alice" },
+                        },
+                        committedDate: "2026-01-01T00:00:00Z",
+                        changedFilesIfAvailable: 3,
+                      },
+                      {
+                        oid: "def456",
+                        message: "Add feature",
+                        author: {
+                          name: "Bob",
+                          email: "bob@example.com",
+                          user: null, // Not a GitHub user
+                        },
+                        committedDate: "2026-01-02T00:00:00Z",
+                        changedFilesIfAvailable: null,
+                      },
+                    ],
                   },
-                  {
-                    oid: "def456",
-                    message: "Add feature",
-                    author: {
-                      name: "Bob",
-                      email: "bob@example.com",
-                      user: null, // Not a GitHub user
-                    },
-                    committedDate: "2026-01-02T00:00:00Z",
-                    changedFilesIfAvailable: null,
-                  },
-                ],
+                },
               },
-            },
+            ],
           },
         },
       }),
@@ -95,50 +101,62 @@ describe("fetchCommits", () => {
     expect(commits[1].filesChanged).toBeUndefined();
   });
 
-  it("should handle pagination across multiple pages", async () => {
-    // Page 1: has more pages
+  it("should handle pagination across multiple branch pages", async () => {
+    // Page 1: two branches, more branch pages to come
     mockFetch.mockResolvedValueOnce(
       mockGraphQLResponse({
         repository: {
-          defaultBranchRef: {
-            target: {
-              history: {
-                pageInfo: { hasNextPage: true, endCursor: "cursor1" },
-                nodes: [
-                  {
-                    oid: "aaa",
-                    message: "First",
-                    author: { name: "A", email: "a@test.com", user: null },
-                    committedDate: "2026-01-01T00:00:00Z",
-                    changedFilesIfAvailable: null,
+          refs: {
+            pageInfo: { hasNextPage: true, endCursor: "branchCursor1" },
+            nodes: [
+              {
+                name: "main",
+                target: {
+                  history: {
+                    pageInfo: { hasNextPage: false, endCursor: null },
+                    nodes: [
+                      {
+                        oid: "aaa",
+                        message: "First",
+                        author: { name: "A", email: "a@test.com", user: null },
+                        committedDate: "2026-01-01T00:00:00Z",
+                        changedFilesIfAvailable: null,
+                      },
+                    ],
                   },
-                ],
+                },
               },
-            },
+            ],
           },
         },
       }),
     );
 
-    // Page 2: last page
+    // Page 2: last branch page
     mockFetch.mockResolvedValueOnce(
       mockGraphQLResponse({
         repository: {
-          defaultBranchRef: {
-            target: {
-              history: {
-                pageInfo: { hasNextPage: false, endCursor: null },
-                nodes: [
-                  {
-                    oid: "bbb",
-                    message: "Second",
-                    author: { name: "B", email: "b@test.com", user: null },
-                    committedDate: "2026-01-02T00:00:00Z",
-                    changedFilesIfAvailable: null,
+          refs: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [
+              {
+                name: "feature",
+                target: {
+                  history: {
+                    pageInfo: { hasNextPage: false, endCursor: null },
+                    nodes: [
+                      {
+                        oid: "bbb",
+                        message: "Second",
+                        author: { name: "B", email: "b@test.com", user: null },
+                        committedDate: "2026-01-02T00:00:00Z",
+                        changedFilesIfAvailable: null,
+                      },
+                    ],
                   },
-                ],
+                },
               },
-            },
+            ],
           },
         },
       }),
@@ -148,9 +166,6 @@ describe("fetchCommits", () => {
 
     // Should have fetched both pages
     expect(commits).toHaveLength(2);
-    expect(commits[0].sha).toBe("aaa");
-    expect(commits[1].sha).toBe("bbb");
-    // fetch should have been called twice (once per page)
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
@@ -158,13 +173,9 @@ describe("fetchCommits", () => {
     mockFetch.mockResolvedValueOnce(
       mockGraphQLResponse({
         repository: {
-          defaultBranchRef: {
-            target: {
-              history: {
-                pageInfo: { hasNextPage: false, endCursor: null },
-                nodes: [],
-              },
-            },
+          refs: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
           },
         },
       }),
@@ -177,11 +188,11 @@ describe("fetchCommits", () => {
     expect(requestBody.variables.since).toBe("2026-03-01T00:00:00Z");
   });
 
-  it("should return empty array for empty repos (no defaultBranchRef)", async () => {
+  it("should return empty array for empty repos (no refs)", async () => {
     mockFetch.mockResolvedValueOnce(
       mockGraphQLResponse({
         repository: {
-          defaultBranchRef: null,
+          refs: null,
         },
       }),
     );

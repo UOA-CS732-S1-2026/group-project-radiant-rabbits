@@ -10,9 +10,19 @@ type CurrentSprintStatus = "ready" | "empty" | "error";
 // Fetch all data required to display the current sprint metrics
 export default async function CurrentSprintPage() {
   const session = await getServerSession(options);
+  const isTestMode = process.env.TEST_MODE === "true";
 
   if (!session?.user) {
     redirect("/");
+  }
+
+  if (isTestMode) {
+    return (
+      <CurrentSprint
+        status="empty"
+        statusMessage="Test mode current sprint placeholder."
+      />
+    );
   }
 
   const { body } = await getCurrentSprintData();
