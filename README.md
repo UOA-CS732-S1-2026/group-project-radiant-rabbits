@@ -1,6 +1,6 @@
-# SprintHub — Team Radiant Rabbits
+# SprintHub - Team Radiant Rabbits
 
-SprintHub is a project management tool designed specifically for student software engineering teams. It connects directly to GitHub Projects and GitHub repositories, turning raw issue and commit data into sprint dashboards, AI-generated sprint reviews, and per-contributor workload summaries — removing the manual overhead of tracking progress across a team.
+SprintHub is a web-based project management tool designed specifically for student software engineering teams. It connects directly to GitHub Projects and GitHub repositories, turning raw issue and commit data into sprint dashboards, AI-generated sprint reviews, and per-contributor workload summaries, removing the manual overhead of tracking progress across a team.
 
 ---
 
@@ -42,7 +42,7 @@ SprintHub is a project management tool designed specifically for student softwar
 
 - **Node.js 20+** and **npm**
 - A **MongoDB** connection string (MongoDB Atlas free tier works fine)
-- A **GitHub OAuth App** — create one at [github.com/settings/developers](https://github.com/settings/developers) with the callback URL set to `http://localhost:3000/api/auth/callback/github` for local development
+- A **GitHub OAuth App** (create one at [github.com/settings/developers](https://github.com/settings/developers)) with the callback URL set to `http://localhost:3000/api/auth/callback/github` for local development
 - *(Optional)* A **Redis** URL for caching and sync workflows
 - *(Optional)* An **OpenAI** or **Google Gemini** API key for AI-generated sprint reviews and summaries
 
@@ -92,7 +92,7 @@ The app will be available at `http://localhost:3000`.
 
 ### Unit and integration tests (Jest)
 
-Jest tests live in `src/app/test/` and cover API routes, service logic, database aggregations, and React components. They use `mongodb-memory-server` to spin up an in-memory MongoDB instance — no external database is needed.
+Jest tests live in `src/app/test/` and cover API routes, service logic, database aggregations, and React components. They use `mongodb-memory-server` to spin up an in-memory MongoDB instance, so no external database is needed.
 
 ```bash
 npm test
@@ -127,6 +127,7 @@ npm run test:e2e:ui
 │   │   ├── (auth)/              # Sign-in and sign-out pages
 │   │   ├── (group-change)/      # Group creation, join, and switch flows
 │   │   ├── (main)/              # Authenticated app pages
+│   │   │   ├── components/
 │   │   │   ├── current-sprint/
 │   │   │   ├── dashboard/
 │   │   │   ├── group/
@@ -139,6 +140,7 @@ npm run test:e2e:ui
 │   │   │   └── teammates/
 │   │   ├── api/                 # API route handlers
 │   │   ├── database/            # Mongoose models and DB connection
+│   │   ├── docs/                # Internal setup guides
 │   │   ├── lib/                 # Server-side services (GitHub, AI, sync)
 │   │   ├── test/                # Jest test files
 │   │   └── utils/
@@ -167,6 +169,6 @@ To deploy your own instance, set the same environment variables listed above in 
 
 ## Team
 
-**Radiant Rabbits** — CS732 S1 2026, University of Auckland
+**Radiant Rabbits** | CS732 S1 2026, University of Auckland
 
 See the [GitHub Wiki](https://github.com/UOA-CS732-S1-2026/group-project-radiant-rabbits/wiki) for weekly meeting minutes and task breakdowns.
