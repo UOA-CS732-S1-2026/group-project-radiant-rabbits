@@ -195,6 +195,7 @@ export default function CurrentSprint({
   const [transitionErrorMessage, setTransitionErrorMessage] = useState("");
   const [handoffErrorOpen, setHandoffErrorOpen] = useState(false);
   const [handoffErrorMessage, setHandoffErrorMessage] = useState("");
+  const [isArchivingGroup, setIsArchivingGroup] = useState(false);
 
   useEffect(() => {
     if (status !== "ready") {
@@ -470,6 +471,39 @@ export default function CurrentSprint({
     }
   }, [groupId, sprint, router]);
 
+  const handleArchiveGroupFromHandoffError = useCallback(async () => {
+    if (!groupId) {
+      setHandoffErrorOpen(false);
+      router.push("/join-create-switch-group");
+      return;
+    }
+
+    setIsArchivingGroup(true);
+    try {
+      const response = await fetch(`/api/groups/${groupId}/archive`, {
+        method: "POST",
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Failed to archive group");
+      }
+
+      setHandoffErrorOpen(false);
+      router.push("/join-create-switch-group");
+      router.refresh();
+    } catch (error) {
+      setHandoffErrorMessage(
+        error instanceof Error ? error.message : "Failed to archive group.",
+      );
+    } finally {
+      setIsArchivingGroup(false);
+    }
+  }, [groupId, router]);
+
   const isFinishDisabled = useMemo(() => {
     if (!sprint?.endDate) return true;
 
@@ -723,14 +757,12 @@ export default function CurrentSprint({
         description={handoffErrorMessage}
         confirmLabel="Archive Group"
         cancelLabel="Back to Group Settings"
-        onConfirm={() => {
-          setHandoffErrorOpen(false);
-          router.push("/join-create-switch-group");
-        }}
+        onConfirm={handleArchiveGroupFromHandoffError}
         onClose={() => {
           setHandoffErrorOpen(false);
           router.push("/join-create-switch-group");
         }}
+        isConfirming={isArchivingGroup}
       />
     </>
   );
