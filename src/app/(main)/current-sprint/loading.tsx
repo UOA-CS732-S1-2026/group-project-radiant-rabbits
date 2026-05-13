@@ -6,9 +6,9 @@ export default function CurrentSprintLoading() {
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
-        <h2 className="text-(length:--text-h3) font-bold text-brand-dark">
+        <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
           Loading current sprint...
-        </h2>
+        </h1>
         <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
           Fetching project metrics and sprint information.
         </p>

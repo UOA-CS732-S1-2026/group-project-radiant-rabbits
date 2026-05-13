@@ -18,7 +18,7 @@ export default function DangerActionButton({
       type={type}
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-body-sm font-medium text-brand-surface hover:bg-status-todo-fg/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-todo-fg ${className}`.trim()}
+      className={`inline-flex min-h-9 items-center justify-center rounded-xl px-sm py-1.5 text-(length:--text-body-sm) sm:text-(length:--text-body-md) font-medium text-white transition bg-status-todo-fg hover:bg-status-todo-fg/90 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-todo-fg ${className}`.trim()}
     >
       {children}
     </button>

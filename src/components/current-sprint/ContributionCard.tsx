@@ -172,10 +172,10 @@ export default function ContributionCard({
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Contribution · this sprint
         </h4>
-        <p className="mt-xs text-(length:--text-body-xs) text-brand-dark/50">
+        <p className="mt-xs text-(length:--text-body-xs) text-brand-dark/70">
           Total work this sprint, by person · click for AI summary
         </p>
-        <p className="mt-md text-(length:--text-body-md) text-brand-dark/60">
+        <p className="mt-md text-(length:--text-body-md) text-brand-dark/70">
           No contributor activity in this sprint period.
         </p>
       </BorderedPanel>
@@ -190,7 +190,7 @@ export default function ContributionCard({
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Contribution · this sprint
         </h4>
-        <p className="text-(length:--text-body-xs) text-brand-dark/50">
+        <p className="text-(length:--text-body-xs) text-brand-dark/70">
           Total work this sprint, by person · click for AI summary
         </p>
       </div>
@@ -203,7 +203,7 @@ export default function ContributionCard({
         />
       ) : null}
 
-      <div className="h-96 space-y-sm overflow-y-auto pr-xs">
+      <div className="scrollbar-subtle h-96 space-y-sm overflow-y-auto pr-xs">
         {contributors.map((person, index) => {
           const isOpen = openContributor === person.name;
           const summary = contributorSummaries[person.name] ?? initialState;
@@ -225,7 +225,7 @@ export default function ContributionCard({
                   <p className="truncate text-(length:--text-body-sm) font-medium text-brand-dark">
                     {person.name}
                   </p>
-                  <p className="text-(length:--text-body-xs) text-brand-dark/60">
+                  <p className="text-(length:--text-body-xs) text-brand-dark/70">
                     <span className="font-semibold">{person.commits}</span>{" "}
                     commits ·{" "}
                     <span className="font-semibold">{person.prs}</span> PRs ·{" "}
@@ -243,10 +243,10 @@ export default function ContributionCard({
                         : `Show AI summary for ${person.name}`
                     }
                     aria-expanded={isOpen}
-                    className={`shrink-0 rounded-md p-1.5 transition ${
+                    className={`shrink-0 rounded-md p-1.5 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark ${
                       isOpen
-                        ? "bg-brand-accent/10 text-brand-accent"
-                        : "text-brand-dark/50 hover:bg-brand-dark/5 hover:text-brand-dark"
+                        ? "bg-brand-accent/10 text-brand-accent-dark"
+                        : "text-brand-dark/70 hover:bg-brand-dark/5 hover:text-brand-dark"
                     }`}
                   >
                     <Sparkles size={14} />
@@ -289,15 +289,18 @@ function TeamSummary({
   if (state.status === "ready") {
     return (
       <div className="mb-md flex items-start gap-sm rounded-lg bg-brand-accent/5 p-sm">
-        <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-accent" />
-        <p className="flex-1 text-(length:--text-body-xs) leading-relaxed text-brand-dark">
+        <Sparkles
+          size={14}
+          className="mt-0.5 shrink-0 text-brand-accent-dark"
+        />
+        <p className="flex-1 text-(length:--text-body-sm) leading-relaxed text-brand-dark">
           {state.text}
         </p>
         <button
           type="button"
           onClick={onRegenerate}
           aria-label="Regenerate AI summary"
-          className="shrink-0 rounded-md p-1 text-brand-dark/40 transition hover:bg-brand-dark/5 hover:text-brand-dark"
+          className="shrink-0 rounded-md p-1 text-brand-dark/40 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark"
         >
           <RotateCw size={12} />
         </button>
@@ -314,7 +317,7 @@ function TeamSummary({
         <button
           type="button"
           onClick={onGenerate}
-          className="shrink-0 text-(length:--text-body-md) font-medium text-brand-accent hover:underline"
+          className="shrink-0 text-(length:--text-body-md) font-medium text-brand-accent-dark hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark rounded"
         >
           Retry
         </button>
@@ -324,14 +327,14 @@ function TeamSummary({
 
   return (
     <div className="mb-md flex items-center gap-sm rounded-lg border border-dashed border-brand-dark/15 p-sm">
-      <Sparkles size={14} className="shrink-0 text-brand-accent" />
-      <p className="flex-1 text-(length:--text-body-md) text-brand-dark/60">
+      <Sparkles size={14} className="shrink-0 text-brand-accent-dark" />
+      <p className="flex-1 text-(length:--text-body-md) text-brand-dark/70">
         Get an AI summary of how the team contributed this sprint.
       </p>
       <button
         type="button"
         onClick={onGenerate}
-        className="shrink-0 rounded-md bg-brand-accent px-sm py-1 text-(length:--text-body-sm) font-medium text-white transition hover:opacity-90"
+        className="shrink-0 rounded-md bg-brand-accent-dark px-sm py-1 text-(length:--text-body-sm) font-medium text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent-dark"
       >
         Generate
       </button>
@@ -358,7 +361,7 @@ function ContributorSummary({
           <button
             type="button"
             onClick={onRegenerate}
-            className="text-(length:--text-body-sm) font-medium text-brand-accent hover:underline"
+            className="text-(length:--text-body-sm) font-medium text-brand-accent-dark hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark rounded"
           >
             Retry
           </button>
@@ -372,7 +375,7 @@ function ContributorSummary({
             type="button"
             onClick={onRegenerate}
             aria-label="Regenerate"
-            className="shrink-0 rounded-md p-1 text-brand-dark/40 transition hover:bg-brand-dark/5 hover:text-brand-dark"
+            className="shrink-0 rounded-md p-1 text-brand-dark/40 transition hover:bg-brand-dark/5 hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark"
           >
             <RotateCw size={12} />
           </button>

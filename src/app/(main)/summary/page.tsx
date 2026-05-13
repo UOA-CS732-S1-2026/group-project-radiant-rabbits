@@ -407,8 +407,12 @@ export default function SummaryPage() {
               <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 Sprint Review Summary
               </h1>
-              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
-                {selectedSprint?.name ?? "No sprint selected"}
+              <p className="mt-xs text-(length:--text-body-sm) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
+                {selectedSprint
+                  ? /^\d+$/.test(selectedSprint.name ?? "")
+                    ? `Sprint ${selectedSprint.name}`
+                    : selectedSprint.name
+                  : "No sprint selected"}
               </p>
             </div>
             <HelpOverlayTrigger
@@ -433,7 +437,7 @@ export default function SummaryPage() {
                 Generated Sprint Review
               </h2>
 
-              <p className="text-(length:--text-body-sm) text-brand-dark/60">
+              <p className="text-(length:--text-body-sm) text-brand-dark/70">
                 {selectedGroup?.name ?? "No group selected"}
                 {selectedGroup?.repoOwner
                   ? ` (${selectedGroup.repoOwner})`
@@ -443,7 +447,7 @@ export default function SummaryPage() {
                   : ""}
               </p>
 
-              <p className="text-(length:--text-body-xs) text-brand-dark/60">
+              <p className="text-(length:--text-body-md) text-brand-dark/70">
                 Last generated: {formatGeneratedAt(reviewMeta.generatedAt)}
                 {reviewMeta.provider
                   ? ` • Provider: ${reviewMeta.provider}`

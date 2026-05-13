@@ -48,7 +48,7 @@ export default function PastSprint({
               <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 Past Sprints
               </h1>
-              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
+              <p className="mt-xs text-(length:--text-body-md) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                 {completedCount} completed
               </p>
             </div>

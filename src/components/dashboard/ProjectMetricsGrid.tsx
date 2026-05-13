@@ -68,7 +68,7 @@ export default function ProjectMetricsGrid({
           <p className="mt-xs text-(length:--text-body-sm) font-medium text-brand-dark">
             {stat.label}
           </p>
-          <p className="mt-sm text-(length:--text-body-xs) text-brand-dark/60">
+          <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
             {stat.detail}
           </p>
         </div>

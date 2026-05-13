@@ -170,7 +170,7 @@ export default async function GroupHistoryPage({
           <h1 className="text-h2 font-bold text-brand-dark">
             {group.name} (Archived)
           </h1>
-          <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+          <p className="mt-xs text-body-sm font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
             Past sprints and teammate list
           </p>
         </div>
@@ -195,7 +195,7 @@ export default async function GroupHistoryPage({
                   <h3 className="text-body-lg font-semibold text-brand-dark">
                     {sprint.name}
                   </h3>
-                  <p className="mt-xs text-body-sm text-brand-dark/60">
+                  <p className="mt-xs text-body-sm text-brand-dark/70">
                     {formatDate(sprint.startDate)} -{" "}
                     {formatDate(sprint.endDate)}
                   </p>
@@ -209,7 +209,7 @@ export default async function GroupHistoryPage({
                         Download Review
                       </Button>
                     ) : (
-                      <p className="self-center text-body-sm text-brand-dark/60">
+                      <p className="self-center text-body-sm text-brand-dark/70">
                         No generated review yet
                       </p>
                     )}
@@ -257,7 +257,7 @@ export default async function GroupHistoryPage({
                         </p>
                       ) : null}
                       {person.email ? (
-                        <p className="text-body-sm text-brand-dark/60">
+                        <p className="text-body-sm text-brand-dark/70">
                           {person.email}
                         </p>
                       ) : null}

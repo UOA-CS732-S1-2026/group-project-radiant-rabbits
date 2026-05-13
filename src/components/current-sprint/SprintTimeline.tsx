@@ -30,19 +30,19 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
             windows are easy to interpret at a glance. */}
         <div className="grid gap-md text-(length:--text-body-sm) text-brand-dark/70 md:grid-cols-3">
           <div>
-            <div className="font-medium text-brand-dark/50">Start</div>
+            <div className="font-medium text-brand-dark/70">Start</div>
             <div className="font-semibold text-brand-dark">
               {formatDate(sprint.startDate)}
             </div>
           </div>
           <div>
-            <div className="font-medium text-brand-dark/50">End</div>
+            <div className="font-medium text-brand-dark/70">End</div>
             <div className="font-semibold text-brand-dark">
               {formatDate(sprint.endDate)}
             </div>
           </div>
           <div>
-            <div className="font-medium text-brand-dark/50">Remaining</div>
+            <div className="font-medium text-brand-dark/70">Remaining</div>
             <div className="font-semibold text-brand-dark">
               {sprint.remainingDays} day{sprint.remainingDays === 1 ? "" : "s"}
             </div>
@@ -53,7 +53,7 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
             separate from the task breakdown cards. */}
         <div className="space-y-sm">
           <div className="flex items-center justify-between text-(length:--text-body-xs)">
-            <span className="font-medium text-brand-dark/60">Progress</span>
+            <span className="font-medium text-brand-dark/70">Progress</span>
             <span className="font-semibold text-brand-dark">
               {sprint.progressPercent}%
             </span>
