@@ -73,6 +73,7 @@ function getInitials(name: string): string {
 }
 
 type ContributorRow = {
+  id: string;
   name: string;
   initials: string;
   avatarUrl: string | null;
@@ -139,6 +140,7 @@ function buildRepositoryContributors(activity: {
       return;
     }
     const row: ContributorRow = {
+      id: lookup,
       name: displayName,
       initials: getInitials(displayName),
       avatarUrl: avatarUrlForLogin(login),
@@ -253,6 +255,7 @@ export default async function DashboardPage() {
         ]}
         repoContributors={[
           {
+            id: "playwright-test-user",
             name: "Playwright Test User",
             initials: "PT",
             avatarUrl: null,

@@ -1,26 +1,34 @@
-# SprintHub - Team Radiant Rabbits
+﻿# SprintHub - Team Radiant Rabbits
 
-## Description
-SprintHub is a Next.js application for managing a GitHub-backed student project team. It supports GitHub authentication, group creation and switching, sprint tracking, teammate visibility, dashboard analytics, and AI-assisted sprint review generation.
+## Overview
+SprintHub is a Next.js 16 app for managing student team sprints backed by GitHub data. It supports authentication, group lifecycle flows, sprint tracking, teammate visibility, dashboard analytics, and AI-assisted sprint summaries/reviews.
 
-The app stores group and sprint data in MongoDB, uses GitHub for identity and repository access, and can use Redis for caching and sync-related workflows. Sprint review and contribution summary features can also call an LLM provider through environment configuration.
+## Core Features
+- GitHub authentication with NextAuth
+- Group lifecycle: create, join, switch, leave, archive
+- Main app shell with persistent sidebar and top bar
+- Dashboard metrics and contribution breakdown
+- Current sprint workflow (tasks, timeline, focus, status)
+- Past sprint history and summaries
+- Teammate view and membership actions
+- Group sync and sprint transition APIs
+- Jest unit/integration coverage and Playwright E2E coverage
 
-## Included Features
-- GitHub sign-in and session handling
-- GitHub repository connection and fetch of issues based on iterations in GitHub Projects
-- Group onboarding, including join, create, and switch-group flows
-- Dashboard with sprint and contribution analytics
-- Current sprint view with task, focus, timeline components and AI generated contributor workload summaries
-- Past sprints with an AI summary provided for each
-- Teammate views with leave group functionality
-- Sprint review generation and review summary workflows
-- GitHub repository syncing and group-member management APIs
-- Test coverage for dashboard, sprint, join, sync, and review routes and services
-- Responsive UI based on tab size
+## Tech Stack
+- Next.js 16 (App Router)
+- TypeScript
+- React 19 + Tailwind CSS 4
+- next-auth
+- MongoDB + Mongoose
+- ioredis (optional cache/sync integration)
+- Jest, Testing Library, Supertest, Playwright
+- Biome + Lefthook
 
-## File Structure
+## Project Structure
 ```text
 .
+├── .github/
+│   └── workflows/
 ├── public/
 │   └── logo-options/
 ├── src/
@@ -28,7 +36,7 @@ The app stores group and sprint data in MongoDB, uses GitHub for identity and re
 │   │   ├── (auth)/
 │   │   ├── (group-change)/
 │   │   ├── (main)/
-|   |   |   ├── components/
+│   │   │   ├── components/
 │   │   │   ├── current-sprint/
 │   │   │   ├── dashboard/
 │   │   │   ├── group/
@@ -40,10 +48,16 @@ The app stores group and sprint data in MongoDB, uses GitHub for identity and re
 │   │   │   ├── tasks/
 │   │   │   └── teammates/
 │   │   ├── api/
+│   │   │   ├── auth/
+│   │   │   ├── groups/
+│   │   │   └── user/
 │   │   ├── database/
+│   │   ├── docs/
 │   │   ├── lib/
 │   │   ├── test/
-│   │   └── utils/
+│   │   ├── utils/
+│   │   ├── globals.css
+│   │   └── layout.tsx
 │   ├── components/
 │   │   ├── auth/
 │   │   ├── current-sprint/
@@ -54,85 +68,72 @@ The app stores group and sprint data in MongoDB, uses GitHub for identity and re
 │   │   ├── shared/
 │   │   └── teammates/
 │   ├── lib/
-│   └── types/
+│   ├── types/
+│   └── auth.ts
+├── tests/
+│   └── e2e/
+├── .env.example
 ├── biome.json
-├── jest.config.js
 ├── jest.config.ts
 ├── jest.setup.ts
 ├── lefthook.yaml
 ├── next.config.ts
 ├── package.json
+├── playwright.config.ts
 ├── postcss.config.mjs
 ├── tailwind.config.ts
 └── tsconfig.json
 ```
 
-## Dependencies
-Main runtime dependencies:
-- Next.js
-- React and React DOM
-- next-auth for GitHub authentication
-- mongodb and mongoose for database access
-- ioredis for Redis-backed sync/caching
-- lucide-react for icons
-
-Main development and test dependencies:
-- TypeScript
-- Biome
-- Jest
-- Playwright
-- ts-jest
-- Testing Library
-- mongodb-memory-server
-- supertest
-- Tailwind CSS
-- lefthook
+## Why Two Component Folders?
+- `src/app/(main)/components`: shell components specific to the `(main)` route layout (`PageTopBar`, `SideNav`).
+- `src/components`: reusable shared feature/UI components consumed across route groups.
 
 ## Prerequisites
-- Node.js 20 or newer
+- Node.js 20+
 - npm
-- A MongoDB connection string
+- MongoDB connection string
 - GitHub OAuth app credentials
-- A Redis URL if you want sync and cache features enabled
-- An OpenAI or Gemini API key if you want AI-generated sprint reviews and summaries
+- Optional Redis URL
+- Optional OpenAI or Gemini API key for AI-generated summaries/reviews
 
-Required environment variables:
+## Environment Variables
+Copy `.env.example` to `.env` and configure values.
+
+Common variables:
 - `MONGODB_URL`
 - `AUTH_GITHUB_ID`
 - `AUTH_GITHUB_SECRET`
-- `REDIS_URL`
-- `OPENAI_API_KEY` or `GEMINI_API_KEY`
-- Optional model overrides such as `OPENAI_MODEL` or `GEMINI_MODEL`
+- `AUTH_SECRET`
+- `NEXTAUTH_URL`
+- `REDIS_URL` (optional)
+- `OPENAI_API_KEY` or `GEMINI_API_KEY` (optional)
+- `OPENAI_MODEL` / `GEMINI_MODEL` (optional)
 
-Playwright test-mode variables:
+E2E/test-mode variables used by Playwright local server setup:
 - `TEST_MODE=true`
 - `NEXT_PUBLIC_TEST_MODE=true`
-- Optional identity overrides: `TEST_USER_ID`, `TEST_USER_NAME`, `TEST_USER_EMAIL`
 
-## How To Run
-Install dependencies:
+## Scripts
+- `npm run dev`: start dev server
+- `npm run build`: production build
+- `npm run start`: run production server
+- `npm run lint`: Biome checks
+- `npm run format`: format with Biome
+- `npm test`: run Jest tests
+- `npm run test:e2e`: run Playwright tests
+- `npm run test:e2e:ui`: run Playwright UI mode
 
+## Run Locally
 ```bash
 npm install
-```
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+Default URL: `http://localhost:3000`
 
-Run tests:
-
+## Testing
 ```bash
 npm test
 npm run test:e2e
 ```
-
-
-## Still To Be Implemented (DELETE LATER; FOR OUR REFERENCE)
-- Incorrect metrics in Dashboard (many bugs)
-- Landing page with inconsistent colour scheme UI
-- Data caching
