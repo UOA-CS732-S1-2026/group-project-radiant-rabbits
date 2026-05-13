@@ -113,7 +113,7 @@ export default function SprintGitHubTicketsOverlay({
                             key={task.id}
                             className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-(length:--text-body-md)"
                           >
-                            <span className="text-brand-dark/60">
+                            <span className="text-brand-dark/70">
                               {task.ref || "—"}
                             </span>
                             <span className="min-w-0 text-brand-dark/70">

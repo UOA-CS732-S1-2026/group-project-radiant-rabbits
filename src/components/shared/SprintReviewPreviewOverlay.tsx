@@ -116,7 +116,7 @@ export default function SprintReviewPreviewOverlay({
                     <div className="mx-auto min-h-[min(65vh,44rem)] w-full max-w-[68rem] rounded-lg border border-brand-dark/15 bg-brand-surface px-6 py-8 shadow-sm sm:px-10 sm:py-10 md:px-14 md:py-12">
                       {isLoading ? (
                         <div className="flex items-center justify-center h-full">
-                          <p className="text-brand-dark/50">
+                          <p className="text-brand-dark/70">
                             Generating review content...
                           </p>
                         </div>
@@ -125,7 +125,7 @@ export default function SprintReviewPreviewOverlay({
                           <p className="text-body-md font-medium text-brand-dark/85">
                             {sprintName || "Sprint Review"}
                           </p>
-                          <p className="mt-1 text-body-md text-brand-dark/60">
+                          <p className="mt-1 text-body-md text-brand-dark/70">
                             {dateRange}
                           </p>
 
@@ -146,7 +146,7 @@ export default function SprintReviewPreviewOverlay({
                       This sprint review is saved—you can open it anytime from{" "}
                       <Link
                         href="/past-sprints"
-                        className="font-medium text-brand-primary underline decoration-brand-primary/40 underline-offset-2 transition hover:opacity-90"
+                        className="font-medium text-brand-accent-dark underline decoration-brand-accent-dark/40 underline-offset-2 transition hover:opacity-90"
                       >
                         Past Sprints
                       </Link>

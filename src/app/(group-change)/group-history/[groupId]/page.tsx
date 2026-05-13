@@ -195,7 +195,7 @@ export default async function GroupHistoryPage({
                   <h3 className="text-body-lg font-semibold text-brand-dark">
                     {sprint.name}
                   </h3>
-                  <p className="mt-xs text-body-sm text-brand-dark/60">
+                  <p className="mt-xs text-body-sm text-brand-dark/70">
                     {formatDate(sprint.startDate)} -{" "}
                     {formatDate(sprint.endDate)}
                   </p>
@@ -209,7 +209,7 @@ export default async function GroupHistoryPage({
                         Download Review
                       </Button>
                     ) : (
-                      <p className="self-center text-body-sm text-brand-dark/60">
+                      <p className="self-center text-body-sm text-brand-dark/70">
                         No generated review yet
                       </p>
                     )}
@@ -257,7 +257,7 @@ export default async function GroupHistoryPage({
                         </p>
                       ) : null}
                       {person.email ? (
-                        <p className="text-body-sm text-brand-dark/60">
+                        <p className="text-body-sm text-brand-dark/70">
                           {person.email}
                         </p>
                       ) : null}
