@@ -16,6 +16,7 @@ export type SprintReviewPromptOverlayProps = {
 /** Shown after “finish sprint” confirm; Generate opens the preview overlay. */
 export default function SprintReviewPromptOverlay({
   open,
+  onClose,
   onSkip,
   onGenerateSprintReview,
   title = "Sprint complete",
