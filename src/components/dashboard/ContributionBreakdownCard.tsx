@@ -6,6 +6,7 @@ import Card from "@/components/shared/Card";
 import FilterChip from "@/components/shared/FilterChip";
 
 type ContributorRow = {
+  id: string;
   name: string;
   initials: string;
   avatarUrl: string | null;
@@ -43,7 +44,7 @@ function RepoContributionBars({
         {rows.map((row) => {
           return (
             <div
-              key={row.name}
+              key={row.id}
               className="grid grid-cols-[3fr_7fr] items-center ml-sm mr-sm gap-sm"
             >
               {/* Keep identity next to the bar so filtering metrics does not

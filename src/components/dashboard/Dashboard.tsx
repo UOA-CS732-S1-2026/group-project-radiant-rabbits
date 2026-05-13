@@ -43,6 +43,7 @@ type DashboardProps = {
   // Already limited by the server so the dashboard card can stay dense and
   // predictable on small screens.
   repoContributors?: Array<{
+    id: string;
     name: string;
     initials: string;
     avatarUrl: string | null;
