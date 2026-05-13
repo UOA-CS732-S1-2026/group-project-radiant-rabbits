@@ -60,7 +60,10 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Sprint Tasks
         </h4>
-        <div className="flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs">
+        <fieldset
+          aria-label="Filter tasks"
+          className="flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs m-0 border-0"
+        >
           <FilterChip
             label={`All (${tasks.length})`}
             active={filter === "all"}
@@ -86,7 +89,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
             active={filter === "done"}
             onClick={() => setFilter("done")}
           />
-        </div>
+        </fieldset>
       </div>
 
       {/* Task list */}
@@ -97,10 +100,10 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
             GitHub Project to see them here.
           </p>
         ) : (
-          <div className="space-y-xs">
+          <ul className="space-y-xs list-none p-0 m-0">
             {filteredTasks.map((task, index) => {
               return (
-                <div
+                <li
                   key={task.id}
                   className={`flex w-full min-w-0 items-center gap-md px-md py-md text-left-transition ${
                     index === 0 ? "" : "border-t border-brand-dark/10 pt-md"
@@ -155,10 +158,10 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
                       />
                     )}
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
     </BorderedPanel>

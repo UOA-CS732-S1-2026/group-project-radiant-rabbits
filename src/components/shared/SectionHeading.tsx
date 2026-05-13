@@ -8,13 +8,13 @@ export default function SectionHeading({
   subtitle,
 }: SectionHeadingProps) {
   return (
-    <header className="mb-xl border-l-4 border-brand-accent pl-md">
-      <h1 className="text-(length:--text-h2) text-brand-dark">{title}</h1>
+    <div className="mb-xl border-l-4 border-brand-accent pl-md">
+      <h2 className="text-(length:--text-h2) text-brand-dark">{title}</h2>
       {subtitle && (
         <p className="mt-sm text-(length:--text-body-md) text-brand-dark/70">
           {subtitle}
         </p>
       )}
-    </header>
+    </div>
   );
 }

@@ -222,6 +222,7 @@ function JoinCreateSwitchGroupContent() {
                 options={TAB_OPTIONS}
                 value={tab}
                 onChange={setTab}
+                aria-label="Group view"
               />
             </div>
             <div className="min-w-0" aria-hidden="true" />
@@ -232,6 +233,7 @@ function JoinCreateSwitchGroupContent() {
               options={TAB_OPTIONS}
               value={tab}
               onChange={setTab}
+              aria-label="Group view"
             />
           </div>
         )}
@@ -243,6 +245,7 @@ function JoinCreateSwitchGroupContent() {
                 options={CURRENT_GROUP_FILTER_OPTIONS}
                 value={currentGroupFilter}
                 onChange={setCurrentGroupFilter}
+                aria-label="Filter groups"
               />
             </div>
           ) : null}

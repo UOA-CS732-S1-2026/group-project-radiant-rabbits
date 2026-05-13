@@ -51,7 +51,7 @@ export default function Button({
 
   const layout = shape === "pill" ? layoutPill : layoutDefault;
 
-  const base = `${layout} transition disabled:opacity-60 disabled:cursor-not-allowed`;
+  const base = `${layout} transition disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary`;
 
   const variantStyles =
     variant === "purple"
