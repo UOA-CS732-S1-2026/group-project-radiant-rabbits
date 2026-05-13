@@ -31,7 +31,7 @@ export default function LandingHeroSection({
         as="h1"
         size="display"
         variant="purple"
-        className="text-center"
+        className="text-center !text-[#8365C8]"
       />
       <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col items-center gap-5 rounded-2xl border border-brand-border bg-brand-border/15 px-5 py-5 sm:gap-6 sm:px-7 sm:py-6">
         <p className={`text-pretty ${LANDING_HERO_LEAD_TEXT_CLASS}`}>

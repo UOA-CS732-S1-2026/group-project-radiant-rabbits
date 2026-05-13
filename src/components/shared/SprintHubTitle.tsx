@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type SprintHubTitleSize = "display" | "hero" | "lg" | "md" | "sm";
 
-export type SprintHubTitleVariant = "purple" | "white";
+export type SprintHubTitleVariant = "purple" | "white" | "dark";
 
 const sizeClasses: Record<SprintHubTitleSize, string> = {
   display: "text-(length:--text-display) leading-[1.06]",
@@ -15,6 +15,7 @@ const sizeClasses: Record<SprintHubTitleSize, string> = {
 const variantClasses: Record<SprintHubTitleVariant, string> = {
   purple: "text-brand-accent",
   white: "text-white drop-shadow-sm",
+  dark: "text-brand-dark",
 };
 
 type SprintHubTitleProps = {
