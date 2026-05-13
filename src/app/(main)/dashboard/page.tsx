@@ -6,14 +6,12 @@ import {
   calculateGithubMetricsLive,
   type GithubMetrics,
 } from "@/app/lib/githubCalculator";
-import {
-  Commit,
-  Group,
-  Issue,
-  PullRequest,
-  Sprint,
-  User,
-} from "@/app/lib/models";
+import type {
+  CommitData,
+  IssueData,
+  PullRequestData,
+} from "@/app/lib/githubService";
+import { Group, Issue, Sprint, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { syncGroup } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
@@ -74,157 +72,123 @@ function getInitials(name: string): string {
   return tokens.map((token) => token[0]?.toUpperCase() ?? "").join("");
 }
 
-async function loadRepositoryContributors(
-  groupId: import("mongoose").Types.ObjectId,
-): Promise<
-  Array<{
-    name: string;
-    initials: string;
-    avatarUrl: string | null;
-    commits: number;
-    prs: number;
-    issues: number;
-    colour: string;
-  }>
-> {
-  // Commit authors, PR authors, and issue assignees use different identity
-  // shapes, so merge them into one display map before ranking contributors.
-  const commits = await Commit.find({ group: groupId })
-    .select("author")
-    .lean<
-      Array<{ author: { name?: string; email?: string; login?: string } }>
-    >();
+type ContributorRow = {
+  name: string;
+  initials: string;
+  avatarUrl: string | null;
+  commits: number;
+  prs: number;
+  issues: number;
+};
 
-  // Get all PRs with author info
-  const prs = await PullRequest.find({ group: groupId })
-    .select("author")
-    .lean<Array<{ author: string }>>();
+type RepoActivityTotals = {
+  commits: number;
+  prs: number;
+  issues: number;
+};
 
-  // Get all closed issues with assigned person info
-  const issues = await Issue.find({
-    group: groupId,
-    state: "CLOSED",
-  })
-    .select("assignees")
-    .lean<Array<{ assignees: import("mongoose").Types.ObjectId[] }>>();
-
-  // Issue assignees are ObjectId refs, so bulk load profiles once to avoid an
-  // N+1 query while building the contributor cards.
-  const assigneeIds = new Set<string>();
-  for (const issue of issues) {
-    if (issue.assignees) {
-      for (const assigneeId of issue.assignees) {
-        assigneeIds.add(String(assigneeId));
-      }
-    }
+// Build per-contributor commit/PR/issue counts from the same live GitHub data
+function buildRepositoryContributors(activity: {
+  commits: CommitData[];
+  pullRequests: PullRequestData[];
+  issues: IssueData[];
+}): {
+  contributors: Array<ContributorRow & { colour: string }>;
+  totals: RepoActivityTotals;
+} {
+  const canonicalByAlias = new Map<string, string>();
+  for (const commit of activity.commits) {
+    const login = commit.author?.login;
+    if (!login) continue;
+    const lowerLogin = login.trim().toLowerCase();
+    if (!lowerLogin) continue;
+    canonicalByAlias.set(lowerLogin, login);
+    const name = commit.author?.name?.trim().toLowerCase();
+    if (name) canonicalByAlias.set(name, login);
+    const email = commit.author?.email?.trim().toLowerCase();
+    if (email) canonicalByAlias.set(email, login);
   }
 
-  const userMap = new Map(
-    (
-      await User.find({ _id: { $in: Array.from(assigneeIds) } })
-        .select("_id name login avatarUrl")
-        .lean<
-          Array<{
-            _id: string;
-            name?: string;
-            login?: string;
-            avatarUrl?: string | null;
-          }>
-        >()
-    ).map((u) => [String(u._id), u]),
-  );
+  const resolveCanonical = (
+    alias: string | null | undefined,
+  ): string | null => {
+    if (!alias) return null;
+    return canonicalByAlias.get(alias.trim().toLowerCase()) ?? null;
+  };
 
-  const contributorMap = new Map<
-    string,
-    {
-      name: string;
-      initials: string;
-      avatarUrl: string | null;
-      commits: number;
-      prs: number;
-      issues: number;
-    }
-  >();
+  const contributorMap = new Map<string, ContributorRow>();
 
-  // Count commits by author
-  for (const commit of commits) {
-    const author = commit.author?.name || commit.author?.login || "Unknown";
-    if (!author) continue;
-
-    const key = author.trim().toLowerCase();
-    const existing = contributorMap.get(key);
-
+  const upsert = (
+    key: string,
+    displayName: string,
+    login: string | null | undefined,
+    bump: (row: ContributorRow) => void,
+  ) => {
+    const lookup = key.trim().toLowerCase();
+    if (!lookup) return;
+    const existing = contributorMap.get(lookup);
     if (existing) {
-      existing.commits += 1;
+      bump(existing);
       if (!existing.avatarUrl) {
-        existing.avatarUrl = avatarUrlForLogin(commit.author?.login);
+        existing.avatarUrl = avatarUrlForLogin(login);
       }
-    } else {
-      contributorMap.set(key, {
-        name: author,
-        initials: getInitials(author),
-        avatarUrl: avatarUrlForLogin(commit.author?.login),
-        commits: 1,
-        prs: 0,
-        issues: 0,
-      });
+      if (displayName?.includes(" ") && !existing.name.includes(" ")) {
+        existing.name = displayName;
+        existing.initials = getInitials(displayName);
+      }
+      return;
     }
+    const row: ContributorRow = {
+      name: displayName,
+      initials: getInitials(displayName),
+      avatarUrl: avatarUrlForLogin(login),
+      commits: 0,
+      prs: 0,
+      issues: 0,
+    };
+    bump(row);
+    contributorMap.set(lookup, row);
+  };
+
+  for (const commit of activity.commits) {
+    // Commits without a resolved GitHub login fall back to a name/email alias
+    const canonicalLogin =
+      commit.author?.login ??
+      resolveCanonical(commit.author?.name) ??
+      resolveCanonical(commit.author?.email);
+    const display =
+      commit.author?.name ||
+      canonicalLogin ||
+      commit.author?.email ||
+      "Unknown";
+    // Falling back to "Unknown" ensures commits with empty author metadata still get counted
+    const key =
+      canonicalLogin ||
+      commit.author?.name ||
+      commit.author?.email ||
+      "Unknown";
+    upsert(key, display, canonicalLogin, (row) => {
+      row.commits += 1;
+    });
   }
 
-  // Count PRs by author
-  for (const pr of prs) {
+  for (const pr of activity.pullRequests) {
     const author = pr.author || "Unknown";
-    if (!author) continue;
-
-    const key = author.trim().toLowerCase();
-    const existing = contributorMap.get(key);
-
-    if (existing) {
-      existing.prs += 1;
-      if (!existing.avatarUrl) {
-        existing.avatarUrl = avatarUrlForLogin(pr.author);
-      }
-    } else {
-      contributorMap.set(key, {
-        name: author,
-        initials: getInitials(author),
-        avatarUrl: avatarUrlForLogin(pr.author),
-        commits: 0,
-        prs: 1,
-        issues: 0,
-      });
-    }
+    const canonicalLogin = resolveCanonical(pr.author) ?? pr.author ?? null;
+    upsert(canonicalLogin || author, author, canonicalLogin, (row) => {
+      row.prs += 1;
+    });
   }
 
-  // Count issues by assignee
-  for (const issue of issues) {
-    if (!issue.assignees || issue.assignees.length === 0) continue;
-
-    for (const assigneeId of issue.assignees) {
-      const user = userMap.get(String(assigneeId));
-      if (!user) continue;
-
-      const name = user.name || user.login || "Unknown";
-      const key = name.trim().toLowerCase();
-      const userAvatar = user.avatarUrl || avatarUrlForLogin(user.login);
-      const existing = contributorMap.get(key);
-
-      if (existing) {
-        existing.issues += 1;
-        if (!existing.avatarUrl) {
-          existing.avatarUrl = userAvatar;
-        }
-      } else {
-        contributorMap.set(key, {
-          name,
-          initials: getInitials(name),
-          avatarUrl: userAvatar,
-          commits: 0,
-          prs: 0,
-          issues: 1,
-        });
-      }
-    }
+  // Issues from GitHub already carry an author login, so attribute by author
+  // rather than the never-populated Issue.assignees field.
+  for (const issue of activity.issues) {
+    const author = issue.author || "Unknown";
+    const canonicalLogin =
+      resolveCanonical(issue.author) ?? issue.author ?? null;
+    upsert(canonicalLogin || author, author, canonicalLogin, (row) => {
+      row.issues += 1;
+    });
   }
 
   const colours = [
@@ -236,17 +200,26 @@ async function loadRepositoryContributors(
     "var(--color-brand-accent)",
   ];
 
-  // Limit to six so the card layout remains scannable on the dashboard.
-  return Array.from(contributorMap.values())
+  // Show every contributor with activity so the bars in the breakdown sum to
+  // the same totals as the chip labels / headline metric cards.
+  const contributors = Array.from(contributorMap.values())
     .filter((c) => c.commits + c.prs + c.issues > 0)
     .sort(
       (a, b) => b.commits + b.prs + b.issues - (a.commits + a.prs + a.issues),
     )
-    .slice(0, 6)
     .map((row, index) => ({
       ...row,
       colour: colours[index % colours.length],
     }));
+
+  return {
+    contributors,
+    totals: {
+      commits: activity.commits.length,
+      prs: activity.pullRequests.length,
+      issues: activity.issues.length,
+    },
+  };
 }
 
 export default async function DashboardPage() {
@@ -403,7 +376,12 @@ export default async function DashboardPage() {
 
   let status: DashboardStatus = "ready";
   let statusMessage: string | undefined;
-  let githubMetrics: GithubMetrics | undefined;
+  let githubMetrics:
+    | Omit<GithubMetrics, "commits" | "pullRequests" | "issues">
+    | undefined;
+  let liveCommits: CommitData[] = [];
+  let livePullRequests: PullRequestData[] = [];
+  let liveIssues: IssueData[] = [];
 
   // Surface repository/session problems as dashboard errors because the user is
   // already authenticated and can recover by reconnecting/signing in again.
@@ -416,13 +394,18 @@ export default async function DashboardPage() {
       "GitHub access token is missing from your session. Please sign in again.";
   } else {
     try {
-      githubMetrics = await calculateGithubMetricsLive(
+      const result = await calculateGithubMetricsLive(
         accessToken,
         group._id.toString(),
         group.repoOwner,
         group.repoName,
         null,
       );
+      const { commits, pullRequests, issues, ...metrics } = result;
+      githubMetrics = metrics;
+      liveCommits = commits ?? [];
+      livePullRequests = pullRequests ?? [];
+      liveIssues = issues ?? [];
     } catch (error) {
       console.error("Failed to calculate dashboard metrics:", error);
       status = "error";
@@ -430,11 +413,23 @@ export default async function DashboardPage() {
     }
   }
 
-  // Sprint data is sourced from synced GitHub iterations — empty array when
-  // none have been synced yet. The Dashboard component handles the empty state.
+  // Sprint data is sourced from synced GitHub iterations
   const sprints = await loadSprintsForDashboard(group._id);
 
-  const repoContributorsData = await loadRepositoryContributors(group._id);
+  const { contributors: repoContributorsData, totals: repoActivityTotals } =
+    buildRepositoryContributors({
+      commits: liveCommits,
+      pullRequests: livePullRequests,
+      issues: liveIssues,
+    });
+
+  // Use the deduped contributor row count for the headline card.
+  if (githubMetrics) {
+    githubMetrics = {
+      ...githubMetrics,
+      activeContributors: repoContributorsData.length,
+    };
+  }
 
   // Find the next future sprint so we can show "next iteration starts on X"
   // when no iteration covers today.
@@ -468,6 +463,7 @@ export default async function DashboardPage() {
       metrics={githubMetrics}
       sprints={sprints}
       repoContributors={repoContributorsData}
+      repoActivityTotals={repoActivityTotals}
       iterationFieldConfigured={group.iterationFieldConfigured ?? null}
       nextSprintStart={
         nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
