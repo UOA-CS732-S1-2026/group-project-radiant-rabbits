@@ -24,6 +24,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* Font variables live at the root so route groups and portal-based
+          overlays inherit the same typography without wrapping providers. */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-brand-background font-sans text-brand-dark`}
       >

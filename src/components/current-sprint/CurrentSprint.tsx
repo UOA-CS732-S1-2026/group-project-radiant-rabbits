@@ -28,7 +28,6 @@ import SprintWelcomeOverlay from "@/components/shared/SprintWelcomeOverlay";
 import { getInitials } from "@/lib/formatters";
 import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
-// Fetch all required data to display the current sprint metrics
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
 type NextSprintTaskRow = {
@@ -46,7 +45,8 @@ type Assignee = {
 
 type SprintTaskRow = {
   id: string;
-  ref: string; // "#42" for linked issues, otherwise the task id
+  // "#42" for linked issues; blank/draft tasks still need a stable row key.
+  ref: string;
   title: string;
   status: TaskStatus;
   assignees?: Assignee[];
@@ -129,7 +129,6 @@ type CurrentSprintProps = {
   metrics?: SprintMetrics;
 };
 
-// Helper functions for formatting dates
 function formatShortDate(value: string | Date) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -149,7 +148,6 @@ function formatSprintDate(value: string | Date) {
   });
 }
 
-// Helper function to compute the status message for the sprint
 function StatusBlock({ message }: { message: string }) {
   return (
     <div className="min-h-full bg-brand-background">
@@ -162,7 +160,6 @@ function StatusBlock({ message }: { message: string }) {
   );
 }
 
-// Page component that shows when the current sprint is loading or if it has an error
 export default function CurrentSprint({
   status,
   statusMessage,
@@ -199,6 +196,8 @@ export default function CurrentSprint({
 
   useEffect(() => {
     if (status !== "ready") {
+      // Close overlays when the backing sprint disappears so stale modal state
+      // cannot survive a refresh into an empty/error page.
       setFinishConfirmOpen(false);
       setSprintReviewPromptOpen(false);
       setSprintReviewPreviewOpen(false);
@@ -271,7 +270,8 @@ export default function CurrentSprint({
           method: "POST",
         });
 
-        // 409 means a sync is already in progress, treat as success
+        // 409 means another refresh already started sync; refreshing the route
+        // still lets the page pick up whatever data is available.
         if (!syncResponse.ok && syncResponse.status !== 409) {
           const syncPayload = (await syncResponse.json().catch(() => ({}))) as {
             error?: string;
@@ -315,7 +315,8 @@ export default function CurrentSprint({
       try {
         setIsSprintHandoffSubmitting(true);
 
-        // Fetch all sprints for the group
+        // Read the latest sprint list because GitHub sync may have added the
+        // next iteration since this page first rendered.
         const sprintsResponse = await fetch(`/api/groups/${groupId}/sprints`);
         if (!sprintsResponse.ok) {
           throw new Error("Failed to load sprints");
@@ -354,7 +355,8 @@ export default function CurrentSprint({
           setHandoffErrorOpen(true);
           return;
         } else {
-          // Update next sprint's goal with the sprint focus
+          // Store the handoff focus before transition so the next sprint opens
+          // with context even if ticket fetching fails.
           const updateResponse = await fetch(
             `/api/groups/${groupId}/sprints/${nextSprint._id}`,
             {
@@ -368,7 +370,8 @@ export default function CurrentSprint({
             console.error("Failed to update next sprint goal");
           }
 
-          // Fetch tasks for the next sprint
+          // Preview next-sprint tickets before transition so the team can catch
+          // missing GitHub iteration assignments while still on the handoff flow.
           const tasksResponse = await fetch(
             `/api/groups/${groupId}/sprints/${nextSprint._id}/tasks`,
           );
@@ -431,7 +434,8 @@ export default function CurrentSprint({
     try {
       let response = await attemptTransition();
 
-      // If 404 (Sprint not found), try to sync and retry once
+      // A just-created GitHub iteration may not be synced yet; retry once after
+      // sync before asking the user to archive or fix project setup.
       if (response.status === 404) {
         console.log("Next sprint not found. Attempting a background sync...");
 
@@ -586,7 +590,6 @@ export default function CurrentSprint({
   const inProgressCount = metrics?.taskBreakdown.inProgress ?? 0;
   const doneCount = metrics?.taskBreakdown.done ?? 0;
 
-  // Display the current sprint page with the fetched metrics
   return (
     <>
       <div className="min-h-full bg-brand-background">
@@ -598,13 +601,16 @@ export default function CurrentSprint({
               </p>
             ) : null}
 
-            {/* Header: sprint title + help + refresh */}
+            {/* Keep help and refresh beside the title because both explain or
+                update the GitHub-derived sprint data shown below. */}
             <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
               <div>
                 <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
-                  {sprint.name}
+                  {/^\d+$/.test(sprint.name)
+                    ? `Sprint ${sprint.name}`
+                    : sprint.name}
                 </h1>
-                <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                <p className="mt-xs text-(length:--text-body-md) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                   {formatSprintDate(sprint.startDate)} —{" "}
                   {formatSprintDate(sprint.endDate)} ·{" "}
                   {sprint.progress.remainingDays} days remaining
@@ -659,14 +665,16 @@ export default function CurrentSprint({
                 </Button>
               </div>
             </div>
-            {/* Sprint Focus */}
+            {/* Focus is app-owned context layered on top of GitHub iteration
+                data, so it stays editable here. */}
             <SprintFocus
               focus={sprint?.goal || ""}
               onUpdate={handleSaveSprintFocus}
               editable
             />
 
-            {/* Sprint Timeline */}
+            {/* Timeline uses calendar progress so teams can compare time left
+                against task completion below. */}
             <SprintTimeline
               sprint={{
                 startDate: sprint.startDate,
@@ -678,13 +686,15 @@ export default function CurrentSprint({
               }}
             />
 
-            {/* Breakdown cards */}
+            {/* Breakdown cards summarize the same task set before the detailed
+                ticket list. */}
             <BreakdownCard
               todoCount={todoCount}
               inProgressCount={inProgressCount}
               doneCount={doneCount}
             />
-            {/* Tasks and Contributions */}
+            {/* Tasks and contribution summaries are paired so delivery state and
+                contributor activity can be compared without changing pages. */}
             <div className="grid min-w-0 items-stretch gap-lg lg:grid-cols-[1.4fr_1fr]">
               <div className="min-w-0 h-full">
                 <SprintTaskSection tasks={sprintTasks} />
@@ -698,7 +708,8 @@ export default function CurrentSprint({
               </div>
             </div>
 
-            {/* Activity Timeline */}
+            {/* Timeline stays last because it is supporting detail after the
+                sprint status, task state, and contribution overview. */}
             <ActivityTimeline items={timeline} />
           </div>
         </PageContainer>

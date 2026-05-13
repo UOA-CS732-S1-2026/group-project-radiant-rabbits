@@ -22,7 +22,6 @@ type MiniSeriesPoint = {
   active?: boolean;
 };
 
-// Helper to format dates for the "next iteration starts on..." hint
 function formatDateLabel(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -34,11 +33,12 @@ function formatDateLabel(value: string) {
   });
 }
 
-// SVG line/area chart for sprint velocity. Stretches to fill the parent box.
 function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   const w = 760;
   const h = 240;
   const pad = { l: 26, r: 26, t: 12, b: 32 };
+  // Keep a non-zero scale even when every sprint has zero closed issues so the
+  // chart frame remains readable instead of collapsing to a flat axis.
   const safeData = data.length > 0 ? data : [{ label: "S1", value: 0 }];
   const max = Math.max(...safeData.map((point) => point.value), 10);
   const xs = (index: number) =>
@@ -99,7 +99,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
               textAnchor="end"
               fontSize="10"
               fill="var(--color-brand-dark)"
-              fillOpacity="0.45"
+              fillOpacity="0.70"
             >
               {Math.round(tick)}
             </text>
@@ -134,7 +134,7 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
           textAnchor="middle"
           fontSize="10.5"
           fill="var(--color-brand-dark)"
-          fillOpacity="0.58"
+          fillOpacity="0.70"
         >
           {point.label}
         </text>
@@ -143,7 +143,6 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   );
 }
 
-// Component for the sprint velocity card (chart + heading + empty states)
 export default function SprintVelocityCard({
   sprints,
   iterationFieldConfigured,
@@ -164,11 +163,11 @@ export default function SprintVelocityCard({
           <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Sprint velocity
           </h3>
-          <p className="text-(length:--text-body-xs) text-brand-dark/50">
+          <p className="text-(length:--text-body-sm) text-brand-dark/70">
             Total number of issues closed per sprint
           </p>
         </div>
-        <span className="rounded-md bg-brand-accent/10 px-sm py-xs text-(length:--text-body-xs) font-medium text-brand-accent">
+        <span className="rounded-md bg-brand-accent/10 px-sm py-xs text-(length:--text-body-sm) font-medium text-brand-accent-dark">
           {sprints?.length ?? 0} iterations
         </span>
       </div>
@@ -178,7 +177,7 @@ export default function SprintVelocityCard({
             <MiniVelocityChart data={velocitySeries} />
           </div>
           {sprints && !sprints.some((s) => s.isCurrent) && nextSprintStart ? (
-            <p className="mt-md text-(length:--text-body-sm) text-brand-dark/60">
+            <p className="mt-md text-(length:--text-body-sm) text-brand-dark/70">
               No iteration is active right now. The next iteration starts on{" "}
               <span className="font-semibold text-brand-dark">
                 {formatDateLabel(nextSprintStart)}
@@ -190,18 +189,18 @@ export default function SprintVelocityCard({
       ) : (
         <div className="rounded-lg border border-brand-dark/10 bg-brand-surface p-md">
           {iterationFieldConfigured === null ? (
-            <p className="text-(length:--text-body-sm) text-brand-dark/60">
+            <p className="text-(length:--text-body-sm) text-brand-dark/70">
               Sprint data will appear here after your first sync completes.
             </p>
           ) : iterationFieldConfigured === false ? (
-            <p className="text-(length:--text-body-sm) text-brand-dark/60">
+            <p className="text-(length:--text-body-sm) text-brand-dark/70">
               This repo&apos;s GitHub Project doesn&apos;t have an iteration
               field yet. Once you{" "}
               <a
                 href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields"
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium text-brand-accent underline"
+                className="font-medium text-brand-accent-dark underline"
               >
                 add an iteration field
               </a>{" "}
@@ -209,7 +208,7 @@ export default function SprintVelocityCard({
               tickets to it, sprint metrics will appear here on the next sync.
             </p>
           ) : (
-            <p className="text-(length:--text-body-sm) text-brand-dark/60">
+            <p className="text-(length:--text-body-sm) text-brand-dark/70">
               Your iteration field is set up but has no iterations yet. Create
               one in your GitHub Project, assign tickets to it, then refresh.
             </p>

@@ -25,7 +25,6 @@ export type SprintGitHubTicketsOverlayProps = {
   isContinuing?: boolean;
 };
 
-/** Same pill styles as the Current Sprint page task list. */
 function StatusBadge({ status }: { status: TaskStatus }) {
   const styles: Record<TaskStatus, string> = {
     TODO: "bg-brand-todo text-brand-surface",
@@ -72,11 +71,13 @@ export default function SprintGitHubTicketsOverlay({
   const overlay =
     open && typeof document !== "undefined"
       ? createPortal(
-          // z above welcome (100) and sprint review preview (101)
+          // Keep this above the welcome/review overlays because it is the final
+          // handoff step and should not appear underneath earlier dialogs.
           <div className="fixed inset-0 z-[102]">
             <button
               type="button"
-              aria-label="Close dialog"
+              aria-hidden="true"
+              tabIndex={-1}
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity disabled:cursor-not-allowed"
               disabled={isContinuing}
             />
@@ -113,7 +114,7 @@ export default function SprintGitHubTicketsOverlay({
                             key={task.id}
                             className="grid grid-cols-[5rem_1fr_6rem] items-center border-b border-brand-dark/10 pb-sm text-(length:--text-body-md)"
                           >
-                            <span className="text-brand-dark/60">
+                            <span className="text-brand-dark/70">
                               {task.ref || "—"}
                             </span>
                             <span className="min-w-0 text-brand-dark/70">

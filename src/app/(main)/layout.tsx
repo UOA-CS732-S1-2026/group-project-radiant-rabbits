@@ -16,12 +16,15 @@ export default async function MainLayout({
 }>) {
   const session = await getServerSession(options);
 
-  let repoName = "Repo Name"; // Default value if repo name cannot be fetched
+  // Keep the shell renderable even when the current group lookup fails; page
+  // content handles the real empty/error states.
+  let repoName = "Repo Name";
 
   try {
     await connectMongoDB();
 
-    // Fetching user's current group repo name
+    // The layout only needs the repo label, so avoid loading full group data on
+    // every page render.
     const userWithGroup = (await User.findOne({ githubId: session?.user?.id })
       .populate({
         path: "currentGroupId",
@@ -34,7 +37,8 @@ export default async function MainLayout({
       repoName = userWithGroup.currentGroupId.repoName;
     }
   } catch (error) {
-    // Database connection error
+    // Navigation should still render if the label lookup fails; blocking here
+    // would hide page-level recovery actions.
     console.error("Failed to fetch group data for layout:", error);
   }
 
@@ -44,7 +48,8 @@ export default async function MainLayout({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <PageTopBar
           repoName={repoName}
-          // Use session-backed avatar
+          // The session avatar is already available from auth and avoids an
+          // extra user-profile query in the shared shell.
           profileImageUrl={session?.user?.image ?? undefined}
           profileName={session?.user?.name ?? undefined}
         />

@@ -186,7 +186,9 @@ export async function buildTeamWorkloadProfile(
   const start = new Date(sprint.startDate as Date);
   const end = new Date(sprint.endDate as Date);
 
-  // // Fetch all relevant data within the sprint date range
+  // A sprint contribution can happen at creation time or completion time, so
+  // opened/closed and opened/merged events stay separate instead of collapsing
+  // each issue or PR into one record.
   const [
     commits,
     issuesOpened,
@@ -304,7 +306,8 @@ export async function buildTeamWorkloadProfile(
     trackDay(name, pr.mergedAt);
   }
 
-  // Process sprint tasks
+  // Task assignment is treated as workload signal because some planning/support
+  // work may not leave commits or PRs, especially near sprint boundaries.
   for (const task of sprintTasks) {
     for (const assignee of task.assignees ?? []) {
       const name = normalizeAuthorName(assignee);
@@ -599,13 +602,14 @@ type CachedSummary = {
   provider: "openai" | "gemini";
 };
 
-// retrieves a cached summary from the database if it exists for the given group, sprint, kind, and contributorKey.
 export async function getCachedSummary(args: {
   groupId: string;
   sprintId: string;
   kind: "team" | "contributor";
   contributorKey: string | null;
 }): Promise<CachedSummary | null> {
+  // The caller compares inputHash before reusing text so AI summaries refresh
+  // when sprint data changes, while identical profiles avoid repeat API calls.
   const row = await ContributionSummary.findOne({
     group: new mongoose.Types.ObjectId(args.groupId),
     sprint: new mongoose.Types.ObjectId(args.sprintId),
@@ -622,7 +626,6 @@ export async function getCachedSummary(args: {
   };
 }
 
-// inserts or updates a cached summary in the database for the given group, sprint, kind, and contributorKey.
 export async function upsertCachedSummary(args: {
   groupId: string;
   sprintId: string;
@@ -633,6 +636,8 @@ export async function upsertCachedSummary(args: {
   model: string;
   provider: "openai" | "gemini";
 }): Promise<void> {
+  // Contributor and team summaries share the same collection; contributorKey
+  // keeps one teammate's cached text from overwriting another's.
   await ContributionSummary.findOneAndUpdate(
     {
       group: new mongoose.Types.ObjectId(args.groupId),

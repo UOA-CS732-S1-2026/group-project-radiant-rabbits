@@ -22,7 +22,6 @@ import connectMongoDB from "./mongodbConnection";
 
 type IterationMap = Map<string, mongoose.Types.ObjectId>;
 
-// Invalidate all dashboard cache keys using Redis for a group after new data is synced
 async function invalidateDashboardCache(groupId: string) {
   if (!process.env.REDIS_URL) return;
   try {
@@ -34,7 +33,8 @@ async function invalidateDashboardCache(groupId: string) {
     }
     await redis.quit();
   } catch {
-    // If Redis is unavailable, still serve stale data until the next successful sync
+    // Sync data is the source of truth; Redis is only an acceleration layer, so
+    // cache eviction failures should not turn a successful GitHub sync into a user-facing error.
   }
 }
 
@@ -74,8 +74,8 @@ export async function syncGroup(groupId: string, accessToken: string) {
   try {
     const hasExistingSyncedData = await hasExistingGroupData(groupId);
 
-    // If we've synced before, only fetch data newer than lastSyncAt (incremental).
-    // On first sync, `since` is undefined so we fetch everything.
+    // Incremental sync is only safe once local collections already contain data;
+    // a stale lastSyncAt without records would otherwise permanently skip history.
     const since =
       group.lastSyncAt && hasExistingSyncedData
         ? group.lastSyncAt.toISOString()
@@ -106,8 +106,8 @@ export async function syncGroup(groupId: string, accessToken: string) {
       upsertSprintTasks(groupId, projectTasks, iterationMap),
     ]);
 
-    // Sync succeeded - update the group's status and timestamp.
-    // Persist iterationFieldConfigured so the UI knows whether to show a setup hint vs a "no current iteration" hint.
+    // Keep this flag even when no iterations are returned so empty-state copy can
+    // distinguish "Project missing an iteration field" from "field exists but has no iterations".
     await Group.findByIdAndUpdate(groupId, {
       lastSyncAt: new Date(),
       syncStatus: "success",
@@ -235,7 +235,9 @@ async function upsertContributors(
   groupId: string,
   commits: Awaited<ReturnType<typeof fetchCommits>>,
 ) {
-  // Load group members to match commit authors against known identities
+  // Git commit metadata is user-controlled and often differs from the OAuth
+  // profile. Canonicalising against group members avoids splitting one person
+  // across "login", "name", and "email" rows in dashboards.
   const group = await Group.findById(groupId)
     .populate("members", "githubId login name email")
     .lean<{
@@ -379,10 +381,9 @@ async function upsertSprintTasks(
     await SprintTask.bulkWrite(operations);
   }
 
-  // Clear stale sprint links for tasks no longer returned from GitHub Project items.
-  // This handles cases where a task is removed from an iteration/project:
-  // keep the task record for history, but detach it from the sprint so it no longer
-  // appears in sprint task lists.
+  // Keep the task record for history, but detach it from the sprint when GitHub
+  // no longer returns it for the project/iteration. Deleting would erase past
+  // context, while leaving the link would show removed tickets as current work.
   const syncedIssueNumbers = new Set(
     tasks
       .map((task) => task.issueNumber)

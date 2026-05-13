@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 
+// Transitioning advances to the next planned sprint by date so manually-created
+// and GitHub-synced sprint sequences follow the same ordering rule.
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ groupId: string }> },
@@ -46,6 +48,8 @@ export async function POST(
       );
     }
 
+    // Complete the old sprint after the next one is found so a failed transition
+    // does not leave the group with no active sprint.
     await Sprint.updateOne(
       { _id: currentSprintId },
       { $set: { status: "COMPLETED", isCurrent: false } },

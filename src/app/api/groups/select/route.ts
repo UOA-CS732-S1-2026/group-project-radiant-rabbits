@@ -67,6 +67,8 @@ export async function POST(request: Request) {
     }
 
     if (group.active === false) {
+      // Archived groups are kept for history, but selecting one would route the
+      // user into dashboards that assume live syncable data.
       return NextResponse.json(
         { error: "Archived groups cannot be selected as current" },
         { status: 400 },

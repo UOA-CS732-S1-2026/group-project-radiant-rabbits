@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 import {
+  type CommitData,
   fetchCommits,
   fetchIssues,
   fetchPullRequests,
+  type IssueData,
+  type PullRequestData,
 } from "@/app/lib/githubService";
 import {
   Commit,
@@ -26,9 +29,15 @@ export type GithubMetrics = {
   activeContributors: number;
   lastSprintStart: Date;
   lastSprintEnd: Date;
+  // Raw fetch results so callers (e.g. the dashboard page) can drive the
+  // contribution breakdown from the same source as the headline numbers
+  // without re-querying GitHub. Optional because the database fallback
+  // (`calculateGithubMetrics`) does not load full records.
+  commits?: CommitData[];
+  pullRequests?: PullRequestData[];
+  issues?: IssueData[];
 };
 
-// Resolves the last sprint window based on completed sprints, current sprint, or fallback to a default length
 async function resolveLastSprintWindow(
   groupObjectId: mongoose.Types.ObjectId,
   sprintLengthDays?: number | null,
@@ -40,7 +49,8 @@ async function resolveLastSprintWindow(
     .sort({ endDate: -1 })
     .lean();
 
-  // If there's a completed sprint with valid dates, use that as the last sprint window
+  // Completed sprint data is preferred because dashboard comparisons should be
+  // anchored to an actual team cadence instead of a guessed date range.
   if (completedSprint?.startDate && completedSprint?.endDate) {
     return {
       start: new Date(completedSprint.startDate as Date),
@@ -56,7 +66,8 @@ async function resolveLastSprintWindow(
     .sort({ startDate: -1 })
     .lean();
 
-  // If there's a current sprint with a valid start date, use it to calculate the last sprint window
+  // When the team is still in its first tracked sprint, mirror the current
+  // sprint duration backwards so the "last sprint" cards remain comparable.
   if (currentSprint?.startDate && currentSprint?.endDate) {
     const currentStart = new Date(currentSprint.startDate as Date);
     const currentEnd = new Date(currentSprint.endDate as Date);
@@ -71,7 +82,8 @@ async function resolveLastSprintWindow(
     };
   }
 
-  // If there are no completed or current sprints, fallback to using the provided sprint length or default length
+  // This fallback keeps freshly-created groups useful before GitHub iterations
+  // have synced, but it is intentionally the lowest-priority source.
   const lengthDays =
     sprintLengthDays && sprintLengthDays > 0
       ? sprintLengthDays
@@ -137,6 +149,9 @@ export async function calculateGithubMetricsLive(
     activeContributors: contributorKeys.size,
     lastSprintStart: start,
     lastSprintEnd: end,
+    commits,
+    pullRequests,
+    issues,
   };
 }
 

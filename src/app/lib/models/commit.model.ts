@@ -14,7 +14,8 @@ const commitSchema = new Schema(
     author: {
       name: { type: String, trim: true },
       email: { type: String, trim: true },
-      // GitHub login of the commit author, used to render avatars.
+      // Git author name/email can differ from a GitHub account; login gives
+      // dashboards a stronger identity key and lets the UI resolve avatars.
       login: { type: String, default: null, trim: true },
     },
     date: {
@@ -37,8 +38,8 @@ const commitSchema = new Schema(
   },
 );
 
-// Commits are unique per group/repo in this app.
-// The sync path already matches on { sha, group }, so the index must use the same compound key
+// The same commit SHA can appear in more than one tracked repository, so group
+// scope avoids false duplicate-key failures across teams.
 commitSchema.index({ sha: 1, group: 1 }, { unique: true });
 commitSchema.index({ group: 1, date: 1 });
 commitSchema.index({ group: 1, "author.login": 1 });

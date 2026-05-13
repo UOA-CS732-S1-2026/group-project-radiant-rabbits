@@ -6,7 +6,6 @@ import EndProjectButton from "./EndProjectButton";
 import ProjectMetricsGrid from "./ProjectMetricsGrid";
 import SprintVelocityCard from "./SprintVelocityCard";
 
-// Fetch all data required to display the dashboard metrics and pass it to the Dashboard component for rendering
 type RepositoryInfo = {
   owner?: string | null;
   name?: string | null;
@@ -41,8 +40,10 @@ type DashboardProps = {
   // ISO date of the next iteration's start. Only set when iterations exist
   // but none cover today.
   nextSprintStart?: string | null;
-  // Top contributors with their contribution counts
+  // Already limited by the server so the dashboard card can stay dense and
+  // predictable on small screens.
   repoContributors?: Array<{
+    id: string;
     name: string;
     initials: string;
     avatarUrl: string | null;
@@ -51,10 +52,14 @@ type DashboardProps = {
     issues: number;
     colour: string;
   }>;
+  repoActivityTotals?: {
+    commits: number;
+    prs: number;
+    issues: number;
+  };
   groupId?: string;
 };
 
-// Reusable status/error block so every failure surfaces in the dashboard UI
 function StatusBlock({
   message,
   autoRefresh = false,
@@ -66,20 +71,21 @@ function StatusBlock({
     <div className="min-h-full bg-brand-background">
       <PageContainer>
         <div className="space-y-lg">
-          <h2 className="text-(length:--text-h3) font-bold text-brand-dark">
+          <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
             Project Overview
-          </h2>
+          </h1>
           <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
             {message}
           </p>
         </div>
       </PageContainer>
+      {/* Initial sync is asynchronous; polling the server component keeps the
+          loading screen simple without duplicating sync state on the client. */}
       {autoRefresh && <AutoRefresh />}
     </div>
   );
 }
 
-// Page component that shows when the dashboard is loading or if it has an error
 export default function Dashboard({
   status,
   statusMessage,
@@ -89,6 +95,7 @@ export default function Dashboard({
   iterationFieldConfigured,
   nextSprintStart,
   repoContributors,
+  repoActivityTotals,
   groupId,
 }: DashboardProps) {
   if (status !== "ready") {
@@ -115,7 +122,6 @@ export default function Dashboard({
   const iterationGuidanceVariant =
     iterationFieldConfigured === false ? "no-field" : "no-iterations";
 
-  // Display the dashboard with the fetched metrics and timeline chart
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
@@ -123,10 +129,10 @@ export default function Dashboard({
           <div className="mb-lg w-full min-w-0 space-y-sm md:space-y-md">
             <div className="flex flex-col items-start justify-between gap-md sm:flex-row sm:items-start">
               <div>
-                <h1 className="text-h2 font-bold text-brand-dark">
+                <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                   Project Overview
                 </h1>
-                <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                <p className="mt-xs text-(length:--text-body-md) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                   Project metrics
                 </p>
               </div>
@@ -170,7 +176,10 @@ export default function Dashboard({
               iterationFieldConfigured={iterationFieldConfigured}
               nextSprintStart={nextSprintStart}
             />
-            <ContributionBreakdownCard contributors={repoContributors ?? []} />
+            <ContributionBreakdownCard
+              contributors={repoContributors ?? []}
+              totals={repoActivityTotals}
+            />
           </div>
         </div>
       </PageContainer>

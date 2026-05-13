@@ -45,6 +45,8 @@ export default function SideNav() {
     pathname === "/dashboard" || pathname.startsWith("/dashboard/")
       ? pathname
       : "/dashboard";
+  // Preserve dashboard context when switching groups, but avoid sending users
+  // back to setup/history pages after the group change flow completes.
   const changeGroupHref = `/join-create-switch-group?returnTo=${encodeURIComponent(dashboardReturnTarget)}`;
 
   return (
@@ -62,7 +64,8 @@ export default function SideNav() {
           />
         </div>
 
-        {/* Main nav links — scrolls only if space is tight */}
+        {/* The nav region scrolls independently so sign-out and group switching
+            remain reachable on shorter viewports. */}
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex flex-col gap-xs pr-1">
             {navItems.map((item) => {
@@ -73,13 +76,14 @@ export default function SideNav() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
                   className={
                     isActive
-                      ? "flex items-center gap-sm rounded-md border-1-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-(length:--text-body-lg) font-semibold text-brand-dark"
-                      : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-lg) text-brand-dark transition hover:bg-brand-accent/10"
+                      ? "flex items-center gap-sm rounded-md border-1-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-(length:--text-body-lg) font-semibold text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
+                      : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-lg) text-brand-dark transition hover:bg-brand-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
                   }
                 >
-                  <Icon size={18} className="shrink-0" />
+                  <Icon size={18} className="shrink-0" aria-hidden />
                   {item.label}
                 </Link>
               );
@@ -87,7 +91,8 @@ export default function SideNav() {
           </div>
         </div>
 
-        {/* Bottom links — pinned to viewport bottom */}
+        {/* Keep account/group actions outside the primary section list because
+            they affect global app context rather than the current page. */}
         <div className="mt-md flex shrink-0 flex-col gap-xs border-t border-brand-dark/10 pt-md">
           {bottomItems.map((item) => {
             const isActive = pathname === item.href;
@@ -101,25 +106,26 @@ export default function SideNav() {
               <Link
                 key={item.href}
                 href={href}
+                aria-current={isActive ? "page" : undefined}
                 className={
                   isActive
-                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-(length:--text-body-md) font-semibold text-brand-dark"
-                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-md) text-brand-dark transition hover:bg-brand-accent/10"
+                    ? "flex items-center gap-sm rounded-md border-l-2 border-brand-accent bg-brand-accent/10 py-1.5 pl-2.5 pr-2 text-(length:--text-body-md) font-semibold text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
+                    : "flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-(length:--text-body-md) text-brand-dark transition hover:bg-brand-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
                 }
               >
-                <Icon size={18} />
+                <Icon size={18} aria-hidden />
                 {item.label}
               </Link>
             );
           })}
 
-          {/* Logout */}
+          {/* Disable while signing out to prevent duplicate NextAuth requests. */}
           <button
             type="button"
             onClick={handleSignOut}
             disabled={isSigningOut}
             aria-disabled={isSigningOut}
-            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10 disabled:opacity-60"
+            className="flex items-center gap-sm rounded-md py-1.5 pl-3 pr-2 text-body-md text-brand-dark transition hover:bg-brand-accent/10 disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
           >
             {isSigningOut ? (
               <Loader2 size={18} className="animate-spin" aria-hidden />

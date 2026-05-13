@@ -14,6 +14,8 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
       default: function () {
+        // Existing test fixtures and older users may only have githubId; using it
+        // as the login preserves uniqueness without forcing a migration first.
         return this.githubId;
       },
     },

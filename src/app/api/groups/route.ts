@@ -8,8 +8,9 @@ import { triggerSync } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
 import { Group, User } from "../../lib/models";
 
-// Helper function to generate a random 8-character invite code
 function generateInviteCode() {
+  // Short uppercase codes are easy to share verbally in class/team settings,
+  // while still giving enough space to avoid collisions for this app's scale.
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let inviteCode = "";
   for (let i = 0; i < 8; i++) {
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
     const session = await getServerSession(options);
     const sessionWithToken = session as { accessToken?: string };
 
-    // Check if user has logged in with a valid Github account
+    // Group creation depends on a real GitHub identity because repository
+    // membership is part of the authorization model.
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -33,7 +35,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ensure user has access token
+    // The token is needed immediately to prove the user can read the repository
+    // they are attaching to the group.
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "GitHub access token missing. Please sign in again." },
@@ -61,7 +64,8 @@ export async function POST(request: Request) {
 
     await connectMongoDB();
 
-    // Check if group already exists for the associated repository
+    // One active group per repository avoids two teams syncing and caching the
+    // same GitHub source under different invite codes.
     const existingGroup = await Group.findOne({ repoOwner, repoName });
 
     // If the group already exists for the repository, return an error
@@ -72,7 +76,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if the user has access to the associated repository with their GitHub account
+    // Creating a group should not expose private repo metadata to someone who
+    // only knows an owner/name pair.
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       repoOwner,
@@ -86,7 +91,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Otherwise, create the group and generate a unique invite code
+    // The database unique index is the final guard against rare invite-code
+    // collisions; the random code keeps the common path simple.
     const inviteCode = generateInviteCode();
 
     const group = await Group.create({
@@ -103,13 +109,15 @@ export async function POST(request: Request) {
       iterationFieldConfigured: null,
     });
 
-    // Update user using githubId
+    // Newly-created groups become current so the next dashboard request does
+    // not strand the creator on the group selection flow.
     await User.findOneAndUpdate(
       { githubId: session.user.id },
       { currentGroupId: group._id },
     );
 
-    // Trigger background sync
+    // Sync can take multiple GitHub requests, so the API returns after queuing
+    // work and lets the UI poll syncStatus.
     triggerSync(group._id.toString(), sessionWithToken.accessToken);
 
     // Return the created group info with a success message

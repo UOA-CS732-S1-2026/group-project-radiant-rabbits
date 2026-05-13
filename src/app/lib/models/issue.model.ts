@@ -44,12 +44,15 @@ const issueSchema = new Schema({
     {
       type: Schema.Types.ObjectId,
       ref: "User",
+      // Assignees can arrive from GitHub/login-shaped inputs in sync code and
+      // from ObjectId refs in app code, so normalize before Mongo stores them.
       set: normalizeUserRef,
     },
   ],
 });
 
-// Use a compound unique index so the same issue number can exist in different groups/repos without duplication
+// Issue numbers are repository-local on GitHub; group scope lets different
+// tracked repositories each have their own Issue #1.
 issueSchema.index({ number: 1, group: 1 }, { unique: true });
 issueSchema.index({ group: 1, sprint: 1 });
 issueSchema.index({ group: 1, state: 1, closedAt: 1 });

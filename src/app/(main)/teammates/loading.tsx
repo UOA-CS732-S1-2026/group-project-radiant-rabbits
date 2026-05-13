@@ -1,6 +1,7 @@
 import PageContainer from "@/components/shared/PageContainer";
 
-// A teammates loading component displayed while the team members information is being fetched
+// Teammate profiles are joined from group membership refs, so make the loading
+// state clear that profile data is being resolved.
 export default function TeammatesLoading() {
   return (
     <div className="min-h-full bg-brand-background">

@@ -33,6 +33,8 @@ export default function HelpOverlayTrigger({
 
   const close = useCallback(() => {
     setOpen(false);
+    // Return focus to the trigger so keyboard users do not lose their place
+    // after dismissing portal content.
     queueMicrotask(() => triggerRef.current?.focus());
   }, []);
 
@@ -65,7 +67,8 @@ export default function HelpOverlayTrigger({
               onClick={close}
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">
-              {/* Full-width shell so flex never collapses the dialog to content width (Safari / shrink). */}
+              {/* Full-width shell prevents Safari/flex shrink from collapsing
+                  the dialog to its content width. */}
               <div className="pointer-events-auto w-full max-w-[38rem] shrink-0">
                 <div
                   role="dialog"
@@ -120,8 +123,8 @@ export default function HelpOverlayTrigger({
           onClick={() => setOpen(true)}
           className={
             size === "comfortable"
-              ? "flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-(length:--text-body-md) font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-12 sm:w-12"
-              : "flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent text-(length:--text-body-sm) font-bold text-brand-background shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-11 sm:w-11"
+              ? "flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent-dark text-(length:--text-body-md) font-bold text-white shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-12 sm:w-12"
+              : "flex h-10 w-10 items-center justify-center rounded-full bg-brand-accent-dark text-(length:--text-body-sm) font-bold text-white shadow-sm transition hover:brightness-105 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:h-11 sm:w-11"
           }
         >
           ?

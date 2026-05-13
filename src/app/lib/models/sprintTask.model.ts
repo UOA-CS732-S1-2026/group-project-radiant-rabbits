@@ -43,6 +43,8 @@ const sprintTaskSchema = new Schema(
 sprintTaskSchema.index({ sprint: 1, group: 1 });
 sprintTaskSchema.index(
   { issueNumber: 1, group: 1 },
+  // GitHub DraftIssues do not have issue numbers, so sparse uniqueness lets
+  // multiple draft-backed tasks exist while still protecting real issue rows.
   { unique: true, sparse: true },
 );
 sprintTaskSchema.index({ group: 1, title: 1, issueNumber: 1 });

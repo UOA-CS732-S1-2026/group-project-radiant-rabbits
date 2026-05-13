@@ -33,6 +33,8 @@ const contributorSchema = new Schema(
 );
 
 contributorSchema.index({ githubId: 1, group: 1 }, { unique: true });
+// Dashboards usually need the most recently active contributors for one group,
+// so this index matches that access pattern.
 contributorSchema.index({ group: 1, lastSeen: -1 });
 
 export const Contributor =

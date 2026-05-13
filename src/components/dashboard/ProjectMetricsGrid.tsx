@@ -12,16 +12,12 @@ type ProjectMetricsGridProps = {
     issuesClosedLastSprint: number;
     activeContributors: number;
   };
-  /** Same shell as other metric tiles; full width above the four metric tiles when set. */
+  /** Full-width guidance keeps missing sprint setup visible before metric tiles. */
   sprintVelocityGuidance?: {
     variant: GitHubIterationGuidanceVariant;
   };
 };
 
-/**
- * Optional sprint-velocity / GitHub iteration guidance (full-width row when no
- * chart data), then headline project metrics (commits, PRs, issues, contributors).
- */
 export default function ProjectMetricsGrid({
   metrics,
   sprintVelocityGuidance,
@@ -72,7 +68,7 @@ export default function ProjectMetricsGrid({
           <p className="mt-xs text-(length:--text-body-sm) font-medium text-brand-dark">
             {stat.label}
           </p>
-          <p className="mt-sm text-(length:--text-body-xs) text-brand-dark/60">
+          <p className="mt-sm text-(length:--text-body-sm) text-brand-dark/70">
             {stat.detail}
           </p>
         </div>

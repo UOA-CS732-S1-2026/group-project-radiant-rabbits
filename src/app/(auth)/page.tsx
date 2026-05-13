@@ -11,12 +11,15 @@ export default async function LoginPage() {
   const isTestMode = process.env.TEST_MODE === "true";
 
   if (session) {
+    // Test mode skips the group-selection dependency so smoke tests land on a
+    // deterministic authenticated page with fixture data.
     redirect(isTestMode ? "/dashboard" : "/join-create-switch-group");
   }
 
   return (
     <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col items-stretch justify-start gap-20 sm:gap-24 md:gap-28">
-      {/* Full-width row so children are block-level: mx-auto + max-w works (not flex items with margin:auto). */}
+      {/* Keep each landing section in a block wrapper so section-level max-width
+          rules behave consistently outside a flex item context. */}
       <div className="w-full min-w-0">
         <LandingHeroSection />
       </div>

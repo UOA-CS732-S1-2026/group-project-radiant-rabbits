@@ -21,6 +21,9 @@ export function normalizeUserRef(
     if (mongoose.isValidObjectId(value)) {
       return new mongoose.Types.ObjectId(value);
     }
+    // Older routes stored GitHub ids in relationship fields before every path
+    // consistently used Mongo ObjectIds. Hashing keeps those legacy references
+    // comparable without needing a risky data migration during request handling.
     return hashToObjectId(value.trim());
   }
 

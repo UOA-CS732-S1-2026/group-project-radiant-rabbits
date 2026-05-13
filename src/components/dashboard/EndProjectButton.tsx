@@ -26,6 +26,8 @@ export default function EndProjectButton({ groupId }: EndProjectButtonProps) {
       if (!response.ok) {
         throw new Error(data.error || "Failed to end project");
       }
+      // Archiving clears currentGroupId for affected users, so send this user
+      // back to the group picker before refreshing server data.
       router.push("/join-create-switch-group");
       router.refresh();
     } catch (error) {

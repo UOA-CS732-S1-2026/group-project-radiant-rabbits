@@ -43,7 +43,8 @@ export const options: NextAuthOptions = {
             clientSecret: githubSecret,
             authorization: {
               params: {
-                // 1. Request 'repo' and 'read:project' scopes so we can read GitHub Projects
+                // Repo and Project scopes are required because sprint data comes
+                // from private repositories and GitHub Projects v2 fields.
                 scope: "read:user user:email repo read:project",
               },
             },
@@ -52,9 +53,10 @@ export const options: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    // 2. Capture the token from the account when the user signs in
     async jwt({ token, account, profile, user }) {
       if (account?.provider === "test-login") {
+        // Test sessions intentionally omit a GitHub access token so Playwright
+        // flows cannot accidentally call live GitHub APIs.
         token.id = (user?.id as string | undefined) ?? testUserId;
         token.name = user?.name ?? testUserName;
         token.email = user?.email ?? testUserEmail;
@@ -63,7 +65,8 @@ export const options: NextAuthOptions = {
       }
 
       if (account) {
-        // Keep token values used by server routes.
+        // Server routes reuse the OAuth token for repository access checks and
+        // sync calls, so it has to survive beyond the initial callback.
         token.accessToken = account.access_token;
         token.id = account.providerAccountId;
 
@@ -71,7 +74,8 @@ export const options: NextAuthOptions = {
         try {
           await connectMongoDB();
 
-          // Use stable GitHub id for both token and Mongo user id.
+          // The stable GitHub id is used as the bridge between NextAuth sessions
+          // and Mongo references so login/name changes do not orphan records.
           const githubId = account.providerAccountId;
           const userId = normalizeUserRef(githubId);
           // Read useful fields from GitHub profile payload.
@@ -82,7 +86,8 @@ export const options: NextAuthOptions = {
             avatar_url?: string;
           } | null;
 
-          // Fallbacks prevent validation failures on missing profile fields.
+          // GitHub may hide email/name fields; deterministic fallbacks keep user
+          // creation reliable without inventing mutable placeholder identities.
           const login = githubProfile?.login?.trim() || githubId;
           const name = githubProfile?.name?.trim() || login;
           const email =
@@ -91,7 +96,8 @@ export const options: NextAuthOptions = {
           const avatarUrl = githubProfile?.avatar_url?.trim() || null;
 
           if (userId) {
-            // Upsert keeps existing users updated and creates new users on first login.
+            // Upserting on sign-in keeps profile fields fresh while preserving
+            // currentGroupId for returning users.
             await User.findOneAndUpdate(
               { _id: userId },
               {
@@ -120,8 +126,9 @@ export const options: NextAuthOptions = {
       }
       return token;
     },
-    // 3. Pass that token into the session so it's accessible in your pages
     async session({ session, token }: { session: Session; token: JWT }) {
+      // API routes read these fields from the session rather than re-querying
+      // NextAuth internals on every request.
       const sessionWithToken = session as Session & { accessToken?: string };
       sessionWithToken.accessToken = token.accessToken;
       if (sessionWithToken.user && token.id) {

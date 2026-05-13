@@ -55,6 +55,8 @@ async function parseJsonResponse<T>(
 ): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
+    // Some failures can be framework/html responses; normalize them so the UI
+    // shows a readable message instead of failing JSON parsing.
     throw new Error(fallbackMessage);
   }
 
@@ -111,6 +113,8 @@ export default function SummaryPage() {
         setGroups(nextGroups);
 
         const persistedGroupId = window.localStorage.getItem("selectedGroupId");
+        // Prefer explicit deep-link params, then the last manual choice, then a
+        // stable default so refreshes do not jump between groups.
         const preferredGroup =
           nextGroups.find((group) => group.id === queryGroupId) ??
           nextGroups.find((group) => group.id === persistedGroupId) ??
@@ -159,6 +163,8 @@ export default function SummaryPage() {
         setSprints(nextSprints);
 
         setSelectedSprintId((previous) => {
+          // Deep links from sprint pages should win once, but normal interaction
+          // should preserve the user's current sprint selection across refetches.
           if (
             querySprintId &&
             nextSprints.some((sprint) => sprint._id === querySprintId)
@@ -280,6 +286,8 @@ export default function SummaryPage() {
     fetchPersistedReview();
 
     return () => {
+      // Avoid letting slower responses from a previous sprint selection replace
+      // the review for the currently selected sprint.
       cancelled = true;
     };
   }, [selectedGroupId, selectedSprintId, sprints]);
@@ -375,6 +383,8 @@ export default function SummaryPage() {
       return;
     }
 
+    // Auto-generation is triggered from links after finishing a sprint; guard it
+    // per sprint so React re-renders do not create duplicate AI requests.
     autoGenerateAttemptedRef.current = autoGenerateKey;
     requestReview(false);
   }, [
@@ -397,8 +407,12 @@ export default function SummaryPage() {
               <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                 Sprint Review Summary
               </h1>
-              <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
-                {selectedSprint?.name ?? "No sprint selected"}
+              <p className="mt-xs text-(length:--text-body-sm) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
+                {selectedSprint
+                  ? /^\d+$/.test(selectedSprint.name ?? "")
+                    ? `Sprint ${selectedSprint.name}`
+                    : selectedSprint.name
+                  : "No sprint selected"}
               </p>
             </div>
             <HelpOverlayTrigger
@@ -423,7 +437,7 @@ export default function SummaryPage() {
                 Generated Sprint Review
               </h2>
 
-              <p className="text-(length:--text-body-sm) text-brand-dark/60">
+              <p className="text-(length:--text-body-sm) text-brand-dark/70">
                 {selectedGroup?.name ?? "No group selected"}
                 {selectedGroup?.repoOwner
                   ? ` (${selectedGroup.repoOwner})`
@@ -433,7 +447,7 @@ export default function SummaryPage() {
                   : ""}
               </p>
 
-              <p className="text-(length:--text-body-xs) text-brand-dark/60">
+              <p className="text-(length:--text-body-md) text-brand-dark/70">
                 Last generated: {formatGeneratedAt(reviewMeta.generatedAt)}
                 {reviewMeta.provider
                   ? ` • Provider: ${reviewMeta.provider}`

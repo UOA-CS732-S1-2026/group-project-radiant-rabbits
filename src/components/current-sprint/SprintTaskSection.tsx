@@ -26,13 +26,14 @@ type SprintTaskSectionProps = {
   onTaskClick?: (task: Task) => void;
 };
 
-// Component to display a section of tasks grouped by status
 export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
   const [filter, setFilter] = useState<
     "all" | "todo" | "in_progress" | "done" | "unassigned"
   >("all");
 
   const isUnassigned = (t: Task) => !t.assignees || t.assignees.length === 0;
+  // Surface unassigned tickets separately because a TODO status from GitHub can
+  // still be unactionable if nobody owns the issue.
   const getDisplayStatus = (t: Task): TaskStatus =>
     isUnassigned(t) ? "UNASSIGNED" : t.status;
 
@@ -60,7 +61,10 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Sprint Tasks
         </h4>
-        <div className="flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs">
+        <fieldset
+          aria-label="Filter tasks"
+          className="flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs m-0 border-0"
+        >
           <FilterChip
             label={`All (${tasks.length})`}
             active={filter === "all"}
@@ -86,27 +90,28 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
             active={filter === "done"}
             onClick={() => setFilter("done")}
           />
-        </div>
+        </fieldset>
       </div>
 
-      {/* Task list */}
-      <div className="min-h-0 flex-1 overflow-y-auto pr-xs">
+      {/* Keep the list scrollable inside the card so long GitHub projects do not
+          push contribution summaries off the current sprint page. */}
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
-          <p className="text-(length:--text-body-md) text-brand-dark/60">
+          <p className="text-(length:--text-body-md) text-brand-dark/70">
             No tasks in this category. Assign tickets to this iteration in your
             GitHub Project to see them here.
           </p>
         ) : (
-          <div className="space-y-xs">
+          <ul className="space-y-xs list-none p-0 m-0">
             {filteredTasks.map((task, index) => {
               return (
-                <div
+                <li
                   key={task.id}
                   className={`flex w-full min-w-0 items-center gap-md px-md py-md text-left-transition ${
                     index === 0 ? "" : "border-t border-brand-dark/10 pt-md"
                   }`}
                 >
-                  <span className="shrink-0 text-(length:--text-body-xs) font-semibold text-brand-dark/60">
+                  <span className="shrink-0 text-(length:--text-body-xs) font-semibold text-brand-dark/70">
                     {task.ref || `#${task.id}`}
                   </span>
 
@@ -155,10 +160,10 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
                       />
                     )}
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
     </BorderedPanel>

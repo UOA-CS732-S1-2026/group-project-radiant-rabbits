@@ -16,7 +16,8 @@ export async function PUT(_request: Request) {
 
     const session = await getServerSession(options);
 
-    // Check if user has logged in with a valid Github account
+    // Leaving a group changes membership state, so anonymous requests must not
+    // be able to infer or mutate a user's current group.
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -26,7 +27,8 @@ export async function PUT(_request: Request) {
 
     const sessionWithToken = session as { accessToken?: string };
 
-    // Ensure user has access token
+    // Keep the token requirement aligned with other group membership mutations,
+    // where GitHub-backed identity is the trust boundary.
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "GitHub access token missing. Please sign in again." },
@@ -70,7 +72,8 @@ export async function PUT(_request: Request) {
       );
     }
 
-    // Remove the user from the group's members array
+    // Pull the normalized database id because older membership checks may also
+    // accept GitHub ids, but the members array is stored as ObjectId refs.
     const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
       { $pull: { members: normalisedUserId } },
@@ -78,10 +81,13 @@ export async function PUT(_request: Request) {
     );
 
     if (updatedGroup && updatedGroup.members.length === 0) {
+      // Empty groups have no owner/admin concept in this app, so keeping them
+      // would leave invite codes and repository links that nobody can manage.
       await Group.findByIdAndDelete(group._id);
     }
 
-    // Update the user's currentGroupId to null
+    // Clear the pointer even when another group exists; the user should choose
+    // the next current group explicitly after leaving.
     await User.findByIdAndUpdate(normalisedUserId, {
       $set: { currentGroupId: null },
     });

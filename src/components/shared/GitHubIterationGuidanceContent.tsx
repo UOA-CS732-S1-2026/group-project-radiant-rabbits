@@ -5,10 +5,6 @@ import {
 
 export type GitHubIterationGuidanceTextSize = "compact" | "relaxed" | "default";
 
-/**
- * Copy shown when sprint velocity has no chart data: either no iteration field
- * on the GitHub Project, or the field exists but no iterations yet.
- */
 export default function GitHubIterationGuidanceContent({
   variant,
   textSize = "default",
@@ -24,11 +20,13 @@ export default function GitHubIterationGuidanceContent({
         : "text-body-md leading-relaxed text-brand-dark/90";
   const linkClass =
     textSize === "compact"
-      ? "font-semibold text-brand-accent underline text-body-xs"
+      ? "font-semibold text-brand-accent-dark underline text-body-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark rounded-sm"
       : textSize === "relaxed"
-        ? "font-semibold text-brand-accent underline text-body-sm sm:text-body-md"
-        : "font-semibold text-brand-accent underline";
+        ? "font-semibold text-brand-accent-dark underline text-body-sm sm:text-body-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark rounded-sm"
+        : "font-semibold text-brand-accent-dark underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-accent-dark rounded-sm";
 
+  // The two empty states need different fixes: add the field first, or add
+  // iterations to an already-configured field.
   if (variant === "no-field") {
     return (
       <div className="space-y-3 text-left">

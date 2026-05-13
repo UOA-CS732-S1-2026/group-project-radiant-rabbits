@@ -16,6 +16,7 @@ export type SprintReviewPromptOverlayProps = {
 /** Shown after “finish sprint” confirm; Generate opens the preview overlay. */
 export default function SprintReviewPromptOverlay({
   open,
+  onClose,
   onSkip,
   onGenerateSprintReview,
   title = "Sprint complete",
@@ -29,6 +30,8 @@ export default function SprintReviewPromptOverlay({
 
   useEffect(() => {
     if (!open) return;
+    // Freeze the page behind the modal so the finish-sprint flow feels like one
+    // focused decision sequence.
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -42,7 +45,9 @@ export default function SprintReviewPromptOverlay({
           <div className="fixed inset-0 z-[100]">
             <button
               type="button"
-              aria-label="Close dialog"
+              aria-hidden="true"
+              tabIndex={-1}
+              onClick={onClose}
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity"
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">

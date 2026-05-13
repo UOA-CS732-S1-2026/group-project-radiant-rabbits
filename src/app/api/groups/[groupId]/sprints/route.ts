@@ -5,9 +5,8 @@ import { Group, Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup } from "@/app/lib/userRef";
 
-// POST /api/groups/:groupId/sprints
-// Creates a new sprint for the given group.
-
+// Manual sprint creation supports teams that do not use GitHub Projects
+// iterations, while sync-created sprints remain linked by iterationId.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ groupId: string }> },
@@ -64,7 +63,8 @@ export async function POST(
       );
     }
 
-    // Check for overlapping sprints in this group
+    // Overlapping sprint windows make date-based dashboard aggregates ambiguous,
+    // so reject them at write time.
     const overlapping = await Sprint.findOne({
       group: group._id,
       startDate: { $lt: end },
@@ -95,9 +95,8 @@ export async function POST(
   }
 }
 
-// GET /api/groups/:groupId/sprints
-// Lists sprints for the group, sorted by startDate descending.
-
+// Sprint lists power selectors and history views, so pagination is kept at the
+// route boundary instead of forcing every caller to fetch the full history.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ groupId: string }> },
@@ -149,7 +148,8 @@ export async function GET(
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    // If user is not a member, return empty list (but still 200)
+    // The selector UI expects a list shape; returning empty avoids leaking
+    // whether a private group has sprint data.
     if (!isUserInGroup(group.members, session.user.id)) {
       return NextResponse.json([], { status: 200 });
     }

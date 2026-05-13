@@ -40,7 +40,8 @@ const pullRequestSchema = new Schema({
   },
 });
 
-// Use a compound unique index so the same issue number can exist in different groups/repos without duplication
+// PR numbers are only unique within a repository; group scope prevents two
+// tracked repos from colliding on the same GitHub number.
 pullRequestSchema.index({ number: 1, group: 1 }, { unique: true });
 pullRequestSchema.index({ group: 1, createdAt: 1 });
 pullRequestSchema.index({ group: 1, state: 1, mergedAt: 1 });

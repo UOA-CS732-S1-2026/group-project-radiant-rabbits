@@ -27,6 +27,8 @@ export default function Button({
   href,
   "aria-label": ariaLabel,
 }: ButtonProps) {
+  // Callers sometimes provide exact responsive text classes; detecting them
+  // avoids the shared button fighting page-specific sizing.
   const hasExplicitTextSize =
     /text-body-(?:xs|sm|md|lg)/.test(className) ||
     /\btext-(?:xs|sm|md|lg|xl|2xl|3xl)\b/.test(className) ||
@@ -51,21 +53,17 @@ export default function Button({
 
   const layout = shape === "pill" ? layoutPill : layoutDefault;
 
-  const base = `${layout} transition disabled:opacity-60 disabled:cursor-not-allowed`;
+  const base = `${layout} transition disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary`;
 
   const variantStyles =
     variant === "purple"
-      ? "bg-brand-accent text-white hover:opacity-90"
+      ? "bg-brand-accent-dark text-white hover:opacity-90"
       : variant === "white"
         ? "border border-brand-accent bg-white text-brand-dark hover:bg-brand-background"
         : variant === "grey"
-          ? "text-white hover:opacity-90"
+          ? "bg-gray-50 border border-gray-400 text-black hover:bg-gray-100"
           : "bg-brand-primary text-white shadow-sm hover:opacity-90";
 
-  const bgStyle =
-    variant === "grey"
-      ? { backgroundColor: "var(--color-button-grey)" }
-      : undefined;
   const merged = `${base} ${variantStyles} ${className}`.trim();
 
   if (href) {
@@ -73,7 +71,8 @@ export default function Button({
       <Link
         href={href}
         aria-label={ariaLabel}
-        style={bgStyle}
+        // Links cannot be disabled natively, so mirror disabled semantics with
+        // aria-disabled and pointer-events.
         className={`no-underline ${merged} ${disabled ? "pointer-events-none opacity-60" : ""}`.trim()}
         aria-disabled={disabled || undefined}
       >
@@ -88,7 +87,6 @@ export default function Button({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      style={bgStyle}
       className={merged}
     >
       {children}

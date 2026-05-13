@@ -4,14 +4,12 @@ import TeammateRow, {
   type TeammateRowData,
 } from "@/components/teammates/TeammateRow";
 
-// Fetch all data required to display the team members and pass it to the teammates component for rendering
 type TeammatesProps = {
   status: "ready" | "empty";
   statusMessage?: string;
   members?: TeammateRowData[];
 };
 
-// Reusable status block so every failure surfaces in the teammates UI
 function StatusBlock({ message }: { message: string }) {
   return (
     <div className="min-h-full bg-brand-background">
@@ -24,7 +22,6 @@ function StatusBlock({ message }: { message: string }) {
   );
 }
 
-// Page component that shows when the teammates data has an error
 export default function Teammates({
   status,
   statusMessage,
@@ -37,7 +34,6 @@ export default function Teammates({
   const memberList = members ?? [];
   const memberCount = memberList.length;
 
-  // Display the teammates page with the fetched members
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
@@ -48,15 +44,17 @@ export default function Teammates({
                 Teammates
               </h1>
               {memberCount > 0 && (
-                <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                <p className="mt-xs text-(length:--text-body-md) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                   {memberCount} member{memberCount === 1 ? "" : "s"}
                 </p>
               )}
             </div>
-            {/* Leave button */}
+            {/* Leaving changes global group context, so keep the destructive
+                action prominent but separated from member rows. */}
             <LeaveGroupButton />
           </div>
-          {/* Teammate rows */}
+          {/* Preserve server-provided order so the list remains stable across
+              refreshes even when profile data changes. */}
           {memberList.length === 0 ? (
             <p className="text-(length:--text-body-md) text-brand-dark/70">
               No teammates found in this group yet.
