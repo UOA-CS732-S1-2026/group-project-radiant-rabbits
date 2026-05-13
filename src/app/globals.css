@@ -2,11 +2,11 @@
 
 @theme inline {
   /* Brand colors */
-  --color-brand-primary: #7bbcfe;
+  --color-brand-primary: #5a4fcf;
   --color-brand-dark: #0d1f4a;
   --color-brand-background: #ffffff;
-  --color-brand-accent: #b8a9fe;
-  --color-brand-accent-dark: #7252C0;
+  --color-brand-accent: #d7d4ff;
+  --color-brand-accent-dark: #5a4fcf;
   --color-brand-surface: #ffffff;
   --color-brand-border: #e5e7eb;
   --color-brand-todo: #ff0000;
@@ -186,12 +186,31 @@ html {
   scrollbar-gutter: stable;
   scroll-behavior: smooth; }
 
-/* Scrollable regions: accent thumb (#B8A9FE), light track — Firefox + WebKit */
-/* Make it global so that it applies to all scrollable regions in the app */
-html { scrollbar-width: thin; scrollbar-color: #b8a9fe #f1f5f9; }
-*::-webkit-scrollbar { width: 6px; height: 6px; }
-*::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: #b8a9fe; border-radius: 9999px; }
+/* Hide scrollbar UI globally while preserving scroll behavior */
+html { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* Subtle scrollbar for selected in-card panels (e.g. Current Sprint lists) */
+.scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 31, 74, 0.28) transparent;
+  -ms-overflow-style: auto;
+}
+
+.scrollbar-subtle::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  display: block;
+}
+
+.scrollbar-subtle::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background: rgba(13, 31, 74, 0.28);
+  border-radius: 9999px;
+}
 
 html,
 body {
