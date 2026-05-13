@@ -284,22 +284,16 @@ function JoinCreateSwitchGroupContent() {
                     disabled={isActionLoading}
                     className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
                   >
-                    <GroupCard
-                      className={`cursor-pointer transition-colors duration-150 ${
-                        tab === "current" && card.active === false
-                          ? "bg-slate-200"
-                          : "hover:bg-slate-200"
-                      }`}
-                    >
+                    <GroupCard className="cursor-pointer transition-colors duration-150 hover:bg-slate-200">
                       <div className="flex flex-col items-center gap-1 text-center sm:gap-1.5">
-                        <p className="text-(length:--text-body-md) font-semibold leading-snug text-brand-dark">
+                        <p className="text-(length:--text-body-lg) font-semibold leading-snug text-black">
                           {card.name}
                         </p>
-                        <p className="text-(length:--text-body-sm) leading-snug text-[#7A7A7A]">
+                        <p className="text-(length:--text-body-md) leading-snug text-black">
                           {card.repoOwner}
                         </p>
                         {tab === "current" && card.active === false ? (
-                          <span className="mt-1 rounded-full bg-slate-500 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
+                          <span className="mt-1 rounded-full bg-slate-700 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
                             Archived
                           </span>
                         ) : null}

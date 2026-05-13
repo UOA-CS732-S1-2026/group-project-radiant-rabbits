@@ -13,7 +13,7 @@ const sizeClasses: Record<SprintHubTitleSize, string> = {
 };
 
 const variantClasses: Record<SprintHubTitleVariant, string> = {
-  purple: "text-brand-accent",
+  purple: "text-[#8365C8]",
   white: "text-white drop-shadow-sm",
   dark: "text-brand-dark",
 };

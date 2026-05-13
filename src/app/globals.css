@@ -6,6 +6,7 @@
   --color-brand-dark: #0d1f4a;
   --color-brand-background: #ffffff;
   --color-brand-accent: #b8a9fe;
+  --color-brand-accent-dark: #7252C0;
   --color-brand-surface: #ffffff;
   --color-brand-border: #e5e7eb;
   --color-brand-todo: #ff0000;
@@ -95,8 +96,8 @@
   --text-body-sm: 0.8125rem;
   --text-body-sm--line-height: 1.125rem;
 
-  --text-body-xs: 0.6875rem;
-  --text-body-xs--line-height: 0.9375rem;
+  --text-body-xs: 0.75rem;
+  --text-body-xs--line-height: 1rem;
 }
 
 /* Text sizing for laptop screens */
@@ -135,8 +136,8 @@
     --text-body-sm: 0.8125rem;
     --text-body-sm--line-height: 1.125rem;
 
-    --text-body-xs: 0.6875rem;
-    --text-body-xs--line-height: 0.9375rem;
+    --text-body-xs: 0.75rem;
+    --text-body-xs--line-height: 1rem;
   }
 }
 

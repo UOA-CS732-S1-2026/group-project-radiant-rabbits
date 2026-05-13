@@ -66,7 +66,7 @@ function RepoContributionBars({
                     />
                   </div>
                   <div className="w-12 text-right">
-                    <span className="text-brand-accent/70 font-semibold text-(length:--text-body-xs)">
+                    <span className="text-brand-accent-dark font-semibold text-(length:--text-body-sm)">
                       {row.commits}
                     </span>
                   </div>
@@ -80,7 +80,7 @@ function RepoContributionBars({
                     />
                   </div>
                   <div className="w-12 text-right">
-                    <span className="text-brand-completed/60 font-semibold text-(length:--text-body-xs)">
+                    <span className="text-green-700 font-semibold text-(length:--text-body-sm)">
                       {row.prs}
                     </span>
                   </div>
@@ -94,7 +94,7 @@ function RepoContributionBars({
                     />
                   </div>
                   <div className="w-12 text-right">
-                    <span className="text-brand-in-progress/70 font-semibold text-(length:--text-body-xs)">
+                    <span className="text-amber-700 font-semibold text-(length:--text-body-sm)">
                       {row.issues}
                     </span>
                   </div>
@@ -104,7 +104,7 @@ function RepoContributionBars({
           );
         })}
       </div>
-      <div className="mt-auto flex flex-wrap gap-md pt-md text-(length:--text-body-xs) text-brand-dark/50">
+      <div className="mt-auto flex flex-wrap gap-md pt-md text-(length:--text-body-sm) text-brand-dark/70">
         <span className="inline-flex items-center gap-xs">
           <span className="h-2 w-2 rounded-full bg-brand-accent" />
           Commits
@@ -134,7 +134,7 @@ export default function ContributionBreakdownCard({
           <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Contribution Breakdown
           </h3>
-          <p className="text-(length:--text-body-xs) text-brand-dark/50">
+          <p className="text-(length:--text-body-sm) text-brand-dark/70">
             Total work across the repository, by person
           </p>
         </div>

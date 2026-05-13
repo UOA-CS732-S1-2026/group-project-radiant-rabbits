@@ -45,7 +45,7 @@ export default function PageTopBar({
         {/* Keep the repo name visible in every section so users know which group
             their dashboard actions apply to. */}
         <h1 className="flex items-baseline gap-xs text-(length:--text-body-lg) font-semibold">
-          <span className="text-brand-dark/50">{repoName}</span>
+          <span className="text-brand-dark/70">{repoName}</span>
           {pageLabel ? (
             <>
               <span className="text-brand-dark/40">/</span>

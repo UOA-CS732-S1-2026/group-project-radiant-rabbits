@@ -608,7 +608,7 @@ export default function CurrentSprint({
                 <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
                   {sprint.name}
                 </h1>
-                <p className="mt-xs text-(length:--text-body-xs) font-semibold uppercase tracking-[0.14em] text-brand-accent">
+                <p className="mt-xs text-(length:--text-body-md) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                   {formatSprintDate(sprint.startDate)} —{" "}
                   {formatSprintDate(sprint.endDate)} ·{" "}
                   {sprint.progress.remainingDays} days remaining
