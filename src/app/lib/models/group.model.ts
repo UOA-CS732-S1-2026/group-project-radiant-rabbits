@@ -31,6 +31,8 @@ const groupSchema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "User",
+        // Some historical paths used GitHub ids for membership checks; normalize
+        // at the schema boundary so newer code can rely on ObjectId refs.
         set: normalizeUserRef,
       },
     ],
@@ -79,6 +81,8 @@ groupSchema.index(
   { repoOwner: 1, repoName: 1 },
   {
     unique: true,
+    // Groups may be created before a repository is attached; only enforce
+    // repo uniqueness once both fields are real strings.
     partialFilterExpression: {
       repoOwner: { $type: "string" },
       repoName: { $type: "string" },

@@ -31,6 +31,8 @@ let indexesSynced = false;
 
 async function reconcileIndexes() {
   if (indexesSynced) return;
+  // Mark before syncing so parallel requests during cold start do not all try
+  // to reconcile the same indexes; failures reset the flag for a later retry.
   indexesSynced = true;
   try {
     await Promise.all(INDEXED_MODELS.map((model) => model.syncIndexes()));
