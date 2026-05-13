@@ -8,7 +8,7 @@ SprintHub is a web-based project management tool designed specifically for stude
 
 | Area | What you can do |
 |---|---|
-| **Authentication** | Sign in with GitHub OAuth; sessions are managed server-side via NextAuth |
+| **Authentication** | Sign in with GitHub OAuth; sessions are issued and verified by NextAuth |
 | **Group management** | Create a group, join via invite link, switch between groups, or leave a group |
 | **Repository connection** | Link a GitHub repository and project board; SprintHub syncs issues per iteration automatically |
 | **Dashboard** | View sprint velocity, contribution breakdown by member, and task completion trends across all sprints |
