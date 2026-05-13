@@ -17,6 +17,11 @@ type ContributorRow = {
 
 type ContributionBreakdownCardProps = {
   contributors: ContributorRow[];
+  totals?: {
+    commits: number;
+    prs: number;
+    issues: number;
+  };
 };
 
 function RepoContributionBars({
@@ -124,8 +129,15 @@ function RepoContributionBars({
 
 export default function ContributionBreakdownCard({
   contributors,
+  totals,
 }: ContributionBreakdownCardProps) {
   const [metric, setMetric] = useState<"commits" | "prs" | "issues">("commits");
+
+  const commitsTotal =
+    totals?.commits ?? contributors.reduce((s, c) => s + c.commits, 0);
+  const prsTotal = totals?.prs ?? contributors.reduce((s, c) => s + c.prs, 0);
+  const issuesTotal =
+    totals?.issues ?? contributors.reduce((s, c) => s + c.issues, 0);
 
   return (
     <Card className="flex flex-col p-md">
@@ -143,17 +155,17 @@ export default function ContributionBreakdownCard({
       <div className="mb-md">
         <div className="inline-flex flex-wrap gap-1 rounded-md bg-brand-dark/5 p-xs">
           <FilterChip
-            label={`Commits (${contributors.reduce((s, c) => s + c.commits, 0)})`}
+            label={`Commits (${commitsTotal})`}
             active={metric === "commits"}
             onClick={() => setMetric("commits")}
           />
           <FilterChip
-            label={`PRs (${contributors.reduce((s, c) => s + c.prs, 0)})`}
+            label={`PRs (${prsTotal})`}
             active={metric === "prs"}
             onClick={() => setMetric("prs")}
           />
           <FilterChip
-            label={`Issues (${contributors.reduce((s, c) => s + c.issues, 0)})`}
+            label={`Issues (${issuesTotal})`}
             active={metric === "issues"}
             onClick={() => setMetric("issues")}
           />
