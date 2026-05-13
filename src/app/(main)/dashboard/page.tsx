@@ -202,9 +202,34 @@ function buildRepositoryContributors(activity: {
     "var(--color-brand-accent)",
   ];
 
+  const mergeDuplicateContributorRows = (
+    rows: ContributorRow[],
+  ): ContributorRow[] => {
+    const merged = new Map<string, ContributorRow>();
+
+    for (const row of rows) {
+      const dedupeKey = row.name.trim().toLowerCase();
+      const existing = merged.get(dedupeKey);
+      if (!existing) {
+        merged.set(dedupeKey, { ...row });
+        continue;
+      }
+      existing.commits += row.commits;
+      existing.prs += row.prs;
+      existing.issues += row.issues;
+      if (!existing.avatarUrl && row.avatarUrl) {
+        existing.avatarUrl = row.avatarUrl;
+      }
+    }
+
+    return Array.from(merged.values());
+  };
+
   // Show every contributor with activity so the bars in the breakdown sum to
   // the same totals as the chip labels / headline metric cards.
-  const contributors = Array.from(contributorMap.values())
+  const contributors = mergeDuplicateContributorRows(
+    Array.from(contributorMap.values()),
+  )
     .filter((c) => c.commits + c.prs + c.issues > 0)
     .sort(
       (a, b) => b.commits + b.prs + b.issues - (a.commits + a.prs + a.issues),
