@@ -3,7 +3,8 @@ import "next-auth/jwt";
 
 declare module "next-auth" {
   /**
-   * Returned by `useSession`, `getServerSession` and received as a prop on the `SessionProvider` React Context
+   * Routes rely on these fields being present after the NextAuth callbacks copy
+   * GitHub identity/token data into the session.
    */
   interface Session {
     accessToken?: string;
@@ -17,11 +18,11 @@ declare module "next-auth" {
 }
 
 declare module "next-auth/jwt" {
-  /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
+  /** JWT carries GitHub data between the OAuth callback and server routes. */
   interface JWT {
     accessToken?: string;
     id?: string;
-    /** The user's GitHub ID */
+    /** Stable GitHub ID, kept separate from mutable login/name fields. */
     githubId?: string;
   }
 }

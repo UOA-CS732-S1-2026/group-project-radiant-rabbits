@@ -1,6 +1,7 @@
 import PageContainer from "@/components/shared/PageContainer";
 
-// A past sprints loading component displayed while the past sprint information is being fetched
+// Past sprint rows aggregate several GitHub-derived event counts, so this route
+// benefits from a domain-specific loading state.
 export default function PastSprintLoading() {
   return (
     <div className="min-h-full bg-brand-background">

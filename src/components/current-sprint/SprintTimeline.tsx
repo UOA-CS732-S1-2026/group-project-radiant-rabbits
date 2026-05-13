@@ -13,7 +13,6 @@ type SprintTimelineProps = {
   sprint: SprintInfo;
 };
 
-// Component to display the sprint timeline with progress and date information
 export default function SprintTimeline({ sprint }: SprintTimelineProps) {
   const formatDate = (date: string | Date) => {
     const d = new Date(date);
@@ -27,7 +26,8 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
   return (
     <BorderedPanel>
       <div className="space-y-md">
-        {/* Date range display */}
+        {/* Show dates and remaining time together so timezone-normalized sprint
+            windows are easy to interpret at a glance. */}
         <div className="grid gap-md text-(length:--text-body-sm) text-brand-dark/70 md:grid-cols-3">
           <div>
             <div className="font-medium text-brand-dark/50">Start</div>
@@ -49,7 +49,8 @@ export default function SprintTimeline({ sprint }: SprintTimelineProps) {
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress comes from calendar days, not task completion, so it stays
+            separate from the task breakdown cards. */}
         <div className="space-y-sm">
           <div className="flex items-center justify-between text-(length:--text-body-xs)">
             <span className="font-medium text-brand-dark/60">Progress</span>

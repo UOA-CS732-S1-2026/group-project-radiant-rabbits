@@ -5,7 +5,6 @@ import GitHubIterationGuidanceCallout from "@/components/shared/GitHubIterationG
 import HelpOverlayTrigger from "@/components/shared/HelpOverlayTrigger";
 import PageContainer from "@/components/shared/PageContainer";
 
-// Fetch all data required to display the past sprint metrics and pass it to the past sprint component for rendering
 type PastSprintProps = {
   status: "ready" | "empty";
   statusMessage?: string;
@@ -13,7 +12,6 @@ type PastSprintProps = {
   groupId?: string;
 };
 
-// Reusable status block so every failure surfaces in the past sprint UI
 function StatusBlock({ message }: { message: string }) {
   return (
     <div className="min-h-full bg-brand-background">
@@ -26,7 +24,6 @@ function StatusBlock({ message }: { message: string }) {
   );
 }
 
-// Page component that shows when the past sprint data has an error
 export default function PastSprint({
   status,
   statusMessage,
@@ -42,7 +39,6 @@ export default function PastSprint({
   const sprintList = sprints ?? [];
   const completedCount = sprintList.length;
 
-  // Display the past sprint page with the fetched metrics
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>
@@ -78,7 +74,8 @@ export default function PastSprint({
               </div>
             </HelpOverlayTrigger>
           </div>
-          {/* Past sprint rows */}
+          {/* Empty completed history usually means GitHub iterations have not
+              ended/synced yet, so show setup guidance rather than a blank list. */}
           {sprintList.length === 0 ? (
             <GitHubIterationGuidanceCallout title="No sprints yet">
               <p className="text-body-sm leading-relaxed text-brand-dark/85 sm:text-body-md">

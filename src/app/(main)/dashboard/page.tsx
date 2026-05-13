@@ -29,9 +29,8 @@ type SprintForDashboard = {
   endDate: Date;
 };
 
-// Read all sprints for the group from the DB and count issues closed in each
-// sprint's date range. Sprints come from synced GitHub iterations
-// (see syncService.upsertSprints). Returns [] when no iterations have been synced.
+// Dashboard velocity is based on closed issues, not raw commits, because this
+// view is meant to represent completed ticket work per sprint window.
 async function loadSprintsForDashboard(
   groupId: import("mongoose").Types.ObjectId,
 ): Promise<SprintForDashboard[]> {
@@ -69,14 +68,12 @@ async function loadSprintsForDashboard(
   );
 }
 
-// Helper to build initials from a name
 function getInitials(name: string): string {
   const tokens = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
   if (tokens.length === 0) return "?";
   return tokens.map((token) => token[0]?.toUpperCase() ?? "").join("");
 }
 
-// Load the contributors with their commits, PRs, and closed issue counts
 async function loadRepositoryContributors(
   groupId: import("mongoose").Types.ObjectId,
 ): Promise<
@@ -90,7 +87,8 @@ async function loadRepositoryContributors(
     colour: string;
   }>
 > {
-  // Get all commits with author info
+  // Commit authors, PR authors, and issue assignees use different identity
+  // shapes, so merge them into one display map before ranking contributors.
   const commits = await Commit.find({ group: groupId })
     .select("author")
     .lean<
@@ -110,7 +108,8 @@ async function loadRepositoryContributors(
     .select("assignees")
     .lean<Array<{ assignees: import("mongoose").Types.ObjectId[] }>>();
 
-  // Bulk load all users referenced by issue assignees
+  // Issue assignees are ObjectId refs, so bulk load profiles once to avoid an
+  // N+1 query while building the contributor cards.
   const assigneeIds = new Set<string>();
   for (const issue of issues) {
     if (issue.assignees) {
@@ -228,7 +227,6 @@ async function loadRepositoryContributors(
     }
   }
 
-  // Convert to array, sort by total contribution, take top 6
   const colours = [
     "var(--color-brand-accent)",
     "var(--color-brand-in-progress)",
@@ -238,7 +236,7 @@ async function loadRepositoryContributors(
     "var(--color-brand-accent)",
   ];
 
-  // Convert to array, sort by total contributions and take top 6
+  // Limit to six so the card layout remains scannable on the dashboard.
   return Array.from(contributorMap.values())
     .filter((c) => c.commits + c.prs + c.issues > 0)
     .sort(
@@ -251,8 +249,6 @@ async function loadRepositoryContributors(
     }));
 }
 
-// Fetch all data required to display the dashboard metrics
-// Could take a while as it may involve multiple calls for githubCalculator
 export default async function DashboardPage() {
   const session = await getServerSession(options);
   const isTestMode = process.env.TEST_MODE === "true";
@@ -313,8 +309,8 @@ export default async function DashboardPage() {
 
   let selectedGroup = currentGroup;
 
-  // Only run the fallback when the user hasn't picked a group yet.
-  // Don't override an explicit selection.
+  // Auto-select only when the user has no explicit current group; otherwise a
+  // recent sync should not unexpectedly switch their working context.
   if (!selectedGroup && normalizedUserId) {
     const candidateGroups = await Group.find({
       $or: [{ createdBy: normalizedUserId }, { members: normalizedUserId }],
@@ -337,7 +333,8 @@ export default async function DashboardPage() {
 
   let group = selectedGroup;
 
-  // If user is not part of any group, show error message
+  // Keep authenticated users in-app with a useful empty state instead of
+  // redirecting them back to the landing page.
   if (!group) {
     return (
       <Dashboard
@@ -372,8 +369,8 @@ export default async function DashboardPage() {
     // the dashboard with current data while the background sync runs.
   }
 
-  // Ensure iteration-backed sprint data is fresh when arriving on dashboard,
-  // especially right after switching groups.
+  // Dashboard is the first page after group creation/switching, so opportunistic
+  // sync here keeps GitHub iteration data fresh without requiring a manual click.
   if (
     group.repoOwner &&
     group.repoName &&
@@ -408,7 +405,8 @@ export default async function DashboardPage() {
   let statusMessage: string | undefined;
   let githubMetrics: GithubMetrics | undefined;
 
-  // Validate that the group actually has a repository
+  // Surface repository/session problems as dashboard errors because the user is
+  // already authenticated and can recover by reconnecting/signing in again.
   if (!group.repoOwner || !group.repoName) {
     status = "error";
     statusMessage = "No repository is connected to this group.";
@@ -436,7 +434,6 @@ export default async function DashboardPage() {
   // none have been synced yet. The Dashboard component handles the empty state.
   const sprints = await loadSprintsForDashboard(group._id);
 
-  // Load repository contributors with aggregated contribution counts
   const repoContributorsData = await loadRepositoryContributors(group._id);
 
   // Find the next future sprint so we can show "next iteration starts on X"

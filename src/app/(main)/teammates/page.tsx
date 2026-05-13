@@ -16,12 +16,12 @@ type LeanMemberProfile = {
   avatarUrl?: string | null;
 };
 
-// Helper function to create a fallback display name for a member with no profile information
 function fallbackMemberName(memberId: string) {
+  // Legacy group memberships can exist before a profile row is backfilled; show
+  // a stable label instead of hiding that member.
   return `Member ${memberId.slice(0, 8)}`;
 }
 
-// Load profiles for the members of the user's current group
 async function loadTeammates(
   groupId: mongoose.Types.ObjectId,
 ): Promise<TeammateRowData[]> {
@@ -47,7 +47,8 @@ async function loadTeammates(
       .filter((entry): entry is [string, LeanMemberProfile] => Boolean(entry)),
   );
 
-  // Order the members based on joined order
+  // Preserve joined order from the group document so the list does not shuffle
+  // when Mongo returns profiles in a different order.
   return memberIds.map((memberId) => {
     const profile = profilesById.get(memberId);
     const displayName =
@@ -65,7 +66,6 @@ async function loadTeammates(
   });
 }
 
-// Fetch all data required to display the teammates list
 export default async function TeammatesPage() {
   const session = await getServerSession(options);
   const isTestMode = process.env.TEST_MODE === "true";
@@ -96,7 +96,8 @@ export default async function TeammatesPage() {
     "currentGroupId",
   );
 
-  // If the user has no current group, show error message
+  // Keep the page recoverable for authenticated users who have not joined a
+  // group yet.
   if (!user?.currentGroupId) {
     return (
       <Teammates
@@ -106,7 +107,7 @@ export default async function TeammatesPage() {
     );
   }
 
-  // If the user's current group doesn't exist, show error message
+  // Current-group pointers can become stale after archive/delete operations.
   const group = await Group.findById(user.currentGroupId).select("_id");
   if (!group) {
     return (
@@ -114,7 +115,6 @@ export default async function TeammatesPage() {
     );
   }
 
-  // Load teammates for the user's current group and display
   const members = await loadTeammates(group._id);
   return <Teammates status="ready" members={members} />;
 }

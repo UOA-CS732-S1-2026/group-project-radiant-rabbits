@@ -5,13 +5,14 @@ type BreakdownTileProps = {
   dotColour: string;
 };
 
-// Component for individual tiles in the breakdown card, showing count and percentage
 export default function BreakdownTile({
   label,
   count,
   total,
   dotColour,
 }: BreakdownTileProps) {
+  // Empty sprints should show 0% instead of NaN so the dashboard remains stable
+  // before GitHub tickets are assigned.
   const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="rounded-xl border border-brand-dark/10 bg-brand-surface p-md">

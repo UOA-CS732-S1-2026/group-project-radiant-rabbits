@@ -17,7 +17,8 @@ type LeanMemberProfile = {
 };
 
 function fallbackMemberName(memberId: string) {
-  // Last-resort display label when no profile exists yet.
+  // Last-resort label keeps the teammates view usable while auth/profile
+  // backfill catches up for legacy member references.
   return `Member ${memberId.slice(0, 8)}`;
 }
 
@@ -35,7 +36,8 @@ export async function GET(_request: NextRequest) {
 
     await connectMongoDB();
 
-    // Convert session user id into the same reference format used in group.members.
+    // Convert once at the boundary so membership checks work for both legacy
+    // GitHub-id references and current ObjectId refs.
     const userRef = normalizeUserRef(session.user.id);
     if (!userRef) {
       return NextResponse.json(
@@ -59,7 +61,8 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    // Find the group using the user's current group id and verify user is still a member
+    // Verify currentGroupId still points to a group the user belongs to; stale
+    // pointers can remain after archival or membership changes.
     const group = await Group.findOne({
       _id: user.currentGroupId,
       members: userRef,
@@ -100,7 +103,8 @@ export async function GET(_request: NextRequest) {
         ),
     );
 
-    // Preserve group member order while attaching profile data.
+    // Preserve group member order so the UI remains stable between refreshes
+    // even when profile records are returned in arbitrary database order.
     const members = memberIds.map((memberId: string) => {
       const profile = profilesById.get(memberId);
       const displayName =

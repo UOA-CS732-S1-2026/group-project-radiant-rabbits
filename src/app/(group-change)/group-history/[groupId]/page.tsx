@@ -38,6 +38,8 @@ function formatDate(value: Date) {
 async function loadPastSprints(
   groupId: mongoose.Types.ObjectId,
 ): Promise<PastSprintRow[]> {
+  // Include active sprints only when a review already exists; archived history
+  // should expose generated artifacts without pretending unfinished work completed.
   const sprints = await Sprint.find({
     group: groupId,
     $or: [
@@ -105,6 +107,8 @@ export default async function GroupHistoryPage({
     !isUserInGroup(group.members, session.user.id) ||
     group.active
   ) {
+    // Active groups belong in the main dashboard; this page is only for
+    // read-only archived history.
     redirect("/join-create-switch-group");
   }
 
@@ -150,6 +154,8 @@ export default async function GroupHistoryPage({
     };
   });
 
+  // Load sprints after the access check so archived project details are not
+  // queried for non-members.
   const pastSprints = await loadPastSprints(group._id);
 
   return (

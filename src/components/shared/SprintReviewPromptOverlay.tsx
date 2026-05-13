@@ -29,6 +29,8 @@ export default function SprintReviewPromptOverlay({
 
   useEffect(() => {
     if (!open) return;
+    // Freeze the page behind the modal so the finish-sprint flow feels like one
+    // focused decision sequence.
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {

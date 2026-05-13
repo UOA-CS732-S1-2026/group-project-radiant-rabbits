@@ -22,7 +22,6 @@ type MiniSeriesPoint = {
   active?: boolean;
 };
 
-// Helper to format dates for the "next iteration starts on..." hint
 function formatDateLabel(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -34,11 +33,12 @@ function formatDateLabel(value: string) {
   });
 }
 
-// SVG line/area chart for sprint velocity. Stretches to fill the parent box.
 function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   const w = 760;
   const h = 240;
   const pad = { l: 26, r: 26, t: 12, b: 32 };
+  // Keep a non-zero scale even when every sprint has zero closed issues so the
+  // chart frame remains readable instead of collapsing to a flat axis.
   const safeData = data.length > 0 ? data : [{ label: "S1", value: 0 }];
   const max = Math.max(...safeData.map((point) => point.value), 10);
   const xs = (index: number) =>
@@ -143,7 +143,6 @@ function MiniVelocityChart({ data }: { data: MiniSeriesPoint[] }) {
   );
 }
 
-// Component for the sprint velocity card (chart + heading + empty states)
 export default function SprintVelocityCard({
   sprints,
   iterationFieldConfigured,

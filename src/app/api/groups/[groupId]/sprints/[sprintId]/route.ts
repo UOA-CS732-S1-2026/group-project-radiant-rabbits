@@ -5,8 +5,9 @@ import { Group, Sprint } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup } from "@/app/lib/userRef";
 
-// Helper to load group + membership
 async function getGroupForUser(groupId: string, userId: string) {
+  // Keep group lookup and membership checks paired so every sprint mutation
+  // enforces the same access boundary.
   const group = await Group.findById(groupId);
   if (!group) {
     return { status: 404, error: "Group not found" as const };
@@ -20,8 +21,8 @@ async function getGroupForUser(groupId: string, userId: string) {
   return { group } as const;
 }
 
-// GET /api/groups/:groupId/sprints/:sprintId
-
+// Single-sprint reads and writes always include groupId so object ids from
+// another group cannot be used as standalone capabilities.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
@@ -64,8 +65,8 @@ export async function GET(
   }
 }
 
-// PUT /api/groups/:groupId/sprints/:sprintId
-
+// Sprint edits preserve existing values when fields are omitted so partial UI
+// forms do not need to resend every sprint attribute.
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
@@ -127,7 +128,8 @@ export async function PUT(
       );
     }
 
-    // Check for overlapping sprints, excluding this sprint itself
+    // Exclude this sprint so editing metadata without changing dates does not
+    // trip the overlap guard.
     const overlapping = await Sprint.findOne({
       _id: { $ne: sprint._id },
       group: group._id,
@@ -159,8 +161,8 @@ export async function PUT(
   }
 }
 
-// DELETE /api/groups/:groupId/sprints/:sprintId
-
+// Deleting is scoped by both ids to avoid removing a sprint solely by a guessed
+// ObjectId.
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },

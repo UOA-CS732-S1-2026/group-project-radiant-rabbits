@@ -16,13 +16,15 @@ import { isUserInGroup } from "@/app/lib/userRef";
 
 type AuthResult = { ok: true } | { ok: false; error: string; status: number };
 
-// This route generates a contribution summary for one contributor in a sprint, using an LLM.
-// It checks if a cached summary exists with the same inputHash and returns it if valid, otherwise it generates a new one and caches it.
+// Contributor summaries can call paid/external AI providers, so authorization
+// and cache validation happen before any generation request is made.
 async function authorize(
   groupId: string,
   sprintId: string,
   userId: string,
 ): Promise<AuthResult> {
+  // Authorize against both group membership and sprint ownership so contributor
+  // names from another group's sprint cannot be probed.
   const group = await Group.findById(groupId);
   if (!group) {
     return { ok: false, error: "Group not found", status: 404 };
@@ -42,6 +44,8 @@ async function authorize(
 }
 
 function mapErrorToResponse(error: unknown) {
+  // AI provider failures are dependency errors, while missing contributor data
+  // means the requested sprint simply has no matching workload profile.
   if (error instanceof ContributionSummaryAiError) {
     return NextResponse.json(
       { error: "Failed to generate summary" },
@@ -69,10 +73,8 @@ function mapErrorToResponse(error: unknown) {
   );
 }
 
-// POST /api/groups/:groupId/sprints/:sprintId/summary/contributor
-// Body: { contributor: string, regenerate?: boolean }
-// Generates a workload summary for one contributor, or returns the cached
-// one if its inputHash matches and !regenerate.
+// POST is the only method here because a contributor summary needs an explicit
+// contributor key from the UI before cache lookup or generation.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
@@ -130,6 +132,8 @@ export async function POST(
     });
 
     if (cached && cached.inputHash === inputHash && !regenerate) {
+      // Contributor summaries use the display name as part of the cache key
+      // because that is the identity surfaced by the workload profile and UI.
       return NextResponse.json(
         {
           summary: cached.summary,

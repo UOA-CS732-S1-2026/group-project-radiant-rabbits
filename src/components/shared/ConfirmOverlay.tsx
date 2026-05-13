@@ -14,11 +14,10 @@ export type ConfirmOverlayProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   isConfirming?: boolean;
-  /** Hide header X (e.g. finish-sprint confirm uses only buttons + backdrop). Default true. */
+  /** Hide header X when the decision should be made through explicit actions. */
   showCloseButton?: boolean;
 };
 
-/** Modal confirm; optional corner close matches help-style overlays when enabled. */
 export default function ConfirmOverlay({
   open,
   onClose,
@@ -43,6 +42,8 @@ export default function ConfirmOverlay({
 
   useEffect(() => {
     if (!open) return;
+    // Lock page scroll while the portal is open so backdrop clicks and keyboard
+    // focus stay tied to the dialog.
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {

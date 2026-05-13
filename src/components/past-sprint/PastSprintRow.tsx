@@ -26,7 +26,6 @@ function formatDate(value: Date) {
   });
 }
 
-// Component to display a single past sprint row
 export default function PastSprintRow({
   sprint,
   isFirst,
@@ -84,6 +83,8 @@ export default function PastSprintRow({
   if (groupId) {
     return (
       <Link
+        // Opening from history can auto-generate a review, but only after the
+        // summary page validates the group/sprint selection.
         href={`/summary?groupId=${groupId}&sprintId=${sprint.id}&autoGenerate=1`}
         className={className}
       >

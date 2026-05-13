@@ -7,7 +7,6 @@ import type { GitHubIterationGuidanceVariant } from "@/lib/githubProjectDocs";
 
 type CurrentSprintStatus = "ready" | "empty" | "error";
 
-// Fetch all data required to display the current sprint metrics
 export default async function CurrentSprintPage() {
   const session = await getServerSession(options);
   const isTestMode = process.env.TEST_MODE === "true";
@@ -31,7 +30,8 @@ export default async function CurrentSprintPage() {
   let statusMessage: string | undefined;
   let iterationGuidanceVariant: GitHubIterationGuidanceVariant | undefined;
 
-  // Determine status and message based on the errors
+  // Preserve service-level guidance variants so the UI can distinguish missing
+  // GitHub iteration setup from an empty-but-configured project.
   if (body.error) {
     status = "error";
     statusMessage = body.error;
@@ -41,7 +41,6 @@ export default async function CurrentSprintPage() {
     iterationGuidanceVariant = body.iterationGuidanceVariant;
   }
 
-  // Display the current sprint page with the fetched metrics
   return (
     <CurrentSprint
       status={status}

@@ -5,6 +5,8 @@ import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
 
 export default function RepositoryPage() {
+  // Legacy static mock retained while repository selection is handled by the
+  // group creation flow backed by GitHub repo access.
   return (
     <PageContainer>
       <SectionHeading

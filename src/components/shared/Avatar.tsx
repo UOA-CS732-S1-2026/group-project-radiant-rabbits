@@ -9,8 +9,6 @@ type AvatarProps = {
   className?: string;
 };
 
-// Displays a circular image if the user's github profile is available
-// Otherwise displays a coloured circle with the user's initials
 export default function Avatar({
   name,
   initials,
@@ -27,6 +25,8 @@ export default function Avatar({
         width={size}
         height={size}
         className={`shrink-0 rounded-full object-cover ${className}`}
+        // GitHub avatar URLs already include size hints and redirect behavior;
+        // bypass optimization so external profile images render reliably.
         unoptimized
       />
     );

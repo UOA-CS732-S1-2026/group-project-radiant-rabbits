@@ -27,6 +27,8 @@ export default function Button({
   href,
   "aria-label": ariaLabel,
 }: ButtonProps) {
+  // Callers sometimes provide exact responsive text classes; detecting them
+  // avoids the shared button fighting page-specific sizing.
   const hasExplicitTextSize =
     /text-body-(?:xs|sm|md|lg)/.test(className) ||
     /\btext-(?:xs|sm|md|lg|xl|2xl|3xl)\b/.test(className) ||
@@ -74,6 +76,8 @@ export default function Button({
         href={href}
         aria-label={ariaLabel}
         style={bgStyle}
+        // Links cannot be disabled natively, so mirror disabled semantics with
+        // aria-disabled and pointer-events.
         className={`no-underline ${merged} ${disabled ? "pointer-events-none opacity-60" : ""}`.trim()}
         aria-disabled={disabled || undefined}
       >

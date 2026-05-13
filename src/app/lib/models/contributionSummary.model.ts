@@ -55,6 +55,8 @@ const contributionSummarySchema = new Schema(
 
 contributionSummarySchema.index(
   { group: 1, sprint: 1, kind: 1, contributorKey: 1 },
+  // One cache row per summary target keeps regeneration idempotent when users
+  // click the generate action repeatedly.
   { unique: true },
 );
 contributionSummarySchema.index({ sprint: 1 });

@@ -75,6 +75,8 @@ sprintSchema.index(
   { group: 1, iterationId: 1 },
   {
     unique: true,
+    // Manually-created or fallback sprints can have no GitHub iteration; only
+    // synced iteration-backed sprints need uniqueness within a group.
     partialFilterExpression: { iterationId: { $type: "string" } },
   },
 );

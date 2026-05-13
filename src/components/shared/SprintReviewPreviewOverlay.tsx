@@ -17,7 +17,6 @@ export type SprintReviewPreviewOverlayProps = {
   groupName?: string;
 };
 
-/** Placeholder sprint review body until generation/API exists. */
 export default function SprintReviewPreviewOverlay({
   open,
   onContinue,
@@ -49,6 +48,8 @@ export default function SprintReviewPreviewOverlay({
 
     const rawFileName = `${groupName || "group"}-${sprintName || "sprint"}-review`;
 
+    // Sanitize client-side export names so sprint/group titles from users do
+    // not create awkward or invalid filenames.
     const safeFileName = rawFileName
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "-")
@@ -129,7 +130,8 @@ export default function SprintReviewPreviewOverlay({
                           </p>
 
                           <div className="mt-8 border-t border-brand-dark/5 pt-6">
-                            {/* Use whitespace-pre-wrap to preserve formatting from the AI */}
+                            {/* Preserve model-generated line breaks so section
+                                headings and bullets remain readable. */}
                             <pre className="whitespace-pre-wrap font-sans text-body-md leading-relaxed text-brand-dark/90">
                               {reviewText || "No review content available."}
                             </pre>

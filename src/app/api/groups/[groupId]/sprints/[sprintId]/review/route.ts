@@ -62,6 +62,8 @@ export async function GET(
       );
     }
 
+    // Keep generated filenames filesystem-safe while still making downloads
+    // recognizable to the team.
     const sprintName = (sprint.name || "sprint")
       .toString()
       .trim()
@@ -135,6 +137,8 @@ export async function POST(
     }
 
     if (sprint.aiReview?.text && !regenerate) {
+      // Sprint reviews are stored on the sprint itself because they are an
+      // artifact of that sprint, not a per-user generated view.
       return NextResponse.json(
         {
           review: sprint.aiReview.text,

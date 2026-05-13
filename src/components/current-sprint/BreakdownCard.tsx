@@ -6,12 +6,13 @@ type BreakdownCardProps = {
   doneCount: number;
 };
 
-// Component for breakdown cards that shows the task counts by status
 export default function BreakdownCard({
   todoCount,
   inProgressCount,
   doneCount,
 }: BreakdownCardProps) {
+  // Percentages are computed from the same total across all tiles so the three
+  // cards read as one sprint snapshot rather than independent metrics.
   const total = todoCount + inProgressCount + doneCount;
   return (
     <div className="grid grid-cols-1 gap-md md:grid-cols-3">

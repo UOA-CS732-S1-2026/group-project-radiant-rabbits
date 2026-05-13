@@ -55,6 +55,8 @@ async function parseJsonResponse<T>(
 ): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
+    // Some failures can be framework/html responses; normalize them so the UI
+    // shows a readable message instead of failing JSON parsing.
     throw new Error(fallbackMessage);
   }
 
@@ -111,6 +113,8 @@ export default function SummaryPage() {
         setGroups(nextGroups);
 
         const persistedGroupId = window.localStorage.getItem("selectedGroupId");
+        // Prefer explicit deep-link params, then the last manual choice, then a
+        // stable default so refreshes do not jump between groups.
         const preferredGroup =
           nextGroups.find((group) => group.id === queryGroupId) ??
           nextGroups.find((group) => group.id === persistedGroupId) ??
@@ -159,6 +163,8 @@ export default function SummaryPage() {
         setSprints(nextSprints);
 
         setSelectedSprintId((previous) => {
+          // Deep links from sprint pages should win once, but normal interaction
+          // should preserve the user's current sprint selection across refetches.
           if (
             querySprintId &&
             nextSprints.some((sprint) => sprint._id === querySprintId)
@@ -280,6 +286,8 @@ export default function SummaryPage() {
     fetchPersistedReview();
 
     return () => {
+      // Avoid letting slower responses from a previous sprint selection replace
+      // the review for the currently selected sprint.
       cancelled = true;
     };
   }, [selectedGroupId, selectedSprintId, sprints]);
@@ -375,6 +383,8 @@ export default function SummaryPage() {
       return;
     }
 
+    // Auto-generation is triggered from links after finishing a sprint; guard it
+    // per sprint so React re-renders do not create duplicate AI requests.
     autoGenerateAttemptedRef.current = autoGenerateKey;
     requestReview(false);
   }, [

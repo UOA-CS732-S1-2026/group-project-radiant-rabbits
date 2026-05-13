@@ -14,7 +14,8 @@ import connectMongoDB from "@/app/lib/mongodbConnection";
 import PastSprint from "@/components/past-sprint/PastSprint";
 import type { PastSprintRowData } from "@/components/past-sprint/PastSprintRow";
 
-// Load completed sprints with per-sprint commit and closed-issue counts.
+// Past sprint rows are computed from event dates so historical cards stay
+// stable even if later syncs add newer repository activity.
 async function loadPastSprints(
   groupId: mongoose.Types.ObjectId,
 ): Promise<PastSprintRowData[]> {
@@ -66,7 +67,6 @@ async function loadPastSprints(
   );
 }
 
-// Fetch all data required to display the past sprints list
 export default async function PastSprintsPage() {
   const session = await getServerSession(options);
   const isTestMode = process.env.TEST_MODE === "true";
@@ -101,7 +101,8 @@ export default async function PastSprintsPage() {
     "currentGroupId",
   );
 
-  // If the user has no current group, show error message
+  // Keep the page reachable for signed-in users without a group so the layout
+  // can point them back to the group-selection flow.
   if (!user?.currentGroupId) {
     return (
       <PastSprint
@@ -111,7 +112,8 @@ export default async function PastSprintsPage() {
     );
   }
 
-  // If the user's current group doesn't exist, show error message
+  // A missing group can happen after archival/deletion, so show a recoverable
+  // empty state instead of throwing from the server component.
   const group = await Group.findById(user.currentGroupId).select("_id");
   if (!group) {
     return (
@@ -119,7 +121,6 @@ export default async function PastSprintsPage() {
     );
   }
 
-  // Load past sprints for the user's current group and display
   const pastSprints = await loadPastSprints(group._id);
   return (
     <PastSprint

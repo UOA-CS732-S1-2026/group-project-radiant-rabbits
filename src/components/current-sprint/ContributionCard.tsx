@@ -30,7 +30,6 @@ type SummaryState =
 
 const initialState: SummaryState = { status: "idle" };
 
-// Component for displaying a contributor's activity in current sprint
 export default function ContributionCard({
   contributors,
   groupId,
@@ -154,6 +153,8 @@ export default function ContributionCard({
     }
     setOpenContributor(name);
     const existing = contributorSummaries[name];
+    // Generate lazily per contributor so expanding the card does not trigger
+    // AI work for every teammate at once.
     if (
       !existing ||
       existing.status === "idle" ||

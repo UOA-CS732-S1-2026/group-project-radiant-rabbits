@@ -18,12 +18,13 @@ const pageLabels: Record<string, string> = {
   "/join-create-switch-group": "Change Group",
 };
 
-// Helper function to resolve page label based on pathname
 function resolvePageLabel(pathname: string | null): string {
   if (!pathname) return "";
 
   if (pageLabels[pathname]) return pageLabels[pathname];
 
+  // Nested pages inherit their parent label so detail routes keep the same
+  // breadcrumb language as their section.
   const match = Object.keys(pageLabels).find((key) => pathname.startsWith(key));
 
   return match ? pageLabels[match] : "";
@@ -41,7 +42,8 @@ export default function PageTopBar({
   return (
     <header className="border-b border-brand-dark/10 bg-brand-surface">
       <div className="flex items-center justify-between px-lg py-sm">
-        {/* Left: group name / current tab*/}
+        {/* Keep the repo name visible in every section so users know which group
+            their dashboard actions apply to. */}
         <h1 className="flex items-baseline gap-xs text-(length:--text-body-lg) font-semibold">
           <span className="text-brand-dark/50">{repoName}</span>
           {pageLabel ? (
@@ -52,9 +54,9 @@ export default function PageTopBar({
           ) : null}
         </h1>
 
-        {/* Right: avatar */}
         <div className="flex items-center gap-md">
-          {/* Avatar with fallback to initial */}
+          {/* Some auth providers/tests do not supply an image, so the initial
+              keeps the top bar visually stable. */}
           {profileImageUrl ? (
             <Image
               src={profileImageUrl}

@@ -4,8 +4,9 @@ type StatusBadgeProps = {
   status: TaskStatus;
 };
 
-// Component to display a colored badge based on the task status
 export default function StatusBadge({ status }: StatusBadgeProps) {
+  // Colors come from shared status tokens so badges match dashboard/task
+  // breakdown semantics across the app.
   const styles: Record<TaskStatus, { backgroundColor: string; color: string }> =
     {
       UNASSIGNED: {

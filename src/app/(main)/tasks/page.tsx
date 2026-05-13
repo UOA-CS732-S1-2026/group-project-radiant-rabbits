@@ -3,6 +3,8 @@ import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
 
 export default function TasksPage() {
+  // Legacy static mock retained while real task data is exposed through the
+  // current sprint view from synced GitHub Project items.
   return (
     <PageContainer>
       <SectionHeading

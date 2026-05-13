@@ -11,7 +11,8 @@ import Card from "@/components/shared/Card";
 import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
 
-// Function to retrieve conditional logic for join page via invite code
+// Keep invite handling server-side so the GitHub access token and repository
+// authorization check are never exposed to the client.
 export async function joinInviteLogic(
   inviteCode: string,
   userId: string,
@@ -21,7 +22,8 @@ export async function joinInviteLogic(
     // Connect to database
     await connectMongoDB();
 
-    // Find the group associated with given invite code
+    // Invite links are shareable, so the code alone must only identify a group;
+    // repository access is still checked below before membership changes.
     const group = await Group.findOne({ inviteCode: inviteCode.trim() });
 
     // If no group is found, return invalid invite error
@@ -37,7 +39,8 @@ export async function joinInviteLogic(
       return { error: "Already Member", group };
     }
 
-    // Check if the user has access to the repository linked to the group
+    // Private repository access remains the real authorization boundary even
+    // when someone has a valid invite URL.
     const repoAccess = await checkRepoAccess(
       accessToken,
       group.repoOwner,
@@ -49,8 +52,8 @@ export async function joinInviteLogic(
       return { error: "No Repository Access" };
     }
 
-    // Else, the user should be able to join the group
-    // If they aren't a member yet, update group membership before redirecting
+    // $addToSet makes invite links safe to refresh/retry without duplicating
+    // membership entries.
     await Group.updateOne(
       { _id: group._id },
       { $addToSet: { members: normalizeUserRef(userId) } },
@@ -63,20 +66,18 @@ export async function joinInviteLogic(
   }
 }
 
-// Function to render UI for the above defined conditions
 export default async function JoinInvitePage({
   params,
 }: {
   params: Promise<{ inviteCode: string }>;
 }) {
-  // Retrieving invite code and GitHub Auth session
   const { inviteCode } = await params;
   const session = await getServerSession(options);
   const sessionWithToken = session as { accessToken?: string };
 
-  // Check if user has logged in with a valid Github account
   if (!session?.user?.id) {
-    // Redirect to login if no session exists
+    // Preserve the invite URL through sign-in so the user returns to the same
+    // group-join attempt after GitHub auth.
     redirect(`/?callbackUrl=/join/${inviteCode}`);
   }
 
@@ -87,7 +88,8 @@ export default async function JoinInvitePage({
     sessionWithToken.accessToken as string,
   );
 
-  // If the database fails to connect, show error and redirect to groups page
+  // Render explicit failure states instead of redirecting immediately so users
+  // can tell whether the problem is the invite, repo access, or infrastructure.
   if (result.error === "Database Connection Error") {
     return (
       <PageContainer>
@@ -102,7 +104,6 @@ export default async function JoinInvitePage({
     );
   }
 
-  // If the invite code does not correlate to a group in the database, redirect the user to groups page
   if (result.error === "Invalid Invite") {
     return (
       <PageContainer>
@@ -117,7 +118,6 @@ export default async function JoinInvitePage({
     );
   }
 
-  // Check if the user is already a member of the group
   if (result.error === "Already Member") {
     return (
       <PageContainer>
@@ -134,7 +134,6 @@ export default async function JoinInvitePage({
     );
   }
 
-  // If the user doesn't have repository access linked to the group, redirect the user to the groups page
   if (result.error === "No Repository Access") {
     return (
       <PageContainer>
@@ -152,7 +151,6 @@ export default async function JoinInvitePage({
     );
   }
 
-  // Redirect the user to the group dashboard if successfully joined
   return (
     <PageContainer>
       <SectionHeading title={`Joined ${result.group?.name}!`} />

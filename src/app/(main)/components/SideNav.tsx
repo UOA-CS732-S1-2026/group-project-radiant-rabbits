@@ -45,6 +45,8 @@ export default function SideNav() {
     pathname === "/dashboard" || pathname.startsWith("/dashboard/")
       ? pathname
       : "/dashboard";
+  // Preserve dashboard context when switching groups, but avoid sending users
+  // back to setup/history pages after the group change flow completes.
   const changeGroupHref = `/join-create-switch-group?returnTo=${encodeURIComponent(dashboardReturnTarget)}`;
 
   return (
@@ -62,7 +64,8 @@ export default function SideNav() {
           />
         </div>
 
-        {/* Main nav links — scrolls only if space is tight */}
+        {/* The nav region scrolls independently so sign-out and group switching
+            remain reachable on shorter viewports. */}
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex flex-col gap-xs pr-1">
             {navItems.map((item) => {
@@ -88,7 +91,8 @@ export default function SideNav() {
           </div>
         </div>
 
-        {/* Bottom links — pinned to viewport bottom */}
+        {/* Keep account/group actions outside the primary section list because
+            they affect global app context rather than the current page. */}
         <div className="mt-md flex shrink-0 flex-col gap-xs border-t border-brand-dark/10 pt-md">
           {bottomItems.map((item) => {
             const isActive = pathname === item.href;
@@ -115,7 +119,7 @@ export default function SideNav() {
             );
           })}
 
-          {/* Logout */}
+          {/* Disable while signing out to prevent duplicate NextAuth requests. */}
           <button
             type="button"
             onClick={handleSignOut}

@@ -218,7 +218,8 @@ async function loadCurrentSprintAndPosition(
     idx = currentIdx >= 0 ? currentIdx : sprints.length - 1;
   }
 
-  // Auto-sprint completion
+  // Advance stale active sprints on read so the dashboard remains current even
+  // when no background sync has run exactly at the iteration boundary.
   if (idx !== -1 && idx < sprints.length - 1) {
     const currentDoc = sprints[idx];
     const expiryDate = new Date(currentDoc.endDate);
@@ -383,10 +384,8 @@ async function getPeriodActivityFromDb(
       .sort({ date: -1 })
       .limit(6)
       .lean(),
-    // Issues created and issues closed in the window are queried separately
-    // so a single issue can produce two timeline entries (one Created, one
-    // Closed) at their respective timestamps. Querying only by createdAt
-    // would drop the close event for issues opened before the sprint.
+    // Created and closed are separate event streams: an issue opened before the
+    // sprint but closed during it should still appear as sprint activity.
     Issue.find({ group: groupId, createdAt: inWindow })
       .select("number createdAt author")
       .sort({ createdAt: -1 })

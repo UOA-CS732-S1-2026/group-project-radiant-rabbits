@@ -31,6 +31,8 @@ type GroupListCard = {
 function JoinCreateSwitchGroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Preserve a safe dashboard return target through join/create flows without
+  // allowing arbitrary external redirect destinations.
   const dashboardReturn = useMemo(
     () => safeDashboardReturn(searchParams.get("returnTo")),
     [searchParams],
@@ -40,7 +42,8 @@ function JoinCreateSwitchGroupContent() {
   const [currentGroupFilter, setCurrentGroupFilter] =
     useState<string>("active");
 
-  // State to hold the lists of groups for each tab
+  // Keep the server-shaped buckets separate so tab switching does not require
+  // refetching GitHub repository visibility.
   const [lists, setLists] = useState({
     current: [] as GroupListCard[],
     join: [] as GroupListCard[],
@@ -53,11 +56,11 @@ function JoinCreateSwitchGroupContent() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isAuthError, setIsAuthError] = useState(false);
 
-  // Fetch the groups for the user on page load
   useEffect(() => {
     async function fetchCardData() {
       try {
-        // Call API route to fetch the user's groups and accessible repositories
+        // This endpoint combines Mongo group membership with GitHub repo access;
+        // duplicating that split client-side would leak too much policy here.
         setIsFetching(true);
         const response = await fetch("/api/user/groups");
         const data = await response.json();
@@ -75,7 +78,6 @@ function JoinCreateSwitchGroupContent() {
           return;
         }
 
-        // Define card lists for each tab
         setLists({
           current: data.currentGroups,
           join: data.joinGroups,
@@ -89,18 +91,17 @@ function JoinCreateSwitchGroupContent() {
         setIsFetching(false);
       }
     }
-    // Call the function to fetch group data
     fetchCardData();
   }, []);
 
-  // Handle card click based on the active tab
   const handleCardClick = async (card: GroupListCard) => {
-    // Reset any errors before event handling
+    // A new action should clear stale auth/network errors from a previous tab.
     setErrorMessage("");
     setIsAuthError(false);
 
     if (tab === "current") {
       if (card.active === false) {
+        // Archived groups are read-only history, not selectable current work.
         router.push(`/group-history/${card.id}`);
         return;
       }
@@ -132,32 +133,32 @@ function JoinCreateSwitchGroupContent() {
       return;
     }
 
-    // Turn on the loading state so the user knows something is happening
     setIsActionLoading(true);
 
     try {
-      // Call the POST "/api/groups/join" route if the user is trying to join a group
       if (tab === "join") {
-        // We use POST to send data to the backend
+        // Joining uses the invite code from the card, while the server still
+        // re-checks GitHub access before adding membership.
         const response = await fetch("/api/groups/join", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ inviteCode: card.inviteCode }),
         });
 
-        // Standard error checking pattern
         if (!response.ok) {
           if (response.status === 401) setIsAuthError(true);
           const errorData = await response.json();
           throw new Error(errorData.error);
         }
 
-        // Send user to the dashboard on success
+        // The join route makes the joined group current, so dashboard is the
+        // next useful destination.
         router.push("/dashboard");
       }
 
-      // If the user clicks on a card in the "Create Groups" tab, we need to create a new group and then navigate them to the set-group page to finish setup
       if (tab === "create") {
+        // Creation is a two-step flow so users see the GitHub Project iteration
+        // guidance before the first sync is triggered.
         const q = new URLSearchParams({
           repoName: card.name,
           repoOwner: card.repoOwner,
@@ -175,7 +176,6 @@ function JoinCreateSwitchGroupContent() {
         setIsAuthError(true);
       }
     } finally {
-      // Turn off the loading state, whether it succeeded or failed
       setIsActionLoading(false);
     }
   };
@@ -197,7 +197,8 @@ function JoinCreateSwitchGroupContent() {
           <SprintHubTitle />
         </header>
 
-        {/* Error banner for redirection if any errors occur */}
+        {/* Auth failures offer sign-in inline so users can recover without
+            losing their selected tab/context. */}
         {errorMessage && (
           <div className="mx-auto mb-4 flex w-full flex-col items-center justify-center gap-3 rounded-md bg-red-100 p-4 text-center text-red-700 sm:mb-5">
             <p className="font-medium">{errorMessage}</p>
@@ -249,7 +250,8 @@ function JoinCreateSwitchGroupContent() {
               />
             </div>
           ) : null}
-          {/* Display for loading and empty states */}
+          {/* Empty state is tab-specific because each bucket has different
+              eligibility rules from the API. */}
           {isFetching && (
             <p className="text-center text-gray-500">
               Loading your repositories...
@@ -267,12 +269,14 @@ function JoinCreateSwitchGroupContent() {
             </p>
           )}
 
-          {/* Displaying the repo/group cards */}
+          {/* Cards share one action handler so keyboard and pointer behavior stay
+              identical across join/create/switch flows. */}
           {!isFetching && displayCards && displayCards.length > 0 && (
             <div className="scrollbar-thumb-accent max-h-[calc(100dvh-19rem)] overflow-y-auto pr-1 sm:max-h-[calc(100dvh-23rem)] sm:pr-2">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
                 {displayCards.map((card) => (
-                  // Button that uses card click handler to either join the group or start the group creation process, depending on the active tab.
+                  // The tab decides the action; the card stays a simple
+                  // accessible button instead of embedding links with mixed behavior.
                   <button
                     type="button"
                     key={card.id}

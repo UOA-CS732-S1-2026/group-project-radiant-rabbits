@@ -5,6 +5,8 @@ exports.fakeUserData = {
   image: "",
 };
 
+// Keep fixture ids deterministic so tests can assert group membership without
+// depending on Mongo-generated ObjectIds.
 exports.fakeGroupData = {
   name: "Test Group",
   description: "This is a test group.",
