@@ -70,7 +70,8 @@ export async function PUT(_request: Request) {
       );
     }
 
-    // Remove the user from the group's members array
+    // Pull the normalized database id because older membership checks may also
+    // accept GitHub ids, but the members array is stored as ObjectId refs.
     const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
       { $pull: { members: normalisedUserId } },
@@ -78,6 +79,8 @@ export async function PUT(_request: Request) {
     );
 
     if (updatedGroup && updatedGroup.members.length === 0) {
+      // Empty groups have no owner/admin concept in this app, so keeping them
+      // would leave invite codes and repository links that nobody can manage.
       await Group.findByIdAndDelete(group._id);
     }
 

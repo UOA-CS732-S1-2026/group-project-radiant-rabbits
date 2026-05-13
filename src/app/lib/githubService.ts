@@ -460,7 +460,8 @@ export async function fetchProjectTasks(
         };
 
         if (isFirstPage) {
-          // The first page of items was already included in the project query
+          // Reusing the embedded first page avoids an extra GraphQL call per
+          // project, which matters because this sync can already touch several paginated connections.
           items = project.items;
           isFirstPage = false;
         } else {
@@ -497,12 +498,14 @@ export async function fetchProjectTasks(
           tasks.push({
             title: content.title || "Untitled",
             status: mapStatus(statusName),
-            // Collect GitHub usernames of anyone assigned to this item
+            // GitHub logins are stored here because they are stable enough to
+            // resolve avatars and match issue ownership across synced data.
             assignees:
               content.assignees?.nodes?.map(
                 (a: { login: string }) => a.login,
               ) || [],
-            // Issues and PRs have a number; DraftIssues don't
+            // Draft issues have no repository issue number, so syncService uses
+            // title matching as the least-bad stable key for those project-only items.
             issueNumber: content.number || null,
             iterationId,
           });

@@ -88,7 +88,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if the user has access to the associated repository with their GitHub account
+    // Group membership should not grant visibility into a private repository;
+    // require GitHub to confirm access with the joining user's own token.
     const repoAccess = await checkRepoAccess(
       sessionWithToken.accessToken,
       group.repoOwner,
