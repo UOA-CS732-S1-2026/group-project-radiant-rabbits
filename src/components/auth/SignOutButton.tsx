@@ -17,7 +17,7 @@ export default function SignOutButton() {
       onClick={handleClick}
       disabled={isLoading}
       aria-disabled={isLoading}
-      className="inline-flex items-center gap-2"
+      className="inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent-dark"
     >
       {isLoading ? (
         <>

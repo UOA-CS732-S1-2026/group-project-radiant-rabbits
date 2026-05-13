@@ -35,7 +35,7 @@ export default function SprintFocus({
     <BorderedPanel>
       <div className="flex items-start justify-between gap-md">
         <div className="flex-1">
-          <div className="text-(length:--text-body-xs) font-semibold uppercase tracking-wide text-brand-dark/50">
+          <div className="text-(length:--text-body-xs) font-semibold uppercase tracking-wide text-brand-dark/70">
             Sprint Focus
           </div>
           {isEditing ? (
@@ -59,14 +59,14 @@ export default function SprintFocus({
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="rounded-lg bg-brand-accent px-md py-sm text-(length:--text-body-xs) font-medium text-white transition hover:opacity-90"
+                  className="rounded-lg bg-brand-accent-dark px-md py-sm text-(length:--text-body-xs) font-medium text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent-dark"
                 >
                   Save
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="rounded-lg border border-brand-dark/10 px-md py-sm text-(length:--text-body-xs) font-medium text-brand-dark transition hover:bg-brand-surface/50"
+                  className="rounded-lg border border-brand-dark/10 px-md py-sm text-(length:--text-body-xs) font-medium text-brand-dark transition hover:bg-brand-surface/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark"
                 >
                   Cancel
                 </button>
@@ -75,8 +75,8 @@ export default function SprintFocus({
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="text-(length:--text-body-md) text-brand-dark/40 transition hover:text-brand-dark"
-                title="Edit focus"
+                aria-label="Edit sprint focus"
+                className="text-(length:--text-body-md) text-brand-dark/70 transition hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark rounded"
               >
                 ✎
               </button>
