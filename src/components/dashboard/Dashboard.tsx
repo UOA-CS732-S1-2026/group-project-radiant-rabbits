@@ -51,6 +51,11 @@ type DashboardProps = {
     issues: number;
     colour: string;
   }>;
+  repoActivityTotals?: {
+    commits: number;
+    prs: number;
+    issues: number;
+  };
   groupId?: string;
 };
 
@@ -89,6 +94,7 @@ export default function Dashboard({
   iterationFieldConfigured,
   nextSprintStart,
   repoContributors,
+  repoActivityTotals,
   groupId,
 }: DashboardProps) {
   if (status !== "ready") {
@@ -169,7 +175,10 @@ export default function Dashboard({
               iterationFieldConfigured={iterationFieldConfigured}
               nextSprintStart={nextSprintStart}
             />
-            <ContributionBreakdownCard contributors={repoContributors ?? []} />
+            <ContributionBreakdownCard
+              contributors={repoContributors ?? []}
+              totals={repoActivityTotals}
+            />
           </div>
         </div>
       </PageContainer>

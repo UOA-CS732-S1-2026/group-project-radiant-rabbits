@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 import {
+  type CommitData,
   fetchCommits,
   fetchIssues,
   fetchPullRequests,
+  type IssueData,
+  type PullRequestData,
 } from "@/app/lib/githubService";
 import {
   Commit,
@@ -26,6 +29,13 @@ export type GithubMetrics = {
   activeContributors: number;
   lastSprintStart: Date;
   lastSprintEnd: Date;
+  // Raw fetch results so callers (e.g. the dashboard page) can drive the
+  // contribution breakdown from the same source as the headline numbers
+  // without re-querying GitHub. Optional because the database fallback
+  // (`calculateGithubMetrics`) does not load full records.
+  commits?: CommitData[];
+  pullRequests?: PullRequestData[];
+  issues?: IssueData[];
 };
 
 async function resolveLastSprintWindow(
@@ -139,6 +149,9 @@ export async function calculateGithubMetricsLive(
     activeContributors: contributorKeys.size,
     lastSprintStart: start,
     lastSprintEnd: end,
+    commits,
+    pullRequests,
+    issues,
   };
 }
 
