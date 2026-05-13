@@ -76,7 +76,8 @@ export default function SprintGitHubTicketsOverlay({
           <div className="fixed inset-0 z-[102]">
             <button
               type="button"
-              aria-label="Close dialog"
+              aria-hidden="true"
+              tabIndex={-1}
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity disabled:cursor-not-allowed"
               disabled={isContinuing}
             />

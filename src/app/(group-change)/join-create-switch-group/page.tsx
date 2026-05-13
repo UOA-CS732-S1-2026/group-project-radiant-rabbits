@@ -282,7 +282,7 @@ function JoinCreateSwitchGroupContent() {
                     key={card.id}
                     onClick={() => handleCardClick(card)}
                     disabled={isActionLoading}
-                    className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
+                    className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent-dark focus-visible:ring-offset-2"
                   >
                     <GroupCard className="cursor-pointer transition-colors duration-150 hover:bg-slate-200">
                       <div className="flex flex-col items-center gap-1 text-center sm:gap-1.5">

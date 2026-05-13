@@ -75,7 +75,9 @@ export default function SprintReviewPreviewOverlay({
           <div className="fixed inset-0 z-[101]">
             <button
               type="button"
-              aria-label="Close preview"
+              aria-hidden="true"
+              tabIndex={-1}
+              onClick={() => {}}
               className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[1px] transition-opacity"
             />
             <div className="pointer-events-none absolute inset-0 grid place-items-center p-3 sm:p-4 md:p-5">

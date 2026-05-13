@@ -31,7 +31,7 @@ export default function PastSprintRow({
   isFirst,
   groupId,
 }: PastSprintRowProps) {
-  const className = `flex w-full items-center justify-between gap-md px-lg py-md text-left transition hover:bg-brand-dark/5 ${
+  const className = `flex w-full items-center justify-between gap-md px-lg py-md text-left transition hover:bg-brand-dark/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-accent-dark ${
     isFirst ? "" : "border-t border-brand-dark/10"
   }`;
   const content = (

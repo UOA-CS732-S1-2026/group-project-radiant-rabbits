@@ -26,7 +26,7 @@ export default function SignInButton({
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent-dark ${className}`}
       onClick={handleClick}
       disabled={isLoading}
       aria-disabled={isLoading}
