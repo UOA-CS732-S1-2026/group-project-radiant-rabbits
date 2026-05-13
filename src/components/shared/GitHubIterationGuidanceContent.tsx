@@ -20,10 +20,10 @@ export default function GitHubIterationGuidanceContent({
         : "text-body-md leading-relaxed text-brand-dark/90";
   const linkClass =
     textSize === "compact"
-      ? "font-semibold text-brand-accent underline text-body-xs"
+      ? "font-semibold text-brand-accent-dark underline text-body-xs"
       : textSize === "relaxed"
-        ? "font-semibold text-brand-accent underline text-body-sm sm:text-body-md"
-        : "font-semibold text-brand-accent underline";
+        ? "font-semibold text-brand-accent-dark underline text-body-sm sm:text-body-md"
+        : "font-semibold text-brand-accent-dark underline";
 
   // The two empty states need different fixes: add the field first, or add
   // iterations to an already-configured field.

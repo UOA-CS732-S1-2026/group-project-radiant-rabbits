@@ -170,7 +170,7 @@ export default async function GroupHistoryPage({
           <h1 className="text-h2 font-bold text-brand-dark">
             {group.name} (Archived)
           </h1>
-          <p className="mt-xs text-body-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
+          <p className="mt-xs text-body-sm font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
             Past sprints and teammate list
           </p>
         </div>

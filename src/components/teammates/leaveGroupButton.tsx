@@ -38,7 +38,7 @@ export default function LeaveGroupButton() {
         type="button"
         onClick={setShowConfirm.bind(null, true)}
         disabled={isLeaving}
-        className="shrink-0 rounded-lg bg-status-todo-fg px-md py-sm text-(length:--text-body-sm) font-medium text-brand-surface hover:bg-status-todo-fg/90 disabled:opacity-50"
+        className="inline-flex min-h-9 items-center justify-center rounded-xl px-sm py-1.5 text-(length:--text-body-sm) sm:text-(length:--text-body-md) font-medium text-white transition bg-status-todo-fg hover:bg-status-todo-fg/90 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-todo-fg"
       >
         {isLeaving ? "Leaving..." : "Leave Group"}
       </button>

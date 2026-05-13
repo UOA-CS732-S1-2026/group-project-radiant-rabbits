@@ -38,12 +38,12 @@ export default function PastSprintRow({
     <>
       <div className="min-w-0 flex-1">
         <h3 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
-          {sprint.name}
+          {/^\d+$/.test(sprint.name) ? `Sprint ${sprint.name}` : sprint.name}
         </h3>
-        <p className="text-(length:--text-body-sm) text-brand-dark/60">
+        <p className="text-(length:--text-body-sm) text-brand-dark/70">
           {formatDate(sprint.startDate)} — {formatDate(sprint.endDate)}
         </p>
-        <p className="mt-xs text-(length:--text-body-sm) font-medium text-brand-accent">
+        <p className="mt-xs text-(length:--text-body-sm) font-medium text-brand-accent-dark">
           Click to view sprint review
         </p>
         <p className="mt-xs text-(length:--text-body-sm) text-brand-dark/70">
@@ -56,7 +56,7 @@ export default function PastSprintRow({
           <p className="text-(length:--text-body-md) font-semibold text-brand-dark">
             {sprint.commits}
           </p>
-          <p className="text-(length:--text-body-xs) text-brand-dark/60">
+          <p className="text-(length:--text-body-sm) text-brand-dark/70">
             commits
           </p>
         </div>
@@ -64,19 +64,19 @@ export default function PastSprintRow({
           <p className="text-(length:--text-body-md) font-semibold text-brand-dark">
             {sprint.pullRequestsMerged}
           </p>
-          <p className="text-(length:--text-body-xs) text-brand-dark/60">PRs</p>
+          <p className="text-(length:--text-body-sm) text-brand-dark/70">PRs</p>
         </div>
         <div>
           <p className="text-(length:--text-body-md) font-semibold text-brand-dark">
             {sprint.issuesClosed}
           </p>
-          <p className="text-(length:--text-body-xs) text-brand-dark/60">
+          <p className="text-(length:--text-body-sm) text-brand-dark/70">
             issues
           </p>
         </div>
       </div>
 
-      <ChevronRight size={20} className="shrink-0 text-brand-dark/40" />
+      <ChevronRight size={20} className="shrink-0 text-brand-dark/70" />
     </>
   );
 

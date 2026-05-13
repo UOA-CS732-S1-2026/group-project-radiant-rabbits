@@ -245,7 +245,7 @@ export default function ContributionCard({
                     aria-expanded={isOpen}
                     className={`shrink-0 rounded-md p-1.5 transition ${
                       isOpen
-                        ? "bg-brand-accent/10 text-brand-accent"
+                        ? "bg-brand-accent/10 text-brand-accent-dark"
                         : "text-brand-dark/70 hover:bg-brand-dark/5 hover:text-brand-dark"
                     }`}
                   >
@@ -289,7 +289,10 @@ function TeamSummary({
   if (state.status === "ready") {
     return (
       <div className="mb-md flex items-start gap-sm rounded-lg bg-brand-accent/5 p-sm">
-        <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-accent" />
+        <Sparkles
+          size={14}
+          className="mt-0.5 shrink-0 text-brand-accent-dark"
+        />
         <p className="flex-1 text-(length:--text-body-xs) leading-relaxed text-brand-dark">
           {state.text}
         </p>
@@ -314,7 +317,7 @@ function TeamSummary({
         <button
           type="button"
           onClick={onGenerate}
-          className="shrink-0 text-(length:--text-body-md) font-medium text-brand-accent hover:underline"
+          className="shrink-0 text-(length:--text-body-md) font-medium text-brand-accent-dark hover:underline"
         >
           Retry
         </button>
@@ -324,7 +327,7 @@ function TeamSummary({
 
   return (
     <div className="mb-md flex items-center gap-sm rounded-lg border border-dashed border-brand-dark/15 p-sm">
-      <Sparkles size={14} className="shrink-0 text-brand-accent" />
+      <Sparkles size={14} className="shrink-0 text-brand-accent-dark" />
       <p className="flex-1 text-(length:--text-body-md) text-brand-dark/70">
         Get an AI summary of how the team contributed this sprint.
       </p>
@@ -358,7 +361,7 @@ function ContributorSummary({
           <button
             type="button"
             onClick={onRegenerate}
-            className="text-(length:--text-body-sm) font-medium text-brand-accent hover:underline"
+            className="text-(length:--text-body-sm) font-medium text-brand-accent-dark hover:underline"
           >
             Retry
           </button>

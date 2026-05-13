@@ -44,11 +44,11 @@ export default function PageTopBar({
       <div className="flex items-center justify-between px-lg py-sm">
         {/* Keep the repo name visible in every section so users know which group
             their dashboard actions apply to. */}
-        <h1 className="flex items-baseline gap-xs text-(length:--text-body-lg) font-semibold">
+        <h1 className="flex items-baseline gap-xs text-(length:--text-xl) font-semibold">
           <span className="text-brand-dark/70">{repoName}</span>
           {pageLabel ? (
             <>
-              <span className="text-brand-dark/40">/</span>
+              <span className="text-brand-dark/70">/</span>
               <span className="text-brand-dark">{pageLabel}</span>
             </>
           ) : null}

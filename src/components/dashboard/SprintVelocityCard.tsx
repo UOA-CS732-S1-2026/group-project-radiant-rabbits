@@ -200,7 +200,7 @@ export default function SprintVelocityCard({
                 href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields"
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium text-brand-accent underline"
+                className="font-medium text-brand-accent-dark underline"
               >
                 add an iteration field
               </a>{" "}
