@@ -120,7 +120,8 @@ export async function aggregateDashboard(
 
   // Prefer GitHub login over git author name so renamed local git identities do
   // not split one contributor into multiple dashboard rows.
-  const contributorAgg = await Commit.aggregate([
+  // Per-contributor commit counts within the selected window.
+  const commitAgg = await Commit.aggregate([
     { $match: { group: gid, date: { $gte: start, $lte: end } } },
     {
       $group: {
@@ -132,10 +133,87 @@ export async function aggregateDashboard(
     { $project: { _id: 0, author: "$_id", commitCount: 1 } },
   ]);
 
-  const totalCommits = contributorAgg.reduce(
+  const totalCommits = commitAgg.reduce(
     (sum: number, c: { commitCount: number }) => sum + c.commitCount,
     0,
   );
+
+  // Per-contributor PR counts within the selected window.
+  const pullRequestAgg = await PullRequest.aggregate([
+    { $match: { group: gid, createdAt: { $gte: start, $lte: end } } },
+    {
+      $group: {
+        _id: "$author",
+        prCount: { $sum: 1 },
+      },
+    },
+    { $project: { _id: 0, author: "$_id", prCount: 1 } },
+  ]);
+
+  // Per-contributor issue counts within the selected window.
+  const issueAgg = await Issue.aggregate([
+    { $match: { group: gid, createdAt: { $gte: start, $lte: end } } },
+    {
+      $group: {
+        _id: "$author",
+        issueCount: { $sum: 1 },
+      },
+    },
+    { $project: { _id: 0, author: "$_id", issueCount: 1 } },
+  ]);
+
+  // Merge commit/PR/issue counts into a single contributor list.
+  const contributorMap = new Map<
+    string,
+    { author: string; commitCount: number; prCount: number; issueCount: number }
+  >();
+
+  const normalizeAuthor = (value: unknown) => {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) return trimmed;
+    }
+    return "Unknown";
+  };
+
+  const upsertContribution = (
+    authorValue: unknown,
+    field: "commitCount" | "prCount" | "issueCount",
+    count: number,
+  ) => {
+    const author = normalizeAuthor(authorValue);
+    const key = author.toLowerCase();
+    const entry = contributorMap.get(key) ?? {
+      author,
+      commitCount: 0,
+      prCount: 0,
+      issueCount: 0,
+    };
+    entry[field] += count;
+    contributorMap.set(key, entry);
+  };
+
+  commitAgg.forEach((row: { author: string; commitCount: number }) => {
+    upsertContribution(row.author, "commitCount", row.commitCount);
+  });
+
+  pullRequestAgg.forEach((row: { author: string; prCount: number }) => {
+    upsertContribution(row.author, "prCount", row.prCount);
+  });
+
+  issueAgg.forEach((row: { author: string; issueCount: number }) => {
+    upsertContribution(row.author, "issueCount", row.issueCount);
+  });
+
+  const contributors = Array.from(contributorMap.values())
+    .filter((entry) => entry.commitCount + entry.prCount + entry.issueCount > 0)
+    .sort(
+      (a, b) =>
+        b.commitCount +
+        b.prCount +
+        b.issueCount -
+        (a.commitCount + a.prCount + a.issueCount),
+    );
 
   // All-time commits for this group, ignoring the date filter.
   // Used for the repo-wide "total commits" stat on the dashboard.
@@ -170,27 +248,41 @@ export async function aggregateDashboard(
 
   const sprints = await Sprint.find(sprintFilter).sort({ startDate: 1 }).lean();
 
+  // Velocity is based on closed issues, but keep commit counts for legacy charts/tests.
   const sprintVelocity = await Promise.all(
     sprints.map(async (sprint) => {
-      const commitCount = await Commit.countDocuments({
-        group: gid,
-        date: {
-          $gte: sprint.startDate as Date,
-          $lte: sprint.endDate as Date,
-        },
-      });
+      const [commitCount, issueCount] = await Promise.all([
+        Commit.countDocuments({
+          group: gid,
+          date: {
+            $gte: sprint.startDate as Date,
+            $lte: sprint.endDate as Date,
+          },
+        }),
+        Issue.countDocuments({
+          group: gid,
+          state: "CLOSED",
+          closedAt: {
+            $gte: sprint.startDate as Date,
+            $lte: sprint.endDate as Date,
+          },
+        }),
+      ]);
+
       return {
         sprintId: sprint._id,
         name: sprint.name as string,
         startDate: sprint.startDate,
         endDate: sprint.endDate,
         commitCount,
+        issueCount,
+        isCurrent: Boolean(sprint.isCurrent),
       };
     }),
   );
 
   return {
-    contributors: contributorAgg,
+    contributors,
     totalCommits,
     allTimeCommits,
     totalIssuesClosed,

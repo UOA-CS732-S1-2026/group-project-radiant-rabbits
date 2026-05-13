@@ -1,17 +1,10 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { avatarUrlForLogin } from "@/app/lib/currentSprintService";
-import {
-  calculateGithubMetricsLive,
-  type GithubMetrics,
-} from "@/app/lib/githubCalculator";
-import type {
-  CommitData,
-  IssueData,
-  PullRequestData,
-} from "@/app/lib/githubService";
-import { Group, Issue, Sprint, User } from "@/app/lib/models";
+import type { GithubMetrics } from "@/app/lib/githubCalculator";
+import { Group, Sprint, User } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { syncGroup } from "@/app/lib/syncService";
 import { normalizeUserRef } from "@/app/lib/userRef";
@@ -26,45 +19,6 @@ type SprintForDashboard = {
   startDate: Date;
   endDate: Date;
 };
-
-// Dashboard velocity is based on closed issues, not raw commits, because this
-// view is meant to represent completed ticket work per sprint window.
-async function loadSprintsForDashboard(
-  groupId: import("mongoose").Types.ObjectId,
-): Promise<SprintForDashboard[]> {
-  const sprints = await Sprint.find({
-    group: groupId,
-    startDate: { $lte: new Date() },
-  })
-    .sort({ startDate: 1 })
-    .lean<
-      Array<{
-        name: string;
-        startDate: Date;
-        endDate: Date;
-        isCurrent: boolean;
-      }>
-    >();
-
-  if (sprints.length === 0) return [];
-
-  return Promise.all(
-    sprints.map(async (sprintData) => {
-      const velocity = await Issue.countDocuments({
-        group: groupId,
-        state: "CLOSED",
-        closedAt: { $gte: sprintData.startDate, $lte: sprintData.endDate },
-      });
-      return {
-        name: sprintData.name,
-        velocity,
-        isCurrent: sprintData.isCurrent,
-        startDate: sprintData.startDate,
-        endDate: sprintData.endDate,
-      };
-    }),
-  );
-}
 
 function getInitials(name: string): string {
   const tokens = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
@@ -87,139 +41,96 @@ type RepoActivityTotals = {
   issues: number;
 };
 
-// Build per-contributor commit/PR/issue counts from the same live GitHub data
-function buildRepositoryContributors(activity: {
-  commits: CommitData[];
-  pullRequests: PullRequestData[];
-  issues: IssueData[];
-}): {
-  contributors: Array<ContributorRow & { colour: string }>;
-  totals: RepoActivityTotals;
-} {
-  const canonicalByAlias = new Map<string, string>();
-  for (const commit of activity.commits) {
-    const login = commit.author?.login;
-    if (!login) continue;
-    const lowerLogin = login.trim().toLowerCase();
-    if (!lowerLogin) continue;
-    canonicalByAlias.set(lowerLogin, login);
-    const name = commit.author?.name?.trim().toLowerCase();
-    if (name) canonicalByAlias.set(name, login);
-    const email = commit.author?.email?.trim().toLowerCase();
-    if (email) canonicalByAlias.set(email, login);
-  }
+type HeaderBag = {
+  get(name: string): string | null;
+};
 
-  const resolveCanonical = (
-    alias: string | null | undefined,
-  ): string | null => {
-    if (!alias) return null;
-    return canonicalByAlias.get(alias.trim().toLowerCase()) ?? null;
-  };
+type DashboardApiContributor = {
+  author: string;
+  commitCount: number;
+  prCount?: number;
+  issueCount?: number;
+};
 
-  const contributorMap = new Map<string, ContributorRow>();
+type DashboardApiSprintVelocity = {
+  sprintId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  commitCount: number;
+  issueCount?: number;
+  isCurrent?: boolean;
+};
 
-  const upsert = (
-    key: string,
-    displayName: string,
-    login: string | null | undefined,
-    bump: (row: ContributorRow) => void,
-  ) => {
-    const lookup = key.trim().toLowerCase();
-    if (!lookup) return;
-    const existing = contributorMap.get(lookup);
-    if (existing) {
-      bump(existing);
-      if (!existing.avatarUrl) {
-        existing.avatarUrl = avatarUrlForLogin(login);
-      }
-      if (displayName?.includes(" ") && !existing.name.includes(" ")) {
-        existing.name = displayName;
-        existing.initials = getInitials(displayName);
-      }
-      return;
-    }
-    const row: ContributorRow = {
-      name: displayName,
-      initials: getInitials(displayName),
-      avatarUrl: avatarUrlForLogin(login),
-      commits: 0,
-      prs: 0,
-      issues: 0,
-    };
-    bump(row);
-    contributorMap.set(lookup, row);
-  };
+type DashboardApiRepository = {
+  owner: string | null;
+  name: string | null;
+  isConnected: boolean;
+  syncStatus?: string | null;
+  syncError?: string | null;
+  validationError?: string | null;
+};
 
-  for (const commit of activity.commits) {
-    // Commits without a resolved GitHub login fall back to a name/email alias
-    const canonicalLogin =
-      commit.author?.login ??
-      resolveCanonical(commit.author?.name) ??
-      resolveCanonical(commit.author?.email);
-    const display =
-      commit.author?.name ||
-      canonicalLogin ||
-      commit.author?.email ||
-      "Unknown";
-    // Falling back to "Unknown" ensures commits with empty author metadata still get counted
-    const key =
-      canonicalLogin ||
-      commit.author?.name ||
-      commit.author?.email ||
-      "Unknown";
-    upsert(key, display, canonicalLogin, (row) => {
-      row.commits += 1;
-    });
-  }
+type DashboardApiResponse = {
+  contributors: DashboardApiContributor[];
+  sprintVelocity: DashboardApiSprintVelocity[];
+  githubMetrics?: GithubMetrics;
+  repository?: DashboardApiRepository;
+  totalCommits?: number;
+  totalPullRequestsOpened?: number;
+  totalIssuesClosed?: number;
+};
 
-  for (const pr of activity.pullRequests) {
-    const author = pr.author || "Unknown";
-    const canonicalLogin = resolveCanonical(pr.author) ?? pr.author ?? null;
-    upsert(canonicalLogin || author, author, canonicalLogin, (row) => {
-      row.prs += 1;
-    });
-  }
+const DASHBOARD_COLOURS = [
+  "var(--color-brand-accent)",
+  "var(--color-brand-in-progress)",
+  "var(--color-brand-completed)",
+  "var(--color-brand-todo)",
+  "var(--color-brand-dark)",
+  "var(--color-brand-accent)",
+];
 
-  // Issues from GitHub already carry an author login, so attribute by author
-  // rather than the never-populated Issue.assignees field.
-  for (const issue of activity.issues) {
-    const author = issue.author || "Unknown";
-    const canonicalLogin =
-      resolveCanonical(issue.author) ?? issue.author ?? null;
-    upsert(canonicalLogin || author, author, canonicalLogin, (row) => {
-      row.issues += 1;
-    });
-  }
-
-  const colours = [
-    "var(--color-brand-accent)",
-    "var(--color-brand-in-progress)",
-    "var(--color-brand-completed)",
-    "var(--color-brand-todo)",
-    "var(--color-brand-dark)",
-    "var(--color-brand-accent)",
-  ];
-
-  // Show every contributor with activity so the bars in the breakdown sum to
-  // the same totals as the chip labels / headline metric cards.
-  const contributors = Array.from(contributorMap.values())
-    .filter((c) => c.commits + c.prs + c.issues > 0)
-    .sort(
-      (a, b) => b.commits + b.prs + b.issues - (a.commits + a.prs + a.issues),
+function buildRepoContributors(contributors: DashboardApiContributor[]) {
+  return contributors
+    .filter(
+      (entry) =>
+        (entry.commitCount ?? 0) +
+          (entry.prCount ?? 0) +
+          (entry.issueCount ?? 0) >
+        0,
     )
-    .map((row, index) => ({
-      ...row,
-      colour: colours[index % colours.length],
-    }));
+    .sort(
+      (a, b) =>
+        (b.commitCount ?? 0) +
+        (b.prCount ?? 0) +
+        (b.issueCount ?? 0) -
+        ((a.commitCount ?? 0) + (a.prCount ?? 0) + (a.issueCount ?? 0)),
+    )
+    .map((entry, index) => {
+      const name = entry.author || "Unknown";
+      return {
+        name,
+        initials: getInitials(name),
+        avatarUrl: avatarUrlForLogin(name),
+        commits: entry.commitCount ?? 0,
+        prs: entry.prCount ?? 0,
+        issues: entry.issueCount ?? 0,
+        colour: DASHBOARD_COLOURS[index % DASHBOARD_COLOURS.length],
+      };
+    });
+}
 
-  return {
-    contributors,
-    totals: {
-      commits: activity.commits.length,
-      prs: activity.pullRequests.length,
-      issues: activity.issues.length,
-    },
-  };
+// Resolve the absolute origin so server-side fetch hits the same deployment.
+function getDashboardBaseUrl(headerList: HeaderBag) {
+  const host =
+    headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
+  if (!host) {
+    return "http://localhost:3000";
+  }
+  const proto =
+    headerList.get("x-forwarded-proto") ??
+    (host.includes("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
 }
 
 export default async function DashboardPage() {
@@ -304,7 +215,7 @@ export default async function DashboardPage() {
     }
   }
 
-  let group = selectedGroup;
+  const group = selectedGroup;
 
   // Keep authenticated users in-app with a useful empty state instead of
   // redirecting them back to the landing page.
@@ -317,6 +228,17 @@ export default async function DashboardPage() {
     );
   }
 
+  if (!group.active) {
+    redirect("/join-create-switch-group");
+  }
+
+  let hasAnySyncedSprint = false;
+  if (group.repoOwner && group.repoName) {
+    hasAnySyncedSprint = Boolean(
+      await Sprint.findOne({ group: group._id }).select("_id").lean(),
+    );
+  }
+
   // If a background sync (e.g. triggered right after group creation) is already
   // running and there is no existing sprint data to show, return a loading state
   // that auto-refreshes every few seconds until the sync completes.
@@ -324,22 +246,16 @@ export default async function DashboardPage() {
     group.syncStatus === "in_progress" &&
     group.repoOwner &&
     group.repoName &&
-    accessToken
+    accessToken &&
+    !hasAnySyncedSprint
   ) {
-    const hasAnySyncedSprint = Boolean(
-      await Sprint.findOne({ group: group._id }).select("_id").lean(),
+    return (
+      <Dashboard
+        status="loading"
+        statusMessage="Syncing your repository data for the first time — this usually takes a few seconds."
+        groupId={group._id.toString()}
+      />
     );
-    if (!hasAnySyncedSprint) {
-      return (
-        <Dashboard
-          status="loading"
-          statusMessage="Syncing your repository data for the first time — this usually takes a few seconds."
-          groupId={group._id.toString()}
-        />
-      );
-    }
-    // Sprints already exist from a previous sync — fall through and render
-    // the dashboard with current data while the background sync runs.
   }
 
   // Dashboard is the first page after group creation/switching, so opportunistic
@@ -350,38 +266,27 @@ export default async function DashboardPage() {
     accessToken &&
     group.syncStatus !== "in_progress"
   ) {
-    const hasAnySyncedSprint = Boolean(
-      await Sprint.findOne({ group: group._id }).select("_id").lean(),
-    );
     const syncedRecently =
       group.lastSyncAt instanceof Date &&
       Date.now() - group.lastSyncAt.getTime() < 2 * 60 * 1000;
 
     if (!hasAnySyncedSprint || !syncedRecently) {
-      try {
-        await syncGroup(group._id.toString(), accessToken);
-        const refreshedGroup = await Group.findById(group._id).lean();
-        if (refreshedGroup) {
-          group = refreshedGroup;
-        }
-      } catch (error) {
+      void syncGroup(group._id.toString(), accessToken).catch((error) => {
         console.error("Dashboard entry sync failed:", error);
-      }
+      });
     }
-  }
-
-  if (!group.active) {
-    redirect("/join-create-switch-group");
   }
 
   let status: DashboardStatus = "ready";
   let statusMessage: string | undefined;
-  let githubMetrics:
+  let repository: DashboardApiRepository | undefined;
+  let metrics:
     | Omit<GithubMetrics, "commits" | "pullRequests" | "issues">
     | undefined;
-  let liveCommits: CommitData[] = [];
-  let livePullRequests: PullRequestData[] = [];
-  let liveIssues: IssueData[] = [];
+  let repoContributorsData: Array<ContributorRow & { colour: string }> = [];
+  let repoActivityTotals: RepoActivityTotals | undefined;
+  let sprints: SprintForDashboard[] = [];
+  let nextSprintStart: string | null = null;
 
   // Surface repository/session problems as dashboard errors because the user is
   // already authenticated and can recover by reconnecting/signing in again.
@@ -394,80 +299,124 @@ export default async function DashboardPage() {
       "GitHub access token is missing from your session. Please sign in again.";
   } else {
     try {
-      const result = await calculateGithubMetricsLive(
-        accessToken,
-        group._id.toString(),
-        group.repoOwner,
-        group.repoName,
-        null,
+      const headerList = await headers();
+      const baseUrl = getDashboardBaseUrl(headerList);
+      const cookie = headerList.get("cookie") ?? "";
+
+      // Use the cached dashboard API (Redis-backed) to avoid live GitHub calls here.
+      const response = await fetch(
+        `${baseUrl}/api/groups/${group._id.toString()}/dashboard`,
+        {
+          headers: cookie ? { cookie } : undefined,
+          cache: "no-store",
+        },
       );
-      const { commits, pullRequests, issues, ...metrics } = result;
-      githubMetrics = metrics;
-      liveCommits = commits ?? [];
-      livePullRequests = pullRequests ?? [];
-      liveIssues = issues ?? [];
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(payload.error || "Failed to load dashboard data");
+      }
+
+      const payload = (await response.json()) as DashboardApiResponse;
+      repository = payload.repository;
+
+      if (repository?.isConnected === false) {
+        status = "error";
+        statusMessage =
+          repository.validationError ??
+          "No repository is connected to this group.";
+      } else if (!payload.githubMetrics) {
+        status = "error";
+        statusMessage = "Dashboard metrics are not available right now.";
+      } else {
+        const apiMetrics = payload.githubMetrics;
+        repoContributorsData = buildRepoContributors(payload.contributors);
+
+        metrics = {
+          totalCommits: apiMetrics.totalCommits,
+          commitsLastSprint: apiMetrics.commitsLastSprint,
+          totalPullRequests: apiMetrics.totalPullRequests,
+          pullRequestsMergedLastSprint: apiMetrics.pullRequestsMergedLastSprint,
+          totalIssuesClosed: apiMetrics.totalIssuesClosed,
+          issuesClosedLastSprint: apiMetrics.issuesClosedLastSprint,
+          activeContributors:
+            repoContributorsData.length > 0
+              ? repoContributorsData.length
+              : apiMetrics.activeContributors,
+          lastSprintStart: apiMetrics.lastSprintStart,
+          lastSprintEnd: apiMetrics.lastSprintEnd,
+        };
+
+        repoActivityTotals = {
+          commits: apiMetrics.totalCommits,
+          prs: apiMetrics.totalPullRequests,
+          issues: apiMetrics.totalIssuesClosed,
+        };
+
+        const now = new Date();
+        const velocityItems = payload.sprintVelocity ?? [];
+
+        sprints = velocityItems.map((sprint) => {
+          const startDate = new Date(sprint.startDate);
+          const endDate = new Date(sprint.endDate);
+          const isCurrent =
+            sprint.isCurrent ?? (startDate <= now && now <= endDate);
+          const velocity =
+            typeof sprint.issueCount === "number"
+              ? sprint.issueCount
+              : sprint.commitCount;
+
+          return {
+            name: sprint.name,
+            velocity,
+            isCurrent,
+            startDate,
+            endDate,
+          };
+        });
+
+        if (sprints.length > 0 && !sprints.some((s) => s.isCurrent)) {
+          const nextSprint = velocityItems
+            .map((sprint) => new Date(sprint.startDate))
+            .filter((date) => date > now)
+            .sort((a, b) => a.getTime() - b.getTime())[0];
+
+          nextSprintStart = nextSprint ? nextSprint.toISOString() : null;
+        }
+      }
     } catch (error) {
-      console.error("Failed to calculate dashboard metrics:", error);
+      console.error("Failed to load dashboard data:", error);
       status = "error";
       statusMessage = error instanceof Error ? error.message : String(error);
     }
   }
-
-  // Sprint data is sourced from synced GitHub iterations
-  const sprints = await loadSprintsForDashboard(group._id);
-
-  const { contributors: repoContributorsData, totals: repoActivityTotals } =
-    buildRepositoryContributors({
-      commits: liveCommits,
-      pullRequests: livePullRequests,
-      issues: liveIssues,
-    });
-
-  // Use the deduped contributor row count for the headline card.
-  if (githubMetrics) {
-    githubMetrics = {
-      ...githubMetrics,
-      activeContributors: repoContributorsData.length,
-    };
-  }
-
-  // Find the next future sprint so we can show "next iteration starts on X"
-  // when no iteration covers today.
-  const nextSprintDoc =
-    sprints.length > 0 && !sprints.some((s) => s.isCurrent)
-      ? await Sprint.findOne({
-          group: group._id,
-          startDate: { $gt: new Date() },
-        })
-          .sort({ startDate: 1 })
-          .select("startDate")
-          .lean<{ startDate: Date }>()
-      : null;
 
   // Display the dashboard with the fetched metrics
   return (
     <Dashboard
       status={status}
       statusMessage={statusMessage}
-      repository={{
-        owner: group.repoOwner,
-        name: group.repoName,
-        isConnected: Boolean(group.repoOwner && group.repoName),
-        syncStatus: group.syncStatus,
-        syncError: group.syncError,
-        validationError:
-          group.repoOwner && group.repoName
-            ? null
-            : "No repository is connected to this group.",
-      }}
-      metrics={githubMetrics}
+      repository={
+        repository ?? {
+          owner: group.repoOwner,
+          name: group.repoName,
+          isConnected: Boolean(group.repoOwner && group.repoName),
+          syncStatus: group.syncStatus,
+          syncError: group.syncError,
+          validationError:
+            group.repoOwner && group.repoName
+              ? null
+              : "No repository is connected to this group.",
+        }
+      }
+      metrics={metrics}
       sprints={sprints}
       repoContributors={repoContributorsData}
       repoActivityTotals={repoActivityTotals}
       iterationFieldConfigured={group.iterationFieldConfigured ?? null}
-      nextSprintStart={
-        nextSprintDoc ? nextSprintDoc.startDate.toISOString() : null
-      }
+      nextSprintStart={nextSprintStart}
       groupId={group._id.toString()}
     />
   );

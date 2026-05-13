@@ -1,16 +1,20 @@
 import { render } from "@testing-library/react";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import DashboardPage from "@/app/(main)/dashboard/page";
-import { calculateGithubMetricsLive } from "@/app/lib/githubCalculator";
-import { Commit, Group, Sprint, User } from "@/app/lib/models";
+import { Group, User } from "@/app/lib/models";
 import { normalizeUserRef } from "@/app/lib/userRef";
 
 // Create a mock for all dependencies used in the dashboard page
 jest.mock("next-auth/next", () => ({
   getServerSession: jest.fn(),
+}));
+
+jest.mock("next/headers", () => ({
+  headers: jest.fn(),
 }));
 
 jest.mock("next/navigation", () => ({
@@ -28,8 +32,8 @@ jest.mock("@/app/api/auth/[...nextauth]/options", () => ({
   options: {},
 }));
 
-jest.mock("@/app/lib/githubCalculator", () => ({
-  calculateGithubMetricsLive: jest.fn(),
+jest.mock("@/app/lib/syncService", () => ({
+  syncGroup: jest.fn(),
 }));
 
 jest.mock("@/components/dashboard/Dashboard", () => ({
@@ -44,11 +48,8 @@ const mockGetServerSession = getServerSession as jest.MockedFunction<
   typeof getServerSession
 >;
 const mockRedirect = redirect as unknown as jest.Mock;
-const mockCalculateGithubMetricsLive =
-  calculateGithubMetricsLive as jest.MockedFunction<
-    typeof calculateGithubMetricsLive
-  >;
 const MockDashboard = Dashboard as unknown as jest.Mock;
+const mockHeaders = headers as jest.MockedFunction<typeof headers>;
 
 const USER_ID = "user-dashboard-test";
 
@@ -65,13 +66,13 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
+beforeEach(() => {
+  mockHeaders.mockReturnValue(new Headers({ host: "localhost:3000" }));
+  global.fetch = jest.fn();
+});
+
 afterEach(async () => {
-  await Promise.all([
-    Group.deleteMany({}),
-    User.deleteMany({}),
-    Commit.deleteMany({}),
-    Sprint.deleteMany({}),
-  ]);
+  await Promise.all([Group.deleteMany({}), User.deleteMany({})]);
   jest.clearAllMocks();
 });
 
@@ -85,7 +86,7 @@ function authedSession(
   >;
 }
 
-// Helper to build a seed user + group + commit so the page's group-selection loop picks it
+// Helper to build a seed user + group so the page's group-selection loop picks it
 async function seedUserWithGroup(
   overrides: Partial<{
     repoOwner: string | null;
@@ -120,14 +121,6 @@ async function seedUserWithGroup(
     currentGroupId: group._id,
   });
 
-  // Seed a commit so the group passes the "hasCommitData" check in page.tsx
-  await Commit.create({
-    group: group._id,
-    sha: `sha-${Date.now()}`,
-    author: { name: "Tester", email: "tester@example.com" },
-    date: new Date("2026-01-15"),
-  });
-
   return group;
 }
 
@@ -135,6 +128,18 @@ function lastDashboardProps() {
   const calls = MockDashboard.mock.calls;
   expect(calls.length).toBeGreaterThan(0);
   return calls[calls.length - 1][0];
+}
+
+function mockDashboardApi(
+  payload: Record<string, unknown>,
+  ok = true,
+  status = 200,
+) {
+  (global.fetch as jest.Mock).mockResolvedValue({
+    ok,
+    status,
+    json: async () => payload,
+  });
 }
 
 // Describe the test suite for the dashboard page
@@ -167,7 +172,7 @@ describe("DashboardPage — auth + error branches", () => {
     const props = lastDashboardProps();
     expect(props.status).toBe("empty");
     expect(props.statusMessage).toMatch(/No group selected yet/i);
-    expect(mockCalculateGithubMetricsLive).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("should redirect to join/create page when current group is archived", async () => {
@@ -217,7 +222,7 @@ describe("DashboardPage — auth + error branches", () => {
     expect(props.repository.validationError).toMatch(
       /No repository is connected/i,
     );
-    expect(mockCalculateGithubMetricsLive).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   // Test 4: test case for session lacking an accessToken
@@ -233,17 +238,15 @@ describe("DashboardPage — auth + error branches", () => {
     const props = lastDashboardProps();
     expect(props.status).toBe("error");
     expect(props.statusMessage).toMatch(/GitHub access token is missing/i);
-    expect(mockCalculateGithubMetricsLive).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   // Test 5: test case for metric calculation throwing an error
-  it("should render status='error' when calculateGithubMetricsLive throws", async () => {
+  it("should render status='error' when dashboard API returns an error", async () => {
     mockGetServerSession.mockResolvedValue(authedSession());
     await seedUserWithGroup();
 
-    mockCalculateGithubMetricsLive.mockRejectedValueOnce(
-      new Error("GitHub API rate limit exceeded"),
-    );
+    mockDashboardApi({ error: "Failed to load dashboard data" }, false, 502);
 
     // Silence the console.error emitted inside the catch branch
     const errSpy = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -253,7 +256,7 @@ describe("DashboardPage — auth + error branches", () => {
 
     const props = lastDashboardProps();
     expect(props.status).toBe("error");
-    expect(props.statusMessage).toBe("GitHub API rate limit exceeded");
+    expect(props.statusMessage).toBe("Failed to load dashboard data");
     expect(props.metrics).toBeUndefined();
   });
 });
@@ -265,7 +268,7 @@ describe("DashboardPage — success path", () => {
     mockGetServerSession.mockResolvedValue(
       authedSession({ accessToken: "gh-token" }),
     );
-    const group = await seedUserWithGroup();
+    await seedUserWithGroup();
 
     const metrics = {
       totalCommits: 42,
@@ -278,19 +281,29 @@ describe("DashboardPage — success path", () => {
       lastSprintStart: new Date("2026-01-01"),
       lastSprintEnd: new Date("2026-01-15"),
     };
-    mockCalculateGithubMetricsLive.mockResolvedValueOnce(metrics);
+    mockDashboardApi({
+      contributors: [
+        { author: "Alice", commitCount: 4, prCount: 1, issueCount: 0 },
+        { author: "Bob", commitCount: 2, prCount: 0, issueCount: 1 },
+        { author: "Casey", commitCount: 1, prCount: 2, issueCount: 2 },
+        { author: "Dev", commitCount: 3, prCount: 0, issueCount: 0 },
+      ],
+      sprintVelocity: [],
+      githubMetrics: metrics,
+      repository: {
+        owner: "radiant",
+        name: "rabbits",
+        isConnected: true,
+        syncStatus: "success",
+        syncError: null,
+        validationError: null,
+      },
+    });
 
     const Page = await DashboardPage();
     render(Page);
 
-    expect(mockCalculateGithubMetricsLive).toHaveBeenCalledTimes(1);
-    expect(mockCalculateGithubMetricsLive).toHaveBeenCalledWith(
-      "gh-token",
-      group._id.toString(),
-      "radiant",
-      "rabbits",
-      null,
-    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
 
     const props = lastDashboardProps();
     expect(props.status).toBe("ready");
@@ -312,80 +325,53 @@ describe("DashboardPage — success path", () => {
     mockGetServerSession.mockResolvedValue(
       authedSession({ accessToken: "gh-token" }),
     );
-    const group = await seedUserWithGroup();
+    await seedUserWithGroup();
 
-    // Two sprints: one in the past with 2 commits inside its window, one current with 1
-    const sprintAStart = new Date("2026-01-01T00:00:00Z");
-    const sprintAEnd = new Date("2026-01-14T23:59:59.999Z");
-    const sprintBStart = new Date("2026-01-15T00:00:00Z");
-    const sprintBEnd = new Date("2026-01-28T23:59:59.999Z");
-
-    await Sprint.create([
-      {
-        group: group._id,
-        iterationId: "iter_a",
-        name: "Sprint A",
-        startDate: sprintAStart,
-        endDate: sprintAEnd,
-        status: "COMPLETED",
-        isCurrent: false,
+    mockDashboardApi({
+      contributors: [],
+      sprintVelocity: [
+        {
+          sprintId: "sprint-a",
+          name: "Sprint A",
+          startDate: "2026-01-01T00:00:00.000Z",
+          endDate: "2026-01-14T23:59:59.999Z",
+          commitCount: 2,
+          isCurrent: false,
+        },
+        {
+          sprintId: "sprint-b",
+          name: "Sprint B",
+          startDate: "2026-01-15T00:00:00.000Z",
+          endDate: "2026-01-28T23:59:59.999Z",
+          commitCount: 2,
+          isCurrent: true,
+        },
+      ],
+      githubMetrics: {
+        totalCommits: 4,
+        commitsLastSprint: 0,
+        totalPullRequests: 0,
+        pullRequestsMergedLastSprint: 0,
+        totalIssuesClosed: 0,
+        issuesClosedLastSprint: 0,
+        activeContributors: 0,
+        lastSprintStart: new Date(),
+        lastSprintEnd: new Date(),
       },
-      {
-        group: group._id,
-        iterationId: "iter_b",
-        name: "Sprint B",
-        startDate: sprintBStart,
-        endDate: sprintBEnd,
-        status: "ACTIVE",
-        isCurrent: true,
+      repository: {
+        owner: "radiant",
+        name: "rabbits",
+        isConnected: true,
+        syncStatus: "success",
+        syncError: null,
+        validationError: null,
       },
-    ]);
-
-    // 2 commits in Sprint A window, 1 in Sprint B window, 1 outside both
-    await Commit.create([
-      {
-        group: group._id,
-        sha: "a1",
-        author: { name: "x", email: "x@y" },
-        date: new Date("2026-01-05"),
-      },
-      {
-        group: group._id,
-        sha: "a2",
-        author: { name: "x", email: "x@y" },
-        date: new Date("2026-01-10"),
-      },
-      {
-        group: group._id,
-        sha: "b1",
-        author: { name: "x", email: "x@y" },
-        date: new Date("2026-01-20"),
-      },
-      {
-        group: group._id,
-        sha: "outside",
-        author: { name: "x", email: "x@y" },
-        date: new Date("2026-02-01"),
-      },
-    ]);
-
-    mockCalculateGithubMetricsLive.mockResolvedValueOnce({
-      totalCommits: 4,
-      commitsLastSprint: 0,
-      totalPullRequests: 0,
-      pullRequestsMergedLastSprint: 0,
-      totalIssuesClosed: 0,
-      issuesClosedLastSprint: 0,
-      activeContributors: 0,
-      lastSprintStart: new Date(),
-      lastSprintEnd: new Date(),
     });
 
     const Page = await DashboardPage();
     render(Page);
 
     const props = lastDashboardProps();
-    // seedUserWithGroup also seeds a commit at 2026-01-15, which falls inside Sprint B's window
     expect(props.sprints).toEqual([
       { name: "Sprint A", velocity: 2, isCurrent: false },
       { name: "Sprint B", velocity: 2, isCurrent: true },

@@ -13,6 +13,46 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/dashboard",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, max-age=60, stale-while-revalidate=120",
+          },
+        ],
+      },
+      {
+        source: "/current-sprint",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, max-age=60, stale-while-revalidate=120",
+          },
+        ],
+      },
+      {
+        source: "/past-sprints",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, max-age=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/teammates",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, max-age=60, stale-while-revalidate=120",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
