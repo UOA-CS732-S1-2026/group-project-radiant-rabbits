@@ -409,7 +409,7 @@ export default function SummaryPage() {
               </h1>
               <p className="mt-xs text-(length:--text-body-sm) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                 {selectedSprint
-                  ? /^\d+$/.test(selectedSprint.name)
+                  ? /^\d+$/.test(selectedSprint.name ?? "")
                     ? `Sprint ${selectedSprint.name}`
                     : selectedSprint.name
                   : "No sprint selected"}
