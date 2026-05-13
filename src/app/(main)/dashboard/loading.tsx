@@ -1,6 +1,7 @@
 import PageContainer from "@/components/shared/PageContainer";
 
-// A dashboard loading component displayed while the dashboard information is being fetched
+// Server components may trigger sync/aggregation before streaming this route, so
+// keep the fallback specific to repository metrics rather than a generic spinner.
 export default function DashboardLoading() {
   return (
     <div className="min-h-full bg-brand-background">

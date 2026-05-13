@@ -1,6 +1,7 @@
 import PageContainer from "@/components/shared/PageContainer";
 
-// A current sprint loading component displayed while the current sprint information is being fetched
+// Current sprint resolution can wait on group/session data, so the fallback
+// names the domain work instead of showing a blank app shell.
 export default function CurrentSprintLoading() {
   return (
     <div className="min-h-full bg-brand-background">
