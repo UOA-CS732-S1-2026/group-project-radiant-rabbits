@@ -97,7 +97,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
           push contribution summaries off the current sprint page. */}
       <div className="min-h-0 flex-1 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
-          <p className="text-(length:--text-body-md) text-brand-dark/60">
+          <p className="text-(length:--text-body-md) text-brand-dark/70">
             No tasks in this category. Assign tickets to this iteration in your
             GitHub Project to see them here.
           </p>
@@ -111,7 +111,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
                     index === 0 ? "" : "border-t border-brand-dark/10 pt-md"
                   }`}
                 >
-                  <span className="shrink-0 text-(length:--text-body-xs) font-semibold text-brand-dark/60">
+                  <span className="shrink-0 text-(length:--text-body-xs) font-semibold text-brand-dark/70">
                     {task.ref || `#${task.id}`}
                   </span>
 

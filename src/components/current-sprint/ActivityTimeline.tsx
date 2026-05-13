@@ -22,7 +22,7 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Activity Timeline
         </h4>
-        <p className="mt-md text-(length:--text-body-md) text-brand-dark/60">
+        <p className="mt-md text-(length:--text-body-md) text-brand-dark/70">
           No activity captured for this sprint period.
         </p>
       </BorderedPanel>
@@ -37,7 +37,7 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
           <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
             Activity Timeline
           </h4>
-          <p className="text-(length:--text-body-xs) text-brand-dark/50">
+          <p className="text-(length:--text-body-xs) text-brand-dark/70">
             Chronological sprint activity
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function ActivityTimeline({ items }: ActivityTimelineProps) {
               index > 0 ? "border-t border-brand-dark/10 pt-md" : ""
             }`}
           >
-            <div className="text-(length:--text-body-xs) font-medium text-brand-dark/50">
+            <div className="text-(length:--text-body-xs) font-medium text-brand-dark/70">
               {item.date}
             </div>
 

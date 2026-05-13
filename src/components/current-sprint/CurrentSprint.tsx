@@ -606,7 +606,9 @@ export default function CurrentSprint({
             <div className="flex items-start justify-between gap-md border-b border-brand-dark/10 pb-lg">
               <div>
                 <h1 className="text-(length:--text-h2) font-bold text-brand-dark">
-                  {sprint.name}
+                  {/^\d+$/.test(sprint.name)
+                    ? `Sprint ${sprint.name}`
+                    : sprint.name}
                 </h1>
                 <p className="mt-xs text-(length:--text-body-md) font-semibold uppercase tracking-[0.14em] text-brand-accent-dark">
                   {formatSprintDate(sprint.startDate)} —{" "}

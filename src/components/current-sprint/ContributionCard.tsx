@@ -172,10 +172,10 @@ export default function ContributionCard({
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Contribution · this sprint
         </h4>
-        <p className="mt-xs text-(length:--text-body-xs) text-brand-dark/50">
+        <p className="mt-xs text-(length:--text-body-xs) text-brand-dark/70">
           Total work this sprint, by person · click for AI summary
         </p>
-        <p className="mt-md text-(length:--text-body-md) text-brand-dark/60">
+        <p className="mt-md text-(length:--text-body-md) text-brand-dark/70">
           No contributor activity in this sprint period.
         </p>
       </BorderedPanel>
@@ -190,7 +190,7 @@ export default function ContributionCard({
         <h4 className="text-(length:--text-body-lg) font-semibold text-brand-dark">
           Contribution · this sprint
         </h4>
-        <p className="text-(length:--text-body-xs) text-brand-dark/50">
+        <p className="text-(length:--text-body-xs) text-brand-dark/70">
           Total work this sprint, by person · click for AI summary
         </p>
       </div>
@@ -225,7 +225,7 @@ export default function ContributionCard({
                   <p className="truncate text-(length:--text-body-sm) font-medium text-brand-dark">
                     {person.name}
                   </p>
-                  <p className="text-(length:--text-body-xs) text-brand-dark/60">
+                  <p className="text-(length:--text-body-xs) text-brand-dark/70">
                     <span className="font-semibold">{person.commits}</span>{" "}
                     commits ·{" "}
                     <span className="font-semibold">{person.prs}</span> PRs ·{" "}
@@ -246,7 +246,7 @@ export default function ContributionCard({
                     className={`shrink-0 rounded-md p-1.5 transition ${
                       isOpen
                         ? "bg-brand-accent/10 text-brand-accent"
-                        : "text-brand-dark/50 hover:bg-brand-dark/5 hover:text-brand-dark"
+                        : "text-brand-dark/70 hover:bg-brand-dark/5 hover:text-brand-dark"
                     }`}
                   >
                     <Sparkles size={14} />
@@ -325,13 +325,13 @@ function TeamSummary({
   return (
     <div className="mb-md flex items-center gap-sm rounded-lg border border-dashed border-brand-dark/15 p-sm">
       <Sparkles size={14} className="shrink-0 text-brand-accent" />
-      <p className="flex-1 text-(length:--text-body-md) text-brand-dark/60">
+      <p className="flex-1 text-(length:--text-body-md) text-brand-dark/70">
         Get an AI summary of how the team contributed this sprint.
       </p>
       <button
         type="button"
         onClick={onGenerate}
-        className="shrink-0 rounded-md bg-brand-accent px-sm py-1 text-(length:--text-body-sm) font-medium text-white transition hover:opacity-90"
+        className="shrink-0 rounded-md bg-brand-accent-dark px-sm py-1 text-(length:--text-body-sm) font-medium text-white transition hover:opacity-90"
       >
         Generate
       </button>

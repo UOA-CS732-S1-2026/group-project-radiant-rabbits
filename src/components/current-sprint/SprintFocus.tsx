@@ -35,7 +35,7 @@ export default function SprintFocus({
     <BorderedPanel>
       <div className="flex items-start justify-between gap-md">
         <div className="flex-1">
-          <div className="text-(length:--text-body-xs) font-semibold uppercase tracking-wide text-brand-dark/50">
+          <div className="text-(length:--text-body-xs) font-semibold uppercase tracking-wide text-brand-dark/70">
             Sprint Focus
           </div>
           {isEditing ? (
@@ -59,7 +59,7 @@ export default function SprintFocus({
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="rounded-lg bg-brand-accent px-md py-sm text-(length:--text-body-xs) font-medium text-white transition hover:opacity-90"
+                  className="rounded-lg bg-brand-accent-dark px-md py-sm text-(length:--text-body-xs) font-medium text-white transition hover:opacity-90"
                 >
                   Save
                 </button>
@@ -75,7 +75,7 @@ export default function SprintFocus({
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="text-(length:--text-body-md) text-brand-dark/40 transition hover:text-brand-dark"
+                className="text-(length:--text-body-md) text-brand-dark/70 transition hover:text-brand-dark"
                 title="Edit focus"
               >
                 ✎

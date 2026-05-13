@@ -57,7 +57,7 @@ export default function Button({
 
   const variantStyles =
     variant === "purple"
-      ? "bg-brand-accent text-white hover:opacity-90"
+      ? "bg-brand-accent-dark text-white hover:opacity-90"
       : variant === "white"
         ? "border border-brand-accent bg-white text-brand-dark hover:bg-brand-background"
         : variant === "grey"
