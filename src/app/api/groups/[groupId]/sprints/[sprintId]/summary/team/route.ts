@@ -16,13 +16,15 @@ import { isUserInGroup } from "@/app/lib/userRef";
 
 type AuthResult = { ok: true } | { ok: false; error: string; status: number };
 
-// This route generates a contribution summary for the whole team in a sprint, using an LLM.
-// It checks if a cached summary exists with the same inputHash and returns it if valid, otherwise it generates a new one and caches it.
+// Team summaries can call paid/external AI providers, so authorization and
+// cache validation happen before any generation request is made.
 async function authorize(
   groupId: string,
   sprintId: string,
   userId: string,
 ): Promise<AuthResult> {
+  // Authorize against both group membership and sprint ownership so a valid
+  // sprint id from another group cannot be queried through this route.
   const group = await Group.findById(groupId);
   if (!group) {
     return { ok: false, error: "Group not found", status: 404 };
@@ -42,6 +44,8 @@ async function authorize(
 }
 
 function mapErrorToResponse(error: unknown) {
+  // AI provider failures are surfaced as bad gateway so callers can distinguish
+  // dependency outages from app validation errors.
   if (error instanceof ContributionSummaryAiError) {
     return NextResponse.json(
       { error: "Failed to generate summary" },
@@ -68,9 +72,8 @@ function mapErrorToResponse(error: unknown) {
   );
 }
 
-// GET /api/groups/:groupId/sprints/:sprintId/summary/team
-// Returns the cached team summary, or { summary: null } if none has been
-// generated yet. Never calls the LLM.
+// GET is intentionally read-only so page loads never create unexpected AI
+// provider calls or costs.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
@@ -121,10 +124,8 @@ export async function GET(
   }
 }
 
-// POST /api/groups/:groupId/sprints/:sprintId/summary/team
-// Body: { regenerate?: boolean }
-// Generates a team summary, or returns the cached one if its inputHash
-// matches the freshly-aggregated workload profile (and !regenerate).
+// POST may generate text, but only after comparing the current profile hash
+// with the cached row to avoid duplicate provider calls.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
@@ -166,6 +167,8 @@ export async function POST(
     });
 
     if (cached && cached.inputHash === inputHash && !regenerate) {
+      // The hash ties cached prose to the exact workload profile, so regenerated
+      // summaries are only needed when sprint data changed or the user asks.
       return NextResponse.json(
         {
           summary: cached.summary,

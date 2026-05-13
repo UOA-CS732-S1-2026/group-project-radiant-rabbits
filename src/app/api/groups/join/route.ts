@@ -29,7 +29,8 @@ export async function POST(request: Request) {
 
     const sessionWithToken = session as { accessToken?: string };
 
-    // Check if user has logged in with a valid Github account
+    // Joining still requires a GitHub identity because invite codes are not
+    // enough to authorize private repository access.
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -37,7 +38,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ensure user has access token
+    // The joining user's token is used to verify repo access before membership
+    // is granted.
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
         { error: "GitHub access token missing. Please sign in again." },
@@ -55,7 +57,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Checking that the inputted invite code is valid (8 alphanumeric characters)
+    // Normalize invite codes so screenshots, typed lowercase codes, and copied
+    // codes all resolve to the same stored value.
     const trimmedInviteCode = inviteCode.trim().toUpperCase();
 
     const isValidFormat =
@@ -103,14 +106,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add the user to the group and return the updated group info
+    // $addToSet keeps repeated joins idempotent if a client retries after a
+    // network failure.
     const updatedGroup = await Group.findByIdAndUpdate(
       group._id,
       { $addToSet: { members: normalizeUserRef(session.user.id) } },
       { new: true },
     );
 
-    // Update the user's currentGroupId to the newly joined group
+    // Joining implies intent to work in this group next, so make it current.
     await User.findByIdAndUpdate(normalizeUserRef(session.user.id), {
       currentGroupId: group._id,
     });

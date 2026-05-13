@@ -6,10 +6,8 @@ import connectMongoDB from "@/app/lib/mongodbConnection";
 import { triggerSync } from "@/app/lib/syncService";
 import { isUserInGroup } from "@/app/lib/userRef";
 
-// POST /api/groups/:groupId/sync
-// Manually triggers a GitHub data sync for this group.
-// Used when a user wants to refresh the data without waiting for the next auto-sync.
-
+// Manual sync exists because GitHub changes are external to the app; users need
+// a way to refresh data without waiting for a later navigation or background job.
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ groupId: string }> },
@@ -17,7 +15,8 @@ export async function POST(
   try {
     const session = await getServerSession(options);
 
-    // Must be logged in
+    // Sync uses the caller's GitHub token, so the request must come from an
+    // authenticated group member rather than a background cron identity.
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -43,7 +42,8 @@ export async function POST(
       );
     }
 
-    // Don't start a new sync if one is already running
+    // GitHub sync is not transactional across all collections; rejecting
+    // concurrent runs avoids interleaved writes and confusing syncStatus updates.
     if (group.syncStatus === "in_progress") {
       return NextResponse.json(
         { error: "Sync is already in progress" },
@@ -51,7 +51,8 @@ export async function POST(
       );
     }
 
-    // Fire-and-forget: start the sync in the background
+    // The token can expire or be absent after auth changes, so fail before
+    // marking the UI as syncing.
     const sessionWithToken = session as { accessToken?: string };
     if (!sessionWithToken.accessToken) {
       return NextResponse.json(
@@ -62,7 +63,8 @@ export async function POST(
 
     triggerSync(groupId, sessionWithToken.accessToken);
 
-    // Return immediately - the sync runs in the background
+    // Return immediately because GitHub pagination can be slow and the UI polls
+    // syncStatus for completion/errors.
     return NextResponse.json(
       { message: "Sync started", syncStatus: "in_progress" },
       { status: 202 },

@@ -9,26 +9,28 @@ import { isUserInGroup } from "@/app/lib/userRef";
 
 const CACHE_TTL_SECONDS = 300;
 
-// Return a cache key based on the dashboard filters
 export function buildCacheKey(
   groupId: string,
   sprintId?: string,
   startDate?: string,
   endDate?: string,
 ): string {
+  // Include every filter that changes the aggregate so users never receive a
+  // cached response for a different sprint or custom date range.
   if (sprintId) return `dashboard:${groupId}:sprint:${sprintId}`;
   if (startDate && endDate)
     return `dashboard:${groupId}:range:${startDate}:${endDate}`;
   return `dashboard:${groupId}:default`;
 }
 
-// Singleton Redis client
 let redisClient: import("ioredis").Redis | null = null;
 
 async function getRedis() {
   if (!process.env.REDIS_URL) return null;
   if (redisClient) return redisClient;
   try {
+    // Redis is optional in local/dev deployments; dashboard data can still be
+    // computed directly from Mongo if the cache layer is unavailable.
     const { default: Redis } = await import("ioredis");
     redisClient = new Redis(process.env.REDIS_URL);
     return redisClient;
@@ -37,7 +39,6 @@ async function getRedis() {
   }
 }
 
-// Get cached value for key, or null if not found or on error
 async function getCached(key: string): Promise<string | null> {
   const redis = await getRedis();
   if (!redis) return null;
@@ -45,21 +46,22 @@ async function getCached(key: string): Promise<string | null> {
     const value = await redis.get(key);
     return value;
   } catch {
+    // Cache failures should degrade to a fresh aggregate rather than fail the
+    // dashboard request.
     return null;
   }
 }
 
-// Set cache value for key with expiration, no-op on error
 async function setCache(key: string, value: string): Promise<void> {
   const redis = await getRedis();
   if (!redis) return;
   try {
     await redis.set(key, value, "EX", CACHE_TTL_SECONDS);
-  } catch {}
+  } catch {
+    // A missed write only affects performance until the next request.
+  }
 }
 
-// Resolve the date range for the dashboard based on query params or current sprint
-// Default to last 30 days if no params or current sprint found
 export async function resolveDateRange(
   groupId: string,
   sprintId?: string,
@@ -69,6 +71,8 @@ export async function resolveDateRange(
   const gid = new mongoose.Types.ObjectId(groupId);
 
   if (sprintId) {
+    // Explicit sprint selection wins over custom dates so sprint drilldowns are
+    // anchored to the stored iteration window.
     const sprint = await Sprint.findOne({
       _id: new mongoose.Types.ObjectId(sprintId),
       group: gid,
@@ -100,11 +104,12 @@ export async function resolveDateRange(
   }
 
   const now = new Date();
+  // Fresh groups may not have synced iterations yet; a 30-day window gives the
+  // dashboard useful initial data without pretending a sprint exists.
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   return { start: thirtyDaysAgo, end: now, sprint: null };
 }
 
-// Aggregate dashboard data for the given group and date range, including optional sprint filter
 export async function aggregateDashboard(
   groupId: string,
   start: Date,
@@ -113,7 +118,8 @@ export async function aggregateDashboard(
 ) {
   const gid = new mongoose.Types.ObjectId(groupId);
 
-  // Contributors & total commits
+  // Prefer GitHub login over git author name so renamed local git identities do
+  // not split one contributor into multiple dashboard rows.
   const contributorAgg = await Commit.aggregate([
     { $match: { group: gid, date: { $gte: start, $lte: end } } },
     {
@@ -135,7 +141,8 @@ export async function aggregateDashboard(
   // Used for the repo-wide "total commits" stat on the dashboard.
   const allTimeCommits = await Commit.countDocuments({ group: gid });
 
-  // Issues closed in range
+  // Closed issues are counted by close date because that is when the work
+  // became completed during the selected window.
   const totalIssuesClosed = await Issue.countDocuments({
     group: gid,
     state: "CLOSED",
@@ -229,7 +236,8 @@ export async function GET(
     const startDate = url.searchParams.get("startDate") ?? undefined;
     const endDate = url.searchParams.get("endDate") ?? undefined;
 
-    // Check cache
+    // Dashboard aggregates are read-heavy; caching keeps repeated navigation
+    // from re-running the same Mongo aggregations within a short window.
     const cacheKey = buildCacheKey(groupId, sprintId, startDate, endDate);
     const cached = await getCached(cacheKey);
     if (cached) {

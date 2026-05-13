@@ -57,7 +57,8 @@ export async function GET(_request: NextRequest) {
 
     const userId = normalizeUserRefString(sessionWithToken.user.id);
 
-    // Fetching all the repositories the user has access to from GitHub
+    // GitHub is the source of truth for repo visibility; Mongo only tells us
+    // which repos already have SprintHub groups.
     const githubResponse = await fetch(
       "https://api.github.com/user/repos?per_page=100",
       {
@@ -91,7 +92,8 @@ export async function GET(_request: NextRequest) {
       repoOwner: string;
     }> = [];
 
-    // Sort existing groups from database
+    // Split existing groups by both SprintHub membership and GitHub visibility
+    // so private groups are only advertised to users who can access the repo.
     allGroups.forEach((group) => {
       // If the user is already a member, add to "Your Groups"
       if (
@@ -117,7 +119,8 @@ export async function GET(_request: NextRequest) {
       }
     });
 
-    // Sort the remaining GitHub repos into "Creatable Groups" if no existing group is associated with that repo in MongoDB
+    // Repos without a group become creation candidates, which prevents users
+    // from creating duplicate groups for the same GitHub source.
     githubRepos.forEach((repo) => {
       // Check if a group already exists in MongoDB for this specific repo
       const groupExists = allGroups.some(

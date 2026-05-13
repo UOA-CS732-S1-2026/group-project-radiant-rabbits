@@ -7,9 +7,8 @@ import { Group, Sprint, SprintTask } from "@/app/lib/models";
 import connectMongoDB from "@/app/lib/mongodbConnection";
 import { isUserInGroup } from "@/app/lib/userRef";
 
-// GET /api/groups/:groupId/sprints/:sprintId/tasks
-// Retrieves all tasks assigned to a specific sprint
-
+// Tasks are read from synced GitHub Project items rather than edited here, so
+// this route stays read-only and reflects the last successful sync.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ groupId: string; sprintId: string }> },
@@ -62,6 +61,8 @@ export async function GET(
       title: t.title,
       status: t.status,
       issueNumber: t.issueNumber ?? null,
+      // Assignee names are GitHub logins from sync, so they can be resolved
+      // directly to GitHub avatar URLs without another profile lookup.
       assignees: (t.assignees ?? []).map((name) => ({
         name,
         avatarUrl: avatarUrlForLogin(name),

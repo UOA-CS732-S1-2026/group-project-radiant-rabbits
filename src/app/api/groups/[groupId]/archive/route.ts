@@ -25,6 +25,8 @@ function formatDateShort(value: string): string {
 function buildFallbackReview(
   data: Awaited<ReturnType<typeof aggregateSprintReviewData>>,
 ) {
+  // Archival should still leave a readable sprint artifact when an AI provider
+  // is down or not configured.
   const topContributors = data.topContributors.slice(0, 3);
   const contributorLines =
     topContributors.length > 0
@@ -108,6 +110,8 @@ export async function POST(
     }).sort({ isCurrent: -1, endDate: -1, startDate: -1 });
 
     if (sprintToArchive) {
+      // Capture a final review before closing the group so past-sprint history
+      // remains useful after sync and active dashboards stop changing.
       if (!sprintToArchive.aiReview?.text?.trim()) {
         const aggregatedData = await aggregateSprintReviewData(
           group._id.toString(),
@@ -145,6 +149,8 @@ export async function POST(
     group.active = false;
     await group.save();
 
+    // Archived groups should disappear from active navigation for all members;
+    // users can still reach historical views through explicit archive flows.
     await User.updateMany(
       { currentGroupId: group._id },
       { $set: { currentGroupId: null } },
