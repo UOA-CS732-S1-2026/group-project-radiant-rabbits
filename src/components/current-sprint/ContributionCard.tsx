@@ -203,7 +203,7 @@ export default function ContributionCard({
         />
       ) : null}
 
-      <div className="h-96 space-y-sm overflow-y-auto pr-xs">
+      <div className="scrollbar-subtle h-96 space-y-sm overflow-y-auto pr-xs">
         {contributors.map((person, index) => {
           const isOpen = openContributor === person.name;
           const summary = contributorSummaries[person.name] ?? initialState;

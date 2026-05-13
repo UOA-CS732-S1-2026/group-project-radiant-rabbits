@@ -95,7 +95,7 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
 
       {/* Keep the list scrollable inside the card so long GitHub projects do not
           push contribution summaries off the current sprint page. */}
-      <div className="min-h-0 flex-1 overflow-y-auto pr-xs">
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
           <p className="text-(length:--text-body-md) text-brand-dark/70">
             No tasks in this category. Assign tickets to this iteration in your
