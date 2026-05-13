@@ -6,7 +6,6 @@ import EndProjectButton from "./EndProjectButton";
 import ProjectMetricsGrid from "./ProjectMetricsGrid";
 import SprintVelocityCard from "./SprintVelocityCard";
 
-// Fetch all data required to display the dashboard metrics and pass it to the Dashboard component for rendering
 type RepositoryInfo = {
   owner?: string | null;
   name?: string | null;
@@ -41,7 +40,8 @@ type DashboardProps = {
   // ISO date of the next iteration's start. Only set when iterations exist
   // but none cover today.
   nextSprintStart?: string | null;
-  // Top contributors with their contribution counts
+  // Already limited by the server so the dashboard card can stay dense and
+  // predictable on small screens.
   repoContributors?: Array<{
     name: string;
     initials: string;
@@ -54,7 +54,6 @@ type DashboardProps = {
   groupId?: string;
 };
 
-// Reusable status/error block so every failure surfaces in the dashboard UI
 function StatusBlock({
   message,
   autoRefresh = false,
@@ -74,12 +73,13 @@ function StatusBlock({
           </p>
         </div>
       </PageContainer>
+      {/* Initial sync is asynchronous; polling the server component keeps the
+          loading screen simple without duplicating sync state on the client. */}
       {autoRefresh && <AutoRefresh />}
     </div>
   );
 }
 
-// Page component that shows when the dashboard is loading or if it has an error
 export default function Dashboard({
   status,
   statusMessage,
@@ -115,7 +115,6 @@ export default function Dashboard({
   const iterationGuidanceVariant =
     iterationFieldConfigured === false ? "no-field" : "no-iterations";
 
-  // Display the dashboard with the fetched metrics and timeline chart
   return (
     <div className="min-h-full bg-brand-background">
       <PageContainer>

@@ -26,13 +26,14 @@ type SprintTaskSectionProps = {
   onTaskClick?: (task: Task) => void;
 };
 
-// Component to display a section of tasks grouped by status
 export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
   const [filter, setFilter] = useState<
     "all" | "todo" | "in_progress" | "done" | "unassigned"
   >("all");
 
   const isUnassigned = (t: Task) => !t.assignees || t.assignees.length === 0;
+  // Surface unassigned tickets separately because a TODO status from GitHub can
+  // still be unactionable if nobody owns the issue.
   const getDisplayStatus = (t: Task): TaskStatus =>
     isUnassigned(t) ? "UNASSIGNED" : t.status;
 
@@ -92,7 +93,8 @@ export default function SprintTaskSection({ tasks }: SprintTaskSectionProps) {
         </fieldset>
       </div>
 
-      {/* Task list */}
+      {/* Keep the list scrollable inside the card so long GitHub projects do not
+          push contribution summaries off the current sprint page. */}
       <div className="min-h-0 flex-1 overflow-y-auto pr-xs">
         {filteredTasks.length === 0 ? (
           <p className="text-(length:--text-body-md) text-brand-dark/60">

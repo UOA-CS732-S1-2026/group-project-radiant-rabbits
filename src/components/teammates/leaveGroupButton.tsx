@@ -21,6 +21,8 @@ export default function LeaveGroupButton() {
         throw new Error(data.error || "Failed to leave group");
       }
 
+      // Leaving clears currentGroupId server-side, so return to group selection
+      // before refreshing the app shell.
       setShowConfirm(false);
       router.push("/join-create-switch-group");
       router.refresh();

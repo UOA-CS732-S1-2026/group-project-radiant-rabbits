@@ -13,7 +13,6 @@ export type SprintWelcomeOverlayProps = {
   isContinuing?: boolean;
 };
 
-/** After skip or review preview; collects sprint focus then hands off to tickets overlay. */
 export default function SprintWelcomeOverlay({
   open,
   onClose,
@@ -28,6 +27,8 @@ export default function SprintWelcomeOverlay({
   const [sprintFocus, setSprintFocus] = useState("");
 
   useEffect(() => {
+    // Each handoff should start with a fresh prompt; the saved focus is written
+    // to the next sprint only after the user continues.
     if (open) setSprintFocus("");
   }, [open]);
 
@@ -38,6 +39,8 @@ export default function SprintWelcomeOverlay({
 
   useEffect(() => {
     if (!open) return;
+    // Lock scroll so mobile keyboards and backdrop clicks do not move the page
+    // underneath the handoff dialog.
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {

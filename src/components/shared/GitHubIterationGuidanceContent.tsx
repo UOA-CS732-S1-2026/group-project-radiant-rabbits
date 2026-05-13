@@ -5,10 +5,6 @@ import {
 
 export type GitHubIterationGuidanceTextSize = "compact" | "relaxed" | "default";
 
-/**
- * Copy shown when sprint velocity has no chart data: either no iteration field
- * on the GitHub Project, or the field exists but no iterations yet.
- */
 export default function GitHubIterationGuidanceContent({
   variant,
   textSize = "default",
@@ -29,6 +25,8 @@ export default function GitHubIterationGuidanceContent({
         ? "font-semibold text-brand-accent underline text-body-sm sm:text-body-md"
         : "font-semibold text-brand-accent underline";
 
+  // The two empty states need different fixes: add the field first, or add
+  // iterations to an already-configured field.
   if (variant === "no-field") {
     return (
       <div className="space-y-3 text-left">

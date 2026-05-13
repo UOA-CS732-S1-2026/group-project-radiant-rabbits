@@ -7,7 +7,6 @@ type SprintFocusProps = {
   editable?: boolean;
 };
 
-// Component for displaying and editing the sprint focus
 export default function SprintFocus({
   focus = "EMPTY: Add sprint focus",
   onUpdate,
@@ -17,6 +16,8 @@ export default function SprintFocus({
   const [text, setText] = useState(focus);
 
   useEffect(() => {
+    // Server refreshes can replace the saved focus after an edit, so mirror the
+    // prop back into local state when it changes.
     setText(focus);
   }, [focus]);
 
@@ -30,7 +31,6 @@ export default function SprintFocus({
     setIsEditing(false);
   };
 
-  // Build the sprint focus display or edit view
   return (
     <BorderedPanel>
       <div className="flex items-start justify-between gap-md">

@@ -46,6 +46,8 @@ export default function SegmentedControl({
   "aria-label": ariaLabel,
 }: SegmentedControlProps) {
   const styles = tabClasses[size];
+  // Background color is a token-driven inline style because this component is
+  // reused on both light and full-page group-change surfaces.
   const shellStyle = { backgroundColor: "var(--color-segmented-bg)" };
 
   return (

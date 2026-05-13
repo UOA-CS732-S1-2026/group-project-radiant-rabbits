@@ -19,7 +19,6 @@ type ContributionBreakdownCardProps = {
   contributors: ContributorRow[];
 };
 
-// Stacked / single-metric bars showing each contributor's commits, PRs, and issues.
 function RepoContributionBars({
   rows,
   metric,
@@ -30,6 +29,8 @@ function RepoContributionBars({
   const maxCommits = Math.max(...rows.map((r) => r.commits), 1);
   const maxPrs = Math.max(...rows.map((r) => r.prs), 1);
   const maxIssues = Math.max(...rows.map((r) => r.issues), 1);
+  // Normalize each metric against its own max so sparse PR/issue activity is
+  // still visible instead of being dwarfed by commit counts.
 
   return (
     <div className="flex h-full flex-col">
@@ -40,7 +41,8 @@ function RepoContributionBars({
               key={row.name}
               className="grid grid-cols-[3fr_7fr] items-center ml-sm mr-sm gap-sm"
             >
-              {/* Contributor name + avatar */}
+              {/* Keep identity next to the bar so filtering metrics does not
+                  make users re-scan a separate legend. */}
               <div className="flex items-center gap-sm min-w-0">
                 <Avatar
                   name={row.name}
@@ -53,7 +55,8 @@ function RepoContributionBars({
                 </span>
               </div>
 
-              {/* Bars: shows for each individual metric by filtering*/}
+              {/* One metric at a time avoids implying that commits, PRs, and
+                  issues are directly comparable units of work. */}
               {metric === "commits" ? (
                 <div className="flex flex-1">
                   <div className="flex flex-1 h-5 overflow-hidden rounded-full bg-brand-dark/5">
@@ -119,7 +122,6 @@ function RepoContributionBars({
   );
 }
 
-// Component for the repository contribution breakdown card (one row per contributor)
 export default function ContributionBreakdownCard({
   contributors,
 }: ContributionBreakdownCardProps) {
