@@ -172,3 +172,13 @@ To deploy your own instance, set the same environment variables listed above in 
 **Radiant Rabbits** | CS732 S1 2026, University of Auckland
 
 See the [GitHub Wiki](https://github.com/UOA-CS732-S1-2026/group-project-radiant-rabbits/wiki) for weekly meeting minutes and task breakdowns.
+
+---
+
+## Note for Markers / Testers
+To fully exercise SprintHub's functionality, the signed-in GitHub account must be a member of a repository that contains:
+- GitHub Projects iterations
+- Issues assigned to those iterations
+- Completed iterations with commits, pull requests, and closed issues
+
+Our project repository (`group-project-radiant-rabbits`) has all of the GitHub data required to showcase the app end-to-end. If you are testing with a different repository that does not have this data, some dashboard metrics, sprint history, and contribution views may appear empty even though the app is working correctly.
