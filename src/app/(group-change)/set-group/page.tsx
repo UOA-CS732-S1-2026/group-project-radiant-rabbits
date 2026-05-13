@@ -17,6 +17,8 @@ function SetGroupContent() {
 
   const repoName = searchParams.get("repoName");
   const repoOwner = searchParams.get("repoOwner");
+  // Only allow same-app dashboard returns so a crafted setup link cannot turn
+  // the Back button into an open redirect.
   const joinPickerHref = joinCreateSwitchGroupHref(
     safeDashboardReturn(searchParams.get("returnTo")),
   );
@@ -52,6 +54,8 @@ function SetGroupContent() {
         throw new Error(data.error || "Failed to create group.");
       }
 
+      // Group creation also makes the new group current on the server, so the
+      // dashboard can immediately render against that selection.
       router.push("/dashboard");
     } catch (error: unknown) {
       setErrorMessage(
@@ -156,6 +160,8 @@ export default function SetGroupPage() {
           </HelpOverlayTrigger>
         </div>
 
+        {/* useSearchParams requires a suspense boundary in app-router client
+            pages, even though this screen is otherwise fully client-rendered. */}
         <Suspense fallback={<div className="text-center">Loading...</div>}>
           <SetGroupContent />
         </Suspense>

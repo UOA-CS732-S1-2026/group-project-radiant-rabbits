@@ -5,6 +5,8 @@ import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
 
 export default function SprintPage() {
+  // Legacy static mock retained while sprint dates are sourced from GitHub
+  // Project iteration fields and synced into the dashboard.
   return (
     <PageContainer>
       <SectionHeading

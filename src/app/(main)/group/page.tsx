@@ -5,6 +5,8 @@ import PageContainer from "@/components/shared/PageContainer";
 import SectionHeading from "@/components/shared/SectionHeading";
 
 export default function GroupPage() {
+  // Legacy static mock retained for routes/tests that still reference /group;
+  // the live group flow now lives in /join-create-switch-group.
   return (
     <PageContainer>
       <SectionHeading
